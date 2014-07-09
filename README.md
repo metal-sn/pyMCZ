@@ -1,4 +1,4 @@
-metalicity_bootstrap
+MC Metalicity
 ====================
 
-bootstrap method to calculate metalicity from flux data
+Monte Carlo method to calculate metalicity uncertainty from flux data
