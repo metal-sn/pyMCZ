@@ -14,6 +14,12 @@
 ##############################################################################
 import numpy as np
 
+##list of metallicity methods, in order calculated
+Zs=["KD_comb_NEW","KD02_NIIOII","KD03new_abund_R23","M91","Z94","KD03_NIIHa_abund","D02","PP04_N2","PP04_O3N2"]
+
+def get_methods():
+    return Zs
+
 ##############################################################################
 ##fz_roots function as used in the IDL code
 ##############################################################################
@@ -25,7 +31,7 @@ def fz_roots(a):
       rts=np.zeros(a.size-1)
     return rts
 
-def calculation(data,num,outfilename,red_corr=True,disp=False,saveres=True):
+def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres=False):
     ##all the lines that go like
     ##if S_mass[i] > low_lim and S_mass[i] < 14.0 and all_lines[i] != 0.0:
     ##are ignored, replaced by (if 1 == 1)
