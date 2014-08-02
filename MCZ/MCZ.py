@@ -313,7 +313,7 @@ def in_mm(filename):
 ##############################################################################
 files=['sn2006ss','SNIbc','ptf09aux-z','ptf09sk-z','ptf10eqi-z','ptf10hfe-z','ptf10kui-z']
 
-filename=files[1]
+filename=files[0]
 nsample=500
 fi=input_format(filename)
 main(fi,nsample)
