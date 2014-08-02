@@ -15,17 +15,25 @@ def readfile(filename):
     b=np.array([])
     i=0
     j=0
+    
     for line in a:
-        try:
-            strs=np.array(line.rstrip('\n').split()).astype(np.float)
-            i=strs.size
+        err_count=0
+        strs=np.array(line.rstrip('\n').split())
+        i=strs.size
+        for word in range(i):
+            try:
+                strs[word]=strs[word].astype(np.float)
+            except ValueError:
+                err_count+=1
+                strs[word]=-1
+        strs=strs.astype(np.float)
+        if err_count<i/2-1:    
             b=np.append(b,strs,axis=0)
             j+=1
-        except ValueError:
-            continue
     b.resize(j,i)
     b=np.transpose(b)
     a.close()
+
     return b,j
 
 ##############################################################################
@@ -240,11 +248,11 @@ def main((filename, flux, err), nsample,binmode='t'):
 ##############################################################################
 ##The input format generator
 ##############################################################################
-def flux_input(filename):
+def flux_input_mmm(filename):
     ###Initialize###
-    maxfile=filename+"_max.txt"
-    medfile=filename+"_med.txt"
-    minfile=filename+"_min.txt"
+    maxfile='sn_data/'+filename+"_max.txt"
+    medfile='sn_data/'+filename+"_med.txt"
+    minfile='sn_data/'+filename+"_min.txt"
     
     ###read the max, med, min flux files###    
     maxf,nm=readfile(maxfile)
@@ -254,7 +262,18 @@ def flux_input(filename):
     ###calculate the flux error as 1/2 [(max-med)+(med-min)]###
     err=0.5*((maxf-medf)+(medf-minf))
     return (filename, medf, err)
-
+def flux_input_mm(filename):
+    ###Initialize###
+    maxfile='sn_data/'+filename+"_max.txt"
+    minfile='sn_data/'+filename+"_min.txt"
+    
+    ###read the max, med, min flux files###    
+    maxf,nm=readfile(maxfile)
+    minf,nn=readfile(minfile)
+    ###calculate the flux error as 1/2 [(max-min)]###
+    err=0.5*(maxf - minf)
+    medf= minf+err
+    return (filename, medf, err)
 ##############################################################################
 ##############################################################################    
 #### How to Use this code:
@@ -275,8 +294,9 @@ def flux_input(filename):
 ####Just edit this part to use
 ##############################################################################
 files=['sn2006ss','ptf09aux-z','ptf09sk-z','ptf10eqi-z','ptf10hfe-z','ptf10kui-z']
-filename=files[0]
-nsample=10000
-
+filename='SNIbc'
+nsample=50000
+#fi=flux_input_mmm(files[0])
+fi=flux_input_mm(filename)
 ##############################################################################
-main(flux_input(filename),nsample)
+main(fi,nsample)
