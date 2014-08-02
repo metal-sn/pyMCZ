@@ -252,9 +252,6 @@ def main((filename, flux, err), nsample,binmode='t'):
 ##############################################################################
 def input_format(filename):
     p=os.path.abspath('..')
-    if not os.path.exists(p+'\\sn_data'):
-        os.makedirs(p+'\\sn_data')
-
     
     if os.path.isfile(p+'\\sn_data\\%s_max.txt'%filename):
         if os.path.isfile(p+'\\sn_data\\%s_min.txt'%filename):
