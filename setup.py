@@ -1,8 +1,4 @@
-import os
-from setuptools import setup
-
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+from distutils.core import setup
 
 setup(name='MCZ',
       version='1.0',
