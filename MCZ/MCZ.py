@@ -121,8 +121,9 @@ def err_est(count,prob=0.68):
 ## delog - if true de-logs the data. False by default
 ##############################################################################
 def savehist(data,filename,Zs,nsample,i,delog=False,mode='t'):
+    p=os.path.abspath('..')
     name='%s_n%d_%s_i%d'%((filename,nsample,Zs,i))
-    outfile='bins/%s/hist/%s.png'%(filename,name)
+    outfile=p+'\\bins\\%s\\hist\\%s.png'%(filename,name)
     plt.clf()
 
     ###de-log###
@@ -190,6 +191,7 @@ def savehist(data,filename,Zs,nsample,i,delog=False,mode='t'):
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
 def main((filename, flux, err), nsample,binmode='t'):
+    p=os.path.abspath('..')
     ###flux and err must be same dimensions
     if flux.shape != err.shape:
         print "flux and err must be of same dimensions"
@@ -200,10 +202,10 @@ def main((filename, flux, err), nsample,binmode='t'):
     Zs= metallicity.get_methods()
 
     ###make necessary paths
-    if not os.path.exists('bins/%s'%filename):
-        os.makedirs('bins/%s'%filename)
-        os.makedirs('bins/%s/hist'%filename)
-    
+    if not os.path.exists(p+'\\bins\\%s'%filename):
+        os.makedirs(p+'\\bins\\%s'%filename)
+        os.makedirs(p+'\\bins\\%s\\hist'%filename)
+    binp=p+'\\bins\\%s\\'%filename
     ###Sample 'nsample' points from a gaussian###
     mu=0
     sigma=1
@@ -215,7 +217,7 @@ def main((filename, flux, err), nsample,binmode='t'):
     plt.title("Sampled")
     st="n=%d"%nsample
     plt.annotate(st, xy=(0.70, 0.85), xycoords='axes fraction')
-    plt.savefig('bins/%s/'%filename+filename+'_n%d_sample.png'%nsample)
+    plt.savefig(binp+filename+'_n%d_sample.png'%nsample)
     plt.clf()
 
     
@@ -234,7 +236,7 @@ def main((filename, flux, err), nsample,binmode='t'):
     
     ###Bin the results and save the uncertainty###
     for i in range(nm):
-        fi=open('bins/%s/%s_n%d_i%d.csv'%(filename,filename,nsample,i),'w')
+        fi=open(binp+'%s_n%d_i%d.csv'%(filename,nsample,i),'w')
         fi.write("%s, Metalicity, Uncertainty\n"%filename)
     
         for j in range(len(Zs)):
@@ -248,11 +250,24 @@ def main((filename, flux, err), nsample,binmode='t'):
 ##############################################################################
 ##The input format generator
 ##############################################################################
-def flux_input_mmm(filename):
+def input_format(filename):
+    p=os.path.abspath('..')
+    if os.path.isfile(p+'\\sn_data\\%s_max.txt'%filename):
+        if os.path.isfile(p+'\\sn_data\\%s_min.txt'%filename):
+            if os.path.isfile(p+'\\sn_data\\%s_med.txt'%filename):
+                return in_mmm(filename)
+            else:
+                return in_mm(filename)
+    print "Unable to find _min and _max files in directory sn_data"
+    return -1
+
+def in_mmm(filename):
+    p=os.path.abspath('..')
+    p+='\\sn_data\\'
     ###Initialize###
-    maxfile='sn_data/'+filename+"_max.txt"
-    medfile='sn_data/'+filename+"_med.txt"
-    minfile='sn_data/'+filename+"_min.txt"
+    maxfile=p+filename+"_max.txt"
+    medfile=p+filename+"_med.txt"
+    minfile=p+filename+"_min.txt"
     
     ###read the max, med, min flux files###    
     maxf,nm=readfile(maxfile)
@@ -262,10 +277,13 @@ def flux_input_mmm(filename):
     ###calculate the flux error as 1/2 [(max-med)+(med-min)]###
     err=0.5*((maxf-medf)+(medf-minf))
     return (filename, medf, err)
-def flux_input_mm(filename):
+
+def in_mm(filename):
+    p=os.path.abspath('..')
+    p+='\\sn_data\\'
     ###Initialize###
-    maxfile='sn_data/'+filename+"_max.txt"
-    minfile='sn_data/'+filename+"_min.txt"
+    maxfile=p+filename+"_max.txt"
+    minfile=p+filename+"_min.txt"
     
     ###read the max, med, min flux files###    
     maxf,nm=readfile(maxfile)
@@ -293,10 +311,9 @@ def flux_input_mm(filename):
 ##############################################################################
 ####Just edit this part to use
 ##############################################################################
-files=['sn2006ss','ptf09aux-z','ptf09sk-z','ptf10eqi-z','ptf10hfe-z','ptf10kui-z']
-filename='SNIbc'
-nsample=50000
-#fi=flux_input_mmm(files[0])
-fi=flux_input_mm(filename)
-##############################################################################
+files=['sn2006ss','SNIbc','ptf09aux-z','ptf09sk-z','ptf10eqi-z','ptf10hfe-z','ptf10kui-z']
+
+filename=files[1]
+nsample=500
+fi=input_format(filename)
 main(fi,nsample)
