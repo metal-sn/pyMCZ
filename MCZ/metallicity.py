@@ -15,9 +15,9 @@
 import numpy as np
 
 ##list of metallicity methods, in order calculated
-Zs=["KD_comb_NEW","KD02_NIIOII","KD03new_abund_R23","M91","Z94","KD03_NIIHa_abund","D02","PP04_N2","PP04_O3N2"]
+Zs=["KD_comb_NEW","KD02_NIIOII","KD03new_abund_R23","M91","Z94","KD03_NIIHa_abund","D02","PP04_N2","PP04_O3N2","Pi01_Z"]
 
-def get_methods():
+def get_keys():
     return Zs
 
 ##############################################################################
@@ -1026,5 +1026,10 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
             wf.write('\n')
     if saveres==True:
         wf.close()
-    return [KD_comb_NEW,KD02_NIIOII_Z,KD03new_abund_R23,M91_Z,Z94_Z,KD03_NIIHa_abund,D02_Z,PP04_N2_Z,PP04_O3N2_Z,Pi01_Z]
+
+    res={Zs[0]:KD_comb_NEW, Zs[1]:KD02_NIIOII_Z, Zs[2]:KD03new_abund_R23,
+         Zs[3]:M91_Z, Zs[4]:Z94_Z, Zs[5]:KD03_NIIHa_abund, Zs[6]:D02_Z,
+         Zs[7]:PP04_N2_Z, Zs[8]:PP04_O3N2_Z, Zs[9]:Pi01_Z}
+    return res
+    #return [KD_comb_NEW,KD02_NIIOII_Z,KD03new_abund_R23,M91_Z,Z94_Z,KD03_NIIHa_abund,D02_Z,PP04_N2_Z,PP04_O3N2_Z,Pi01_Z]
 

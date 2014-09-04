@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.mlab as mlab
 import scipy.stats.mstats as ssm
 import metallicity
 import os
@@ -190,7 +189,7 @@ def savehist(data,filename,Zs,nsample,i,delog=False,mode='t'):
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def main((filename, flux, err), nsample,binmode='t'):
+def run((filename, flux, err), nsample,binmode='t'):
     p=os.path.abspath('..')
     ###flux and err must be same dimensions
     if flux.shape != err.shape:
@@ -198,15 +197,17 @@ def main((filename, flux, err), nsample,binmode='t'):
         return
     nm = flux.shape[1]
 
-    ###retrieve the metallicity methods
-    Zs= metallicity.get_methods()
+    ###retrieve the metallicity keys
+    Zs= metallicity.get_keys()
 
     ###make necessary paths
     if not os.path.exists(p+'\\bins\\%s'%filename):
         os.makedirs(p+'\\bins\\%s'%filename)
         os.makedirs(p+'\\bins\\%s\\hist'%filename)
     binp=p+'\\bins\\%s\\'%filename
+    
     ###Sample 'nsample' points from a gaussian###
+    ##a gaussian centered on 0 with std 1
     mu=0
     sigma=1
     sample=np.random.normal(mu,sigma,nsample)
@@ -226,21 +227,32 @@ def main((filename, flux, err), nsample,binmode='t'):
     ## flux + error*i
     ## where i is the sampled gaussian    
     print "Starting iteration"
-    res=[]
+
+    #initialize the dictionary
+    res={}
+    for key in Zs:
+        res[key]=[]
+
+    #do the iterations
     for i in range(len(sample)):
         temp=flux+err*sample[i]
         t=metallicity.calculation(temp,nm)
-        res.append(t)
-    result=np.array(res)
+        for key in Zs:
+            res[key].append(t[key])
+            
+    #make the result a np.array
+    for key in Zs:
+        res[key]=np.array(res[key])
+        
     print "Iteration Complete"
     
     ###Bin the results and save the uncertainty###
     for i in range(nm):
         fi=open(binp+'%s_n%d_i%d.csv'%(filename,nsample,i),'w')
         fi.write("%s, Metalicity, Uncertainty\n"%filename)
-    
-        for j in range(len(Zs)):
-            s=Zs[j]+", "+savehist(result[:,j,i],filename,Zs[j],nsample,i,binmode)+'\n'
+
+        for key in Zs:
+            s=key+", "+savehist(res[key][:,i],filename,key,nsample,i,binmode)+'\n'
             fi.write(s)
         print "---------------------------------------------"
         fi.close()
@@ -314,8 +326,9 @@ def in_mm(filename):
 ##############################################################################
 
 files=['sn2006ss','SNIbc','ptf09aux-z','ptf09sk-z','ptf10eqi-z','ptf10hfe-z','ptf10kui-z']
-
 filename=files[0]
+
 nsample=500
 fi=input_format(filename)
-main(fi,nsample)
+if fi!=-1:
+    run(fi,nsample)
