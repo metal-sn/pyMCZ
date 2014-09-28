@@ -325,10 +325,10 @@ def in_mm(filename):
 ####Just edit this part to use
 ##############################################################################
 
-files=['sn2006ss','SNIbc','ptf09aux-z','ptf09sk-z','ptf10eqi-z','ptf10hfe-z','ptf10kui-z']
-filename=files[0]
+files=['sn2006ss','ptf10eqi-z']
+filename=files[1]
 
-nsample=500
+nsample=10000
 fi=input_format(filename)
 if fi!=-1:
     run(fi,nsample)
