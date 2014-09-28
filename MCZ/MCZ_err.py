@@ -4,6 +4,8 @@ import scipy.stats.mstats as ssm
 import metallicity
 import os
 
+import sys, argparse
+
 ##############################################################################
 ##Reads the flux file and returns it as an array.
 ##Ignores non-numeric lines
@@ -305,30 +307,27 @@ def in_mm(filename):
     err=0.5*(maxf - minf)
     medf= minf+err
     return (filename, medf, err)
-##############################################################################
-##############################################################################    
-#### How to Use this code:
-##############################################################################    
-##############################################################################    
-####example) if you have:
-####     sn2006ss_max.txt
-####     sn2006ss_med.txt
-####     sn2006ss_min.txt
-####
-####     and you want to sample 5000 points
-####     do:
-####
-#### filename="sn2006ss"
-#### nsample=5000
-####
-##############################################################################
-####Just edit this part to use
-##############################################################################
 
-files=['sn2006ss','ptf10eqi-z']
-filename=files[1]
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename', metavar='<filename>', type=str, help="the common filename")
+    parser.add_argument('nsample', metavar='N', type=int, help="number of iterations")
+    
+    args=parser.parse_args()
 
-nsample=10000
-fi=input_format(filename)
-if fi!=-1:
-    run(fi,nsample)
+    if args.nsample>0:
+        fi=input_format(args.filename)
+        if fi!=-1:
+            run(fi,args.nsample)
+
+    else:
+        print "nsample must be positive"
+    
+
+if __name__ == "__main__":
+    main()
+    #files=['sn2006ss','ptf10eqi-z']
+    #filename=files[1]
+    #nsample=10000
+    
+
