@@ -124,7 +124,7 @@ def err_est(count,prob=0.68):
 def savehist(data,filename,Zs,nsample,i,delog=False,mode='t'):
     p=os.path.abspath('..')
     name='%s_n%d_%s_i%d'%((filename,nsample,Zs,i))
-    outfile=p+'\\bins\\%s\\hist\\%s.png'%(filename,name)
+    outfile=os.path.join(p,'bins','%s'%filename,'hist','%s.png'%name)
     plt.clf()
 
     ###de-log###
@@ -203,10 +203,10 @@ def run((filename, flux, err), nsample,binmode='t'):
     Zs= metallicity.get_keys()
 
     ###make necessary paths
-    if not os.path.exists(p+'\\bins\\%s'%filename):
-        os.makedirs(p+'\\bins\\%s'%filename)
-        os.makedirs(p+'\\bins\\%s\\hist'%filename)
-    binp=p+'\\bins\\%s\\'%filename
+    if not os.path.exists(os.path.join(p,'bins','%s'%filename)):
+        os.makedirs(os.path.join(p,'bins','%s'%filename))
+        os.makedirs(os.path.join(p,'bins','%s'%filename,'hist'))
+    binp=os.path.join(p,'bins','%s'%filename)
     
     ###Sample 'nsample' points from a gaussian###
     ##a gaussian centered on 0 with std 1
@@ -220,7 +220,7 @@ def run((filename, flux, err), nsample,binmode='t'):
     plt.title("Sampled")
     st="n=%d"%nsample
     plt.annotate(st, xy=(0.70, 0.85), xycoords='axes fraction')
-    plt.savefig(binp+filename+'_n%d_sample.png'%nsample)
+    plt.savefig(os.path.join(binp,'%s_n%d_sample.png'%(filename,nsample)))
     plt.clf()
 
     
@@ -250,7 +250,7 @@ def run((filename, flux, err), nsample,binmode='t'):
     
     ###Bin the results and save the uncertainty###
     for i in range(nm):
-        fi=open(binp+'%s_n%d_i%d.csv'%(filename,nsample,i),'w')
+        fi=open(os.path.join(binp,'%s_n%d_i%d.csv'%(filename,nsample,i)),'w')
         fi.write("%s, Metalicity, Uncertainty\n"%filename)
 
         for key in Zs:
@@ -265,11 +265,11 @@ def run((filename, flux, err), nsample,binmode='t'):
 ##The input format generator
 ##############################################################################
 def input_format(filename):
-    p=os.path.abspath('..')
     
-    if os.path.isfile(p+'\\sn_data\\%s_max.txt'%filename):
-        if os.path.isfile(p+'\\sn_data\\%s_min.txt'%filename):
-            if os.path.isfile(p+'\\sn_data\\%s_med.txt'%filename):
+    p=os.path.abspath('..')
+    if os.path.isfile(os.path.join(p,'sn_data','%s_max.txt'%filename)):
+        if os.path.isfile(os.path.join(p,'sn_data','%s_min.txt'%filename)):
+            if os.path.isfile(os.path.join(p,'sn_data','%s_med.txt'%filename)):
                 return in_mmm(filename)
             else:
                 return in_mm(filename)
@@ -278,11 +278,11 @@ def input_format(filename):
 
 def in_mmm(filename):
     p=os.path.abspath('..')
-    p+='\\sn_data\\'
+    p=os.path.join(p,'sn_data')
     ###Initialize###
-    maxfile=p+filename+"_max.txt"
-    medfile=p+filename+"_med.txt"
-    minfile=p+filename+"_min.txt"
+    maxfile=os.path.join(p,filename+"_max.txt")
+    medfile=os.path.join(p,filename+"_med.txt")
+    minfile=os.path.join(p,filename+"_min.txt")
     
     ###read the max, med, min flux files###    
     maxf,nm=readfile(maxfile)
@@ -295,10 +295,10 @@ def in_mmm(filename):
 
 def in_mm(filename):
     p=os.path.abspath('..')
-    p+='\\sn_data\\'
+    p=os.path.join(p,'sn_data')
     ###Initialize###
-    maxfile=p+filename+"_max.txt"
-    minfile=p+filename+"_min.txt"
+    maxfile=os.path.join(p,filename+"_max.txt")
+    minfile=os.path.join(p,filename+"_min.txt")
     
     ###read the max, med, min flux files###    
     maxf,nm=readfile(maxfile)
