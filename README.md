@@ -35,6 +35,7 @@ with common filename \<fi\>
 where max = med+err, min=med-err. The _med file is optional.
 
 The format for each of the txt files should be as follows:
+
 '''
 ;# galnum,[OII]3727,Hb,[OIII]4959,[OIII]5007,[OI]6300,Ha,[NII]6584,[SII]6717,[SII]6731,[SIII]9069,[SIII]9532,E(B-V),dE(B-V)
        1     0.0     0.0     0.0     0.0     0.0   5.117   0.998     0.0     0.0     0.0     0.0
