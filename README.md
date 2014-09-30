@@ -16,3 +16,8 @@ MCZ_err.py <filename> nsample
 -\<filename\>: the common filename of the _min and _max files
 
 -nsample: the number of iterations desired
+
+
+====================
+Input file format
+====================
