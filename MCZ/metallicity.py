@@ -16,7 +16,7 @@ import numpy as np
 
 
 ##list of metallicity methods, in order calculated
-Zs=["KD_comb_NEW","KD02_NIIOII","KD03new_abund_R23","M91","Z94","KD03_NIIHa_abund","D02","PP04_N2","PP04_O3N2","Pi01_Z"]
+Zs=["KD02comb_updated","KD02_NIIOII","KD02_R23_updated","M91","Z94","KD02_NIIHa","D02","PP04_N2","PP04_O3N2","Pi01_Z"]
 
 def get_keys():
     return Zs
