@@ -24,6 +24,8 @@ MCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
 --delog: If set to true, result will be in natural space instead of log space. Default false.
 
 --verbose: verbose mode. Default false.
+
+
 ====================
 Input file format
 ====================
