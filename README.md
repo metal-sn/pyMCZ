@@ -6,18 +6,24 @@ Monte Carlo method to calculate metalicity uncertainty from flux data.
 ====================
 Usage:
 ====================
-Place the _min, _max, and _med(optional) files in the sn_data folder.
+Place the _min, _max, and _med(optional) files in the "sn_data" folder.
 
 
 From the commandline simply use as:
 ```
-MCZ_err.py <filename> nsample 
+MCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
 ```
 -\<filename\>: the common filename of the _min and _max files
 
 -nsample: the number of iterations desired
 
+--path: the directory in which subdirectory "sn_data" is located. If not provided, will default to environmental variable MCMetdata that should be set to point to that directory
 
+--clobber: If set to true, will overwrite existing output files. Default false.
+
+--delog: If set to true, result will be in natural space instead of log space. Default false.
+
+--verbose: verbose mode. Default false.
 ====================
 Input file format
 ====================
@@ -52,7 +58,7 @@ the data should be in the above order, separated by any number of white spaces.
 ====================
 Output
 ====================
-All the results will be saved in the directory "\<fi\>" inside "bins" where bins will be generated in the current directory provided by the --path arg.
+All the results will be saved in the directory "\<fi\>" inside "bins" where bins will be generated in the directory provided by the --path arg.
 
 For a given \<fi\> and nSample, the following output files are generated:
 
