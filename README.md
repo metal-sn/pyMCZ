@@ -11,7 +11,7 @@ Place the _min, _max, and _med(optional) files in the sn_data folder.
 
 From the commandline simply use as:
 ```
-MCZ_err.py <filename> nsample
+MCZ_err.py <filename> nsample 
 ```
 -\<filename\>: the common filename of the _min and _max files
 
@@ -21,9 +21,9 @@ MCZ_err.py <filename> nsample
 ====================
 Input file format
 ====================
-each flux data should be stored in the directory sn_data 
+each flux data should be stored in the directory sn_data that exists in the directory prodived by --path arg. 
 
-with common filename \<fi\>
+with common filename \<fi\>:
 
 \<fi\>_max.txt
 
@@ -36,13 +36,12 @@ where max = med+err, min=med-err. The _med file is optional.
 
 The format for each of the txt files should be as follows:
 
-'''
+
 ;# galnum,[OII]3727,Hb,[OIII]4959,[OIII]5007,[OI]6300,Ha,[NII]6584,[SII]6717,[SII]6731,[SIII]9069,[SIII]9532,E(B-V),dE(B-V)
        1     0.0     0.0     0.0     0.0     0.0   5.117   0.998     0.0     0.0     0.0     0.0
        2     0.0     0.0     0.0     0.0     0.0   5.031   1.012     0.0     0.0     0.0     0.0
-'''
-(example)
-
+       
+       
 galnum is the index used for matching the flux with the corresponding radius for calculating the gradient.
 
 The first row is optional - any row with more strings than numbers will be ignored
@@ -53,7 +52,7 @@ the data should be in the above order, separated by any number of white spaces.
 ====================
 Output
 ====================
-All the results will be saved in the directory "\<fi\>" inside "bins"
+All the results will be saved in the directory "\<fi\>" inside "bins" where bins will be generated in the current directory provided by the --path arg.
 
 For a given \<fi\> and nSample, the following output files are generated:
 
