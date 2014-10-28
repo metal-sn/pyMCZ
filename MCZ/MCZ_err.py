@@ -146,7 +146,7 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False,mode='t'):
         
     data=data[np.isfinite(data)]
     #    data=np.sort(data)
-      
+    
     ####kill outliers###
 
     mean=np.mean(data)
@@ -157,8 +157,9 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False,mode='t'):
     
     if data.shape[0]<=0:
         print name,'is blank' ##if no data
-        return "-1, -1"    
+        return "-1, -1, -1"    
     try:
+        median=np.median(data)
         ######find fit and save hist######
         ###find appropriate bin size###
         numbin=getbinsize(data.shape[0],data,mode)
@@ -169,6 +170,7 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False,mode='t'):
         #####FED
         to_unity = lambda y, pos:  "%.2f"%(y / float(max(count)))
         plt.gca().yaxis.set_major_formatter(FuncFormatter(to_unity))
+
         ###find error###
         l,r,t,fl,fr=err_est(count)
         y=np.zeros(len(bins))
@@ -178,22 +180,21 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False,mode='t'):
         ###plot hist###
         plt.plot(bins,y)
         plt.axvspan(left,right,color='red',alpha=0.4)
-        st='n=%d\nconfidence: %.2f\nleft: %.2f\nright: %.2f'%(n,t,left,right)
-        plt.annotate(st, xy=(0.70, 0.80), xycoords='axes fraction')
-        plt.title(name)
+        st='%s\nn=%d\nconfidence: %.2f\nmedian: %.4f\nleft: %.4f\nright: %.4f'%(Zs,n,t,median,left,right)
+        plt.annotate(st, xy=(0.75, 0.75), xycoords='axes fraction',fontsize=15)
         if delog:
-            plt.xlabel('O/H')
+            plt.xlabel('O/H',fontsize=18)
         else:
-            plt.xlabel('12+log(O/H)')
-        plt.ylabel('counts')
+            plt.xlabel('12+log(O/H)',fontsize=18)
+        plt.ylabel('counts',fontsize=18)
         plt.savefig(outfile,clobber=False)
         
         ###print out the confidence interval###
 #        print name, ':\t%f +- %f'%((left+right)/2.,(right-left)/2.)
 
-        print '{0:40} {1:12.3f}  +- {2:10.3f}'.format(name, (left+right)/2.,(right-left)/2.)
+        print '{0:40} {1:12.3f}  - {2:12.3f} + {3:12.3f}'.format(name, median, left, right)
 
-        return "%f, %f"%((left+right)/2.,(right-left)/2.)
+        return "%f, %f, %f"%(median, left, right)
 
     except (OverflowError,AttributeError,ValueError):
         if VERBOSE: print data
@@ -214,7 +215,7 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False,mode='t'):
 def run((filename, flux, err, path), nsample,binmode='t',delog=False):
     ###flux and err must be same dimensions
     newnsample=int(nsample+0.1*nsample)
-    p=path
+    p=os.path.join(path,'..')
     if flux.shape != err.shape:
         print "flux and err must be of same dimensions"
         return
@@ -273,10 +274,10 @@ def run((filename, flux, err, path), nsample,binmode='t',delog=False):
     if VERBOSE: print "Iteration Complete"
     
     ###Bin the results and save the uncertainty###
-    print '{0:40} {1:12}  +- {2:10}'.format("diagnostic", "metallicity","uncertainty")
+    print '{0:40} {1:12}  - {2:12}  + {3:12}'.format("diagnostic", "metallicity","left", "right")
     for i in range(nm):
         fi=open(os.path.join(binp,'%s_n%d_i%d.csv'%(filename,nsample,i)),'w')
-        fi.write("%s, Metalicity, Uncertainty\n"%filename)
+        fi.write("%s, Median (Z), Left, Right\n"%filename)
 
         print "measurement %d-------------------------------------------------------------"%i
 
@@ -297,17 +298,7 @@ def input_format(filename,path):
         if os.path.isfile(os.path.join(p,filename+'_med.txt')):
             return in_mmm(filename,path=p)
         return in_mm(filename,path=p)
-    '''
-    p=os.path.abspath('..')
     
-    p=os.path.abspath('..')
-    if os.path.isfile(os.path.join(p,'sn_data','%s_max.txt'%filename)):
-        if os.path.isfile(os.path.join(p,'sn_data','%s_min.txt'%filename)):
-            if os.path.isfile(os.path.join(p,'sn_data','%s_med.txt'%filename)):
-                return in_mmm(filename)
-            else:
-                return in_mm(filename)
-    '''
     print "Unable to find _min and _max files ",filename+'_max.txt',filename+'_min.txt',"in directory ",p
     return -1
 
