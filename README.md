@@ -29,7 +29,7 @@ MCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
 ====================
 Input file format
 ====================
-each flux data should be stored in the directory sn_data that exists in the directory prodived by --path arg. 
+each flux data should be stored in the directory sn_data that exists in the directory provided by --path arg. 
 
 with common filename \<fi\>:
 
