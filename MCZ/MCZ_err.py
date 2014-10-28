@@ -340,7 +340,7 @@ def main():
     parser.add_argument('nsample', metavar='N', type=int, help="number of iterations")
     parser.add_argument('--clobber',default=False, action='store_true', help="replace eisting output")
     parser.add_argument('--delog',default=False, action='store_true', help="result in nature, not log space. default is log space")
-    parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _ma.txtx and _min.txt files in a subdirectory sn_data)")
+    parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _max.txt and _min.txt files in a subdirectory sn_data)")
     parser.add_argument('--verbose',default=False, action='store_true', help="verbose mode")
     
     args=parser.parse_args()
