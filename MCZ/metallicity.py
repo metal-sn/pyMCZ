@@ -14,6 +14,7 @@
 ##############################################################################
 import numpy as np
 
+
 ##list of metallicity methods, in order calculated
 Zs=["KD_comb_NEW","KD02_NIIOII","KD03new_abund_R23","M91","Z94","KD03_NIIHa_abund","D02","PP04_N2","PP04_O3N2","Pi01_Z"]
 
@@ -21,10 +22,10 @@ def get_keys():
     return Zs
 
 ##############################################################################
-##fz_roots function as used in the IDL code
+##fz_roots function as used in the IDL code  FED:reference the code here!
 ##############################################################################
 def fz_roots(a):
-    a[np.where(np.isfinite(a)==False)]=0.0
+    a[np.where(~np.isfinite(a))]=0.0
     rts= np.roots(a[::-1])
     if rts.size==0:
       print 'fz_roots failed'
@@ -35,7 +36,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     ##all the lines that go like
     ##if S_mass[i] > low_lim and S_mass[i] < 14.0 and all_lines[i] != 0.0:
     ##are ignored, replaced by (if 1 == 1)
-    data[np.where(np.isfinite(data[1:,:])==False)]=0.0#kills all non-finite terms      
+    data[np.where(np.isfinite(data[1:,:])==False)]=0.0 #kills all non-finite terms      
 
     OII3727_raw=data[1]
     Hb_raw=data[2]
@@ -114,9 +115,10 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     logOIIHb=np.zeros(num)
     logOIII49595007Hb=np.zeros(num)
 
-    if red_corr == True : 
+    if red_corr : 
         for i in range(num) :
-            if 1==1 :
+#            if 1==1:
+            with np.errstate(invalid='ignore'):
                 #print 'extinction correction ',i
                 if (Hb_raw[i] != 0.0) and (Ha_raw[i] != 0.0) :
                     logHaHb[i]=np.log10(Ha_raw[i]/Hb_raw[i])
@@ -174,6 +176,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
                 if (OII3727_raw[i] != 0.0) and (Hb_raw[i] != 0.0) :
                     logOIIHb[i]=np.log10(OII3727_raw[i]/Hb_raw[i])+0.4*EB_V[i]*(k_OII-k_Hb) 
 
+            '''
             else:
                 if (NII6584_raw[i] != 0.0) and (OII3727_raw[i] != 0.0) :
                     logNIIOII[i]=np.log10(NII6584_raw[i]/OII3727_raw[i])
@@ -222,7 +225,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
                 if (OII3727_raw[i] != 0.0) and (Hb_raw[i] != 0.0) :
                     logOIIHb[i]=np.log10(OII3727_raw[i]/Hb_raw[i])
          
-
+            '''
 
 
     #print 'D02'
@@ -1010,21 +1013,21 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     ###############################################
     ################ PRINTING OUT #################
     ###############################################
-    if saveres==True:
+    if saveres:
         wf=open(outfilename,'a')
-    if disp==True:
+    if disp:
         print 'ID\tKD CombNEW\tKD02[NII]/[OII]\tR23 NEW Comb\tM91\tZ94'
         print '\tKD02[NII]/Ha\tD02\tPP04_N2\tPP04_O3N2'
     for i in range(num):
         line1=str(i+1)+'\t'+str(KD_comb_NEW[i])+'\t'+str(KD02_NIIOII_Z[i])+'\t'+str(KD03new_abund_R23[i])+'\t'+str(M91_Z[i])+'\t'+str(Z94_Z[i])
         line2='\t'+str(KD03_NIIHa_abund[i])+'\t'+str(D02_Z[i])+'\t'+str(PP04_N2_Z[i])+'\t'+str(PP04_O3N2_Z[i])+'\t'+str(Pi01_Z[i])
-        if disp==True:
+        if disp:
             print line1
             print line2
-        if saveres==True:
+        if saveres:
             wf.write(line1+line2)
             wf.write('\n')
-    if saveres==True:
+    if saveres:
         wf.close()
 
     res={Zs[0]:KD_comb_NEW, Zs[1]:KD02_NIIOII_Z, Zs[2]:KD03new_abund_R23,

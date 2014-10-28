@@ -3,8 +3,12 @@ import matplotlib.pyplot as plt
 import scipy.stats.mstats as ssm
 import metallicity
 import os
+from matplotlib.ticker import FuncFormatter
 
 import sys, argparse
+
+CLOBBER=False
+VERBOSE=False
 
 ##############################################################################
 ##Reads the flux file and returns it as an array.
@@ -121,37 +125,50 @@ def err_est(count,prob=0.68):
 ##Save the result as histogram as name
 ## delog - if true de-logs the data. False by default
 ##############################################################################
-def savehist(data,filename,Zs,nsample,i,delog=False,mode='t'):
-    p=os.path.abspath('..')
+def savehist(data,filename,Zs,nsample,i,path,delog=False,mode='t'):
+    
+    global CLOBBER
     name='%s_n%d_%s_i%d'%((filename,nsample,Zs,i))
-    outfile=os.path.join(p,'bins','%s'%filename,'hist','%s.png'%name)
+
+    outdir=os.path.join(path,'bins',filename,'hist')
+    outfile=os.path.join(outdir,name+".png")
+    if os.path.isfile(outfile) and not CLOBBER:
+        replace=raw_input("replacing existing image files, starting with: %s ? [Y/n]\n"%outfile).lower()
+        assert(not (replace.startswith('n'))),"save your existing output directory under another name first"
+        CLOBBER =True
+
     plt.clf()
 
     ###de-log###
-    if delog==True:
-        data=np.power(10,np.absolute(data-12))
+    if delog:
+        with np.errstate(invalid='ignore'):
+            data=np.power(10,np.absolute(data-12))
         
-    data=np.sort(data)
-    data=data[np.where(np.isfinite(data)==True)]
-    
+    data=data[np.isfinite(data)]
+    #    data=np.sort(data)
+      
     ####kill outliers###
+
     mean=np.mean(data)
     std=np.std(data)
-    data=data[np.where(data>mean-5*std)]
-    data=data[np.where(data<mean+5*std)]
+    data=data[(data>mean-5*std)*(data>mean-5*std)][:nsample]
+
     n=data.shape[0]
+    
     if data.shape[0]<=0:
         print name,'is blank' ##if no data
-        return "-1, -1"
-    
+        return "-1, -1"    
     try:
         ######find fit and save hist######
         ###find appropriate bin size###
         numbin=getbinsize(data.shape[0],data,mode)
         
         ###make hist###
-        count, bins, ignored = plt.hist(data, numbin, normed=1.0)
+        count, bins, ignored = plt.hist(data, numbin, normed=1.0,color=['steelblue'])
 
+        #####FED
+        to_unity = lambda y, pos:  "%.2f"%(y / float(max(count)))
+        plt.gca().yaxis.set_major_formatter(FuncFormatter(to_unity))
         ###find error###
         l,r,t,fl,fr=err_est(count)
         y=np.zeros(len(bins))
@@ -161,22 +178,25 @@ def savehist(data,filename,Zs,nsample,i,delog=False,mode='t'):
         ###plot hist###
         plt.plot(bins,y)
         plt.axvspan(left,right,color='red',alpha=0.4)
-        st='n=%d\nconfidence: %f\nleft: %f\nright: %f'%(n,t,left,right)
+        st='n=%d\nconfidence: %.2f\nleft: %.2f\nright: %.2f'%(n,t,left,right)
         plt.annotate(st, xy=(0.70, 0.80), xycoords='axes fraction')
         plt.title(name)
-        if delog==True:
+        if delog:
             plt.xlabel('O/H')
         else:
             plt.xlabel('12+log(O/H)')
         plt.ylabel('counts')
-        plt.savefig(outfile)
+        plt.savefig(outfile,clobber=False)
         
         ###print out the confidence interval###
-        print name, ':\t%f +- %f'%((left+right)/2.,(right-left)/2.)
+#        print name, ':\t%f +- %f'%((left+right)/2.,(right-left)/2.)
+
+        print '{0:40} {1:12.3f}  +- {2:10.3f}'.format(name, (left+right)/2.,(right-left)/2.)
+
         return "%f, %f"%((left+right)/2.,(right-left)/2.)
 
     except (OverflowError,AttributeError,ValueError):
-        print data
+        if VERBOSE: print data
         print name, 'had infinities'
         return "-2, -2"
 
@@ -191,9 +211,10 @@ def savehist(data,filename,Zs,nsample,i,delog=False,mode='t'):
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def run((filename, flux, err), nsample,binmode='t'):
-    p=os.path.abspath('..')
+def run((filename, flux, err, path), nsample,binmode='t',delog=False):
     ###flux and err must be same dimensions
+    newnsample=int(nsample+0.1*nsample)
+    p=path
     if flux.shape != err.shape:
         print "flux and err must be of same dimensions"
         return
@@ -207,20 +228,23 @@ def run((filename, flux, err), nsample,binmode='t'):
         os.makedirs(os.path.join(p,'bins','%s'%filename))
         os.makedirs(os.path.join(p,'bins','%s'%filename,'hist'))
     binp=os.path.join(p,'bins','%s'%filename)
-    
+
+    if VERBOSE: print "output files will be stored in ",binp
+
     ###Sample 'nsample' points from a gaussian###
     ##a gaussian centered on 0 with std 1
     mu=0
     sigma=1
-    sample=np.random.normal(mu,sigma,nsample)
+    sample=np.random.normal(mu,sigma,newnsample)
     
     ###save this sampled gaussians into a png file###
     count, bins, ignored = plt.hist(sample, 40,normed=1)
     plt.plot(bins,gaussian(bins,mu,sigma))
     plt.title("Sampled")
-    st="n=%d"%nsample
+    st="n=%d"%newnsample
     plt.annotate(st, xy=(0.70, 0.85), xycoords='axes fraction')
-    plt.savefig(os.path.join(binp,'%s_n%d_sample.png'%(filename,nsample)))
+
+    plt.savefig(binp+filename+'_n%d_sample.png'%newnsample)
     plt.clf()
 
     
@@ -228,7 +252,7 @@ def run((filename, flux, err), nsample,binmode='t'):
     ## the flux to be feed to the calculation will be
     ## flux + error*i
     ## where i is the sampled gaussian    
-    print "Starting iteration"
+    if VERBOSE: print "Starting iteration"
 
     #initialize the dictionary
     res={}
@@ -236,9 +260,9 @@ def run((filename, flux, err), nsample,binmode='t'):
         res[key]=[]
 
     #do the iterations
-    for i in range(len(sample)):
+    for i in range(newnsample):
         temp=flux+err*sample[i]
-        t=metallicity.calculation(temp,nm)
+        t=metallicity.calculation(temp,nm,disp=VERBOSE)
         for key in Zs:
             res[key].append(t[key])
             
@@ -246,25 +270,35 @@ def run((filename, flux, err), nsample,binmode='t'):
     for key in Zs:
         res[key]=np.array(res[key])
         
-    print "Iteration Complete"
+    if VERBOSE: print "Iteration Complete"
     
     ###Bin the results and save the uncertainty###
+    print '{0:40} {1:12}  +- {2:10}'.format("diagnostic", "metallicity","uncertainty")
     for i in range(nm):
         fi=open(os.path.join(binp,'%s_n%d_i%d.csv'%(filename,nsample,i)),'w')
         fi.write("%s, Metalicity, Uncertainty\n"%filename)
 
+        print "measurement %d-------------------------------------------------------------"%i
+
         for key in Zs:
-            s=key+", "+savehist(res[key][:,i],filename,key,nsample,i,binmode)+'\n'
+            s=key+", "+savehist(res[key][:,i],filename,key,nsample,i,path,delog=delog,mode=binmode)+'\n'
             fi.write(s)
-        print "---------------------------------------------"
         fi.close()
     
-    print "uncertainty calculation complete"
+    if VERBOSE: print "uncertainty calculation complete"
 
 ##############################################################################
 ##The input format generator
 ##############################################################################
-def input_format(filename):
+def input_format(filename,path):
+    p = os.path.join(path,"sn_data") 
+    assert os.path.isdir(p), "bad data directory %s"%p
+    if os.path.isfile(os.path.join(p,filename+'_max.txt')) and os.path.isfile(os.path.join(p,filename+'_min.txt')):
+        if os.path.isfile(os.path.join(p,filename+'_med.txt')):
+            return in_mmm(filename,path=p)
+        return in_mm(filename,path=p)
+    '''
+    p=os.path.abspath('..')
     
     p=os.path.abspath('..')
     if os.path.isfile(os.path.join(p,'sn_data','%s_max.txt'%filename)):
@@ -273,16 +307,18 @@ def input_format(filename):
                 return in_mmm(filename)
             else:
                 return in_mm(filename)
-    print "Unable to find _min and _max files in directory sn_data"
+    '''
+    print "Unable to find _min and _max files ",filename+'_max.txt',filename+'_min.txt',"in directory ",p
     return -1
 
-def in_mmm(filename):
-    p=os.path.abspath('..')
-    p=os.path.join(p,'sn_data')
+def in_mmm(filename,path):
+#    p=os.path.abspath('..')
+#    p+='\\sn_data\\'
+    
     ###Initialize###
-    maxfile=os.path.join(p,filename+"_max.txt")
-    medfile=os.path.join(p,filename+"_med.txt")
-    minfile=os.path.join(p,filename+"_min.txt")
+    maxfile=os.path.join(path,filename+"_max.txt")
+    medfile=os.path.join(path,filename+"_med.txt")
+    minfile=os.path.join(path,filename+"_min.txt")
     
     ###read the max, med, min flux files###    
     maxf,nm=readfile(maxfile)
@@ -291,14 +327,13 @@ def in_mmm(filename):
 
     ###calculate the flux error as 1/2 [(max-med)+(med-min)]###
     err=0.5*((maxf-medf)+(medf-minf))
-    return (filename, medf, err)
+    return (filename, medf, err, path)
 
-def in_mm(filename):
-    p=os.path.abspath('..')
-    p=os.path.join(p,'sn_data')
+def in_mm(filename, path):
+
     ###Initialize###
-    maxfile=os.path.join(p,filename+"_max.txt")
-    minfile=os.path.join(p,filename+"_min.txt")
+    maxfile=os.path.join(path,filename+"_max.txt")
+    minfile=os.path.join(path,filename+"_min.txt")
     
     ###read the max, med, min flux files###    
     maxf,nm=readfile(maxfile)
@@ -306,24 +341,40 @@ def in_mm(filename):
     ###calculate the flux error as 1/2 [(max-min)]###
     err=0.5*(maxf - minf)
     medf= minf+err
-    return (filename, medf, err)
+    return (filename, medf, err, path)
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', metavar='<filename>', type=str, help="the common filename")
     parser.add_argument('nsample', metavar='N', type=int, help="number of iterations")
+    parser.add_argument('--clobber',default=False, action='store_true', help="replace eisting output")
+    parser.add_argument('--delog',default=False, action='store_true', help="result in nature, not log space. default is log space")
+    parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _ma.txtx and _min.txt files in a subdirectory sn_data)")
+    parser.add_argument('--verbose',default=False, action='store_true', help="verbose mode")
     
     args=parser.parse_args()
 
+    global CLOBBER
+    global VERBOSE
+    CLOBBER=args.clobber
+    VERBOSE=args.verbose
+    if args.path:
+        path=args.path
+    else:
+        assert (os.getenv("MCMetdata"))," pass a path or set up the environmental variable MCMetdata pointing to the path where the _min _max _med files live"
+        path=os.getenv("MCMetdata")
+    assert(os.path.isdir(path)),"pass a path or set up the environmental variable MCMetdata pointing to the path where the _min _max _med files live"
+
+
+
     if args.nsample>0:
-        fi=input_format(args.filename)
+        fi=input_format(args.filename, path=path)
         if fi!=-1:
-            run(fi,args.nsample)
+            run(fi,args.nsample,delog=args.delog)
 
     else:
-        print "nsample must be positive"
+        print "nsample must be positive number"
     
-
 if __name__ == "__main__":
     main()
     #files=['sn2006ss','ptf10eqi-z']
