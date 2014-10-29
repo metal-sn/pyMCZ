@@ -14,6 +14,11 @@
 ##############################################################################
 import numpy as np
 
+##all the lines that go like
+##if S_mass[i] > low_lim and S_mass[i] < 14.0 and all_lines[i] != 0.0:
+##are ignored, replaced by (if !G) where G is set to False
+
+global G=False
 
 ##list of metallicity methods, in order calculated
 Zs=["KD02comb_updated","KD02_NIIOII","KD02_R23_updated","M91","Z94","KD02_NIIHa","D02","PP04_N2","PP04_O3N2","Pi01_Z"]
@@ -33,9 +38,6 @@ def fz_roots(a):
     return rts
 
 def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres=False):
-    ##all the lines that go like
-    ##if S_mass[i] > low_lim and S_mass[i] < 14.0 and all_lines[i] != 0.0:
-    ##are ignored, replaced by (if 1 == 1)
     data[np.where(np.isfinite(data[1:,:])==False)]=0.0 #kills all non-finite terms      
 
     OII3727_raw=data[1]
@@ -117,7 +119,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
 
     if red_corr : 
         for i in range(num) :
-#            if 1==1:
+#            if !G:
             with np.errstate(invalid='ignore'):
                 #print 'extinction correction ',i
                 if (Hb_raw[i] != 0.0) and (Ha_raw[i] != 0.0) :
@@ -277,7 +279,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     P_R23=R2+R3
 
     for j in range(num):
-        if 1==1 :
+        if !G :
             #print 'P01 ',j
             P_abund_up[j]=(P_R23[j]+726.1+842.2*P[j]+337.5*P[j]**2)/(85.96+82.76*P[j]+43.98*P[j]**2+1.793*P_R23[j])
             P_abund_low[j]=(P_R23[j]+106.4+106.8*P[j]-3.40*P[j]**2)/(17.72+6.60*P[j]+6.95*P[j]**2-0.302*P_R23[j])
@@ -296,7 +298,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     P_R23=10**logR23
     for j in range(num) :
         #print 'P01 old ',j
-        if 1==1 :
+        if !G :
             P_abund_old[j]=(P_R23[j]+54.2+59.45*P[j]+7.31*P[j]**2)/(6.07+6.71*P[j]+0.371*P[j]**2+0.243*P_R23[j])
 
     Pi01_Z_old[(Z_init_guess >= 8.4)]=P_abund_old[(Z_init_guess >= 8.4)].copy()
@@ -318,7 +320,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     NIIOII_coef=np.array([1106.8660,-532.15451,96.373260,-7.8106123,0.23928247])# q=2e7 line (approx average)
 
     for i in range(num):
-        if 1==1 :
+        if !G :
             #print '[NII]/[OII]  ',i
      
             if (NII6584_raw[i] != 0.0) and (OII3727_raw[i] != 0.0) :
@@ -348,7 +350,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     logq_NIIOII=np.zeros(num)
 
     for j in range(num) :
-        if 1==1 :
+        if !G :
             #print '[NII]/Ha',j
             for i in range(nite-1):
        # ionization parameter
@@ -394,7 +396,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     Hb_up_ID=np.zeros(100)
 
     for i in range(num) :
-        if 1==1 :
+        if !G :
             #print '[NII]/Ha, q',i
             if (NII6584_raw[i] != 0.0) :
                 if (Ha_raw[i] > 0.0) and (Hb_raw[i] == 0.0) :
@@ -520,7 +522,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     M91_Z_up=np.zeros(num)
 
     for i in range(num) :
-        if 1==1 :
+        if !G :
             #print 'M91',i
             M91_Z_low[i]=12.0-4.944+0.767*x[i]+0.602*x[i]**2-y[i]*(0.29+0.332*x[i]-0.331*x[i]**2)
             M91_Z_up[i]=12.0-2.939-0.2*x[i]-0.237*x[i]**2-0.305*x[i]**3-0.0283*x[i]**4-y[i]*(0.0047-0.0221*x[i]-0.102*x[i]**2-0.0817*x[i]**3-0.00717*x[i]**4)
@@ -563,7 +565,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
 
     # maximum of R23 curve:
         for j in range(num) :
-            if 1==1 :
+            if !G :
                 #print 'new R23',j
 
                 if (logq[i,j] >= 8.0) and (logq[i,j] < 8.3) :
@@ -600,7 +602,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     KD03new_abund_R23_up=np.zeros(num)
 
     for j in range(num) :
-        if 1==1 :
+        if !G :
             #print 'R23 ',j
             if (OIII5007_raw[j] != 0.0) and (OII3727_raw[j] != 0.0) :
                 if (Hb_raw[j] != 0.0) :
@@ -623,7 +625,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     logq_final=np.zeros(num)
 
     for i in range(num) :
-        if 1==1 :
+        if !G :
             #print 'ionization parameter',i
             if (NII6584_raw[i] != 0.0) and (OII3727_raw[i] != 0.0) :
                 if (Hb_raw[i] != 0.0) and (Ha_raw[i] != 0.0) :
@@ -701,7 +703,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     #close,1
 
     for i in range(num) :
-        if 1==1 :
+        if !G :
             #print 'old R23',i
             if (logOIII5007OII[i] != 0.0) and (logR23[i] != 0.0) :
       # coefficients from KD02 paper:
@@ -815,7 +817,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     KD02_R23comb_Z=np.zeros(num)
 
     for i in range(num) :
-        if 1==1 :
+        if !G :
             #print 'Combined R23',i
             if Z94_Z[i] >= 9.0 : 
                 KD02_R23comb_Z[i]=(KD02_R23_Z[i]+M91_Z[i]+Z94_Z[i])/3.  # my technique averaged with M91 and Z94
@@ -860,7 +862,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
                                       # may be changed
 
     for i in range(num) :
-        if 1==1 :
+        if !G :
             #print '[NII]/[SII]',i
             if (logOIII5007OII[i] != 0.0) and (logNIISII[i] != 0.0) :
       # coefficients from KD02 paper:
@@ -966,7 +968,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
 
     for i in range(num) :
         name[i]=i
-        if 1==1 :
+        if !G :
             #print 'KD01 combined',i
             if (M91_Z[i] != 0.0) and (Z94_Z[i] != 0.0) :
                 M91Z94_ave[i]=(M91_Z[i]+Z94_Z[i])/2.
@@ -998,7 +1000,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     KD_comb_NEW=np.zeros(num)
 
     for j in range(num) :
-        if 1==1 :
+        if !G :
             #print 'NEW combined',j
             if (Z_init_guess[j] > 8.4) :
                 KD_comb_NEW[j]=KD02_NIIOII_Z[j]
