@@ -193,9 +193,9 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False):
         ###print out the confidence interval###
 #        print name, ':\t%f +- %f'%((left+right)/2.,(right-left)/2.)
 
-        print '{0:40} {1:>13.3f} - {2:>7.3f} + {3:>7.3f}'.format(name, median, left, right)
+        print '{0:40} {1:>13.3f} - {2:>7.3f} + {3:>7.3f}'.format(name, median, median-left, right-median)
 
-        return "%f, %f, %f"%(median, left, right)
+        return "%f, %f, %f"%(median, median-left, right-median)
 
     except (OverflowError,AttributeError,ValueError):
         if VERBOSE: print data
