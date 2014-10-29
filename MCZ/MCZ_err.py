@@ -9,6 +9,7 @@ import sys, argparse
 
 CLOBBER=False
 VERBOSE=False
+BINMODE='t'
 
 ##############################################################################
 ##Reads the flux file and returns it as an array.
@@ -49,18 +50,18 @@ def gaussian(x,m,s):
 
 ##############################################################################
 ##returns appropriate bin size for the number of data
-##mode 'd' calculates this based on Doane's formula (default)
+##mode 'd' calculates this based on Doane's formula 
 ##mode 's' calculates this based on sqrt of number of data
-##mode 't' calculates this based on 2*n**1/3
+##mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def getbinsize(n,data,mode='t'):
-    if mode=='d':
+def getbinsize(n,data,):
+    if BINMODE=='d':
         g1=ssm.moment(data,moment=3)
         s1=np.sqrt(6.*(n-2.)/((n+1.)*(n+3.)))
         k=1+np.log2(n)+np.log2(1+np.abs(g1/s1))
-    elif mode=='s':
+    elif BINMODE=='s':
         k=np.sqrt(n)
-    elif mode=='t':
+    elif BINMODE=='t':
         k=2.*n**(1./3.)
     return k
 ##############################################################################        
@@ -125,12 +126,12 @@ def err_est(count,prob=0.68):
 ##Save the result as histogram as name
 ## delog - if true de-logs the data. False by default
 ##############################################################################
-def savehist(data,filename,Zs,nsample,i,path,delog=False,mode='t'):
+def savehist(data,filename,Zs,nsample,i,path,delog=False):
     
     global CLOBBER
     name='%s_n%d_%s_i%d'%((filename,nsample,Zs,i))
 
-    outdir=os.path.join(path,'bins',filename,'hist')
+    outdir=os.path.join(path,'hist')
     outfile=os.path.join(outdir,name+".png")
     if os.path.isfile(outfile) and not CLOBBER:
         replace=raw_input("replacing existing image files, starting with: %s ? [Y/n]\n"%outfile).lower()
@@ -162,7 +163,7 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False,mode='t'):
         median=np.median(data)
         ######find fit and save hist######
         ###find appropriate bin size###
-        numbin=getbinsize(data.shape[0],data,mode)
+        numbin=getbinsize(data.shape[0],data)
         
         ###make hist###
         count, bins, ignored = plt.hist(data, numbin, normed=1.0,color=['steelblue'])
@@ -192,7 +193,7 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False,mode='t'):
         ###print out the confidence interval###
 #        print name, ':\t%f +- %f'%((left+right)/2.,(right-left)/2.)
 
-        print '{0:40} {1:12.3f}  - {2:12.3f} + {3:12.3f}'.format(name, median, left, right)
+        print '{0:40} {1:>13.3f} - {2:>7.3f} + {3:>7.3f}'.format(name, median, left, right)
 
         return "%f, %f, %f"%(median, left, right)
 
@@ -212,7 +213,7 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False,mode='t'):
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def run((filename, flux, err, path), nsample,binmode='t',delog=False):
+def run((filename, flux, err, path), nsample,delog=False):
     ###flux and err must be same dimensions
     newnsample=int(nsample+0.1*nsample)
     p=os.path.join(path,'..')
@@ -227,6 +228,7 @@ def run((filename, flux, err, path), nsample,binmode='t',delog=False):
     ###make necessary paths
     if not os.path.exists(os.path.join(p,'bins','%s'%filename)):
         os.makedirs(os.path.join(p,'bins','%s'%filename))
+    if not os.path.exists(os.path.join(p,'bins','%s'%filename,'hist')):
         os.makedirs(os.path.join(p,'bins','%s'%filename,'hist'))
     binp=os.path.join(p,'bins','%s'%filename)
 
@@ -245,7 +247,7 @@ def run((filename, flux, err, path), nsample,binmode='t',delog=False):
     st="n=%d"%newnsample
     plt.annotate(st, xy=(0.70, 0.85), xycoords='axes fraction')
 
-    plt.savefig(binp+filename+'_n%d_sample.png'%newnsample)
+    plt.savefig(os.path.join(binp,'%s_n%d_sample.png'%(filename,newnsample)))
     plt.clf()
 
     
@@ -274,7 +276,7 @@ def run((filename, flux, err, path), nsample,binmode='t',delog=False):
     if VERBOSE: print "Iteration Complete"
     
     ###Bin the results and save the uncertainty###
-    print '{0:40} {1:12}  - {2:12}  + {3:12}'.format("diagnostic", "metallicity","left", "right")
+    print '{0:40} {1:>13} - {2:>7} + {3:>7}'.format("diagnostic", "metallicity","left", "right")
     for i in range(nm):
         fi=open(os.path.join(binp,'%s_n%d_i%d.csv'%(filename,nsample,i)),'w')
         fi.write("%s, Median (Z), Left, Right\n"%filename)
@@ -282,7 +284,7 @@ def run((filename, flux, err, path), nsample,binmode='t',delog=False):
         print "measurement %d-------------------------------------------------------------"%i
 
         for key in Zs:
-            s=key+", "+savehist(res[key][:,i],filename,key,nsample,i,path,delog=delog,mode=binmode)+'\n'
+            s=key+", "+savehist(res[key][:,i],filename,key,nsample,i,binp,delog=delog)+'\n'
             fi.write(s)
         fi.close()
     
@@ -338,17 +340,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', metavar='<filename>', type=str, help="the common filename")
     parser.add_argument('nsample', metavar='N', type=int, help="number of iterations")
-    parser.add_argument('--clobber',default=False, action='store_true', help="replace eisting output")
-    parser.add_argument('--delog',default=False, action='store_true', help="result in nature, not log space. default is log space")
+    parser.add_argument('--clobber',default=False, action='store_true', help="replace existing output")
+    parser.add_argument('--delog',default=False, action='store_true', help="result in natural, not log space. default is log space")
+    parser.add_argument('--binmode', default='t', type=str, choices=['d','s','t'], help='method to determine bin size {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default)}')
     parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _max.txt and _min.txt files in a subdirectory sn_data)")
     parser.add_argument('--verbose',default=False, action='store_true', help="verbose mode")
-    
+
     args=parser.parse_args()
 
     global CLOBBER
     global VERBOSE
+    global BINMODE
     CLOBBER=args.clobber
     VERBOSE=args.verbose
+    BINMODE=args.binmode
     if args.path:
         path=args.path
     else:
