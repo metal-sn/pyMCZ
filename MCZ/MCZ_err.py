@@ -181,8 +181,8 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False):
         ###plot hist###
         plt.plot(bins,y)
         plt.axvspan(left,right,color='red',alpha=0.4)
-        st='%s\nn=%d\nconfidence: %.2f\nmedian: %.4f\nleft: %.4f\nright: %.4f'%(Zs,n,t,median,left,right)
-        plt.annotate(st, xy=(0.75, 0.75), xycoords='axes fraction',fontsize=15)
+        st='%s\nn=%d\nconfidence: %.2f\nmedian: %.4f\n16%% Percentile: %.4f\n84%% Percentile: %.4f'%(Zs,n,t,median,left,right)
+        plt.annotate(st, xy=(0.60, 0.70), xycoords='axes fraction',fontsize=15)
         if delog:
             plt.xlabel('O/H',fontsize=18)
         else:
