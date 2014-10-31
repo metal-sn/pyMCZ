@@ -169,8 +169,8 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False):
         count, bins, ignored = plt.hist(data, numbin, normed=1.0,color=['steelblue'])
 
         #####FED
-        to_unity = lambda y, pos:  "%.2f"%(y / float(max(count)))
-        plt.gca().yaxis.set_major_formatter(FuncFormatter(to_unity))
+        #to_unity = lambda y, pos:  "%.2f"%(y / float(max(count)))
+        #plt.gca().yaxis.set_major_formatter(FuncFormatter(to_unity))
 
         ###find error###
         l,r,t,fl,fr=err_est(count)
