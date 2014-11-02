@@ -169,8 +169,8 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False):
         count, bins, ignored = plt.hist(data, numbin, normed=1.0,color=['steelblue'])
 
         #####FED
-        #to_unity = lambda y, pos:  "%.2f"%(y / float(max(count)))
-        #plt.gca().yaxis.set_major_formatter(FuncFormatter(to_unity))
+        to_unity = lambda y, pos:  "%.2f"%(y / float(max(count)))
+        plt.gca().yaxis.set_major_formatter(FuncFormatter(to_unity))
 
         ###find error###
         l,r,t,fl,fr=err_est(count)
@@ -181,7 +181,7 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False):
         ###plot hist###
         plt.plot(bins,y)
         plt.axvspan(left,right,color='red',alpha=0.4)
-        st='%s\nn=%d\nconfidence: %.2f\nmedian: %.4f\n16%% Percentile: %.4f\n84%% Percentile: %.4f'%(Zs,n,t,median,left,right)
+        st='%s\nn=%d\nconfidence: %.2f\nmedian: %.2f\n16th Percentile: %.2f\n84th Percentile: %.2f'%(Zs,n,t,median,left,right)
         plt.annotate(st, xy=(0.60, 0.70), xycoords='axes fraction',fontsize=15)
         if delog:
             plt.xlabel('O/H',fontsize=18)
