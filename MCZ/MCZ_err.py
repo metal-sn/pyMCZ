@@ -132,7 +132,7 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False):
     name='%s_n%d_%s_i%d'%((filename,nsample,Zs,i))
 
     outdir=os.path.join(path,'hist')
-    outfile=os.path.join(outdir,name+".png")
+    outfile=os.path.join(outdir,name+".pdf")
     if os.path.isfile(outfile) and not CLOBBER:
         replace=raw_input("replacing existing image files, starting with: %s ? [Y/n]\n"%outfile).lower()
         assert(not (replace.startswith('n'))),"save your existing output directory under another name first"
@@ -177,25 +177,27 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False):
         y=np.zeros(len(bins))
         left=bins[l]+(bins[l+1]-bins[l])*fl
         right=bins[r]-(bins[r]-bins[r-1])*fr
-        
+        if right<median or left>median:
+            median = (left+right)/2
         ###plot hist###
         plt.plot(bins,y)
         plt.axvspan(left,right,color='red',alpha=0.4)
-        st='%s\nn=%d\nconfidence: %.2f\nmedian: %.2f\n16th Percentile: %.2f\n84th Percentile: %.2f'%(Zs,n,t,median,left,right)
+        st='%s\nn=%d\nconfidence: %.2f\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f'%(Zs,n,t,round(median,3),round(left,3),round(right,3))
         plt.annotate(st, xy=(0.60, 0.70), xycoords='axes fraction',fontsize=15)
         if delog:
             plt.xlabel('O/H',fontsize=18)
         else:
             plt.xlabel('12+log(O/H)',fontsize=18)
         plt.ylabel('counts',fontsize=18)
-        plt.savefig(outfile,clobber=False)
+        plt.axvline(x=median,linewidth=2,color='black',ls='--')
+        plt.savefig(outfile,clobber=False,format='pdf')
         
         ###print out the confidence interval###
 #        print name, ':\t%f +- %f'%((left+right)/2.,(right-left)/2.)
 
-        print '{0:40} {1:>13.3f} - {2:>7.3f} + {3:>7.3f}'.format(name, median, median-left, right-median)
+        print '{0:40} {1:>13.3f} - {2:>7.3f} + {3:>7.3f}'.format(name, round(median,3), round(median-left,3), round(right-median,3))
 
-        return "%f, %f, %f"%(median, median-left, right-median)
+        return "%f, %f, %f"%(round(median,3), round(median-left,3), round(right-median,3))
 
     except (OverflowError,AttributeError,ValueError):
         if VERBOSE: print data
