@@ -181,6 +181,7 @@ def savehist(data,filename,Zs,nsample,i,path,delog=False):
             median = (left+right)/2
         ###plot hist###
         plt.plot(bins,y)
+        plt.xlim(median-5*(median-left),median+7*(right-median))
         plt.axvspan(left,right,color='red',alpha=0.4)
         st='%s\nn=%d\nconfidence: %.2f\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f'%(Zs,n,t,round(median,3),round(left,3),round(right,3))
         plt.annotate(st, xy=(0.60, 0.70), xycoords='axes fraction',fontsize=15)
