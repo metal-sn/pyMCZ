@@ -250,7 +250,7 @@ def run((filename, flux, err, path), nsample,delog=False):
     st="n=%d"%newnsample
     plt.annotate(st, xy=(0.70, 0.85), xycoords='axes fraction')
 
-    plt.savefig(os.path.join(binp,'%s_n%d_sample.png'%(filename,newnsample)))
+    plt.savefig(os.path.join(binp,'%s_n%d_sample.pdf'%(filename,newnsample)),format='pdf')
     plt.clf()
 
     
