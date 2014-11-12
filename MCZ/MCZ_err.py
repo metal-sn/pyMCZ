@@ -4,7 +4,7 @@ import scipy.stats.mstats as ssm
 import metallicity
 import os
 from matplotlib.ticker import FuncFormatter
-
+import warnings
 import sys, argparse
 
 CLOBBER=False
@@ -268,6 +268,7 @@ def run((filename, flux, err, path), nsample,delog=False):
     #do the iterations
     for i in range(newnsample):
         temp=flux+err*sample[i]
+        warnings.filterwarnings("ignore")
         t=metallicity.calculation(temp,nm,disp=VERBOSE)
         for key in Zs:
             res[key].append(t[key])
