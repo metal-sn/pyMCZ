@@ -170,8 +170,8 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         plt.annotate(st, xy=(0.13, 0.6), xycoords='axes fraction',fontsize=18,fontweight='bold')
         st='%s '%(Zs)
         plt.annotate(st, xy=(0.62, 0.93), xycoords='axes fraction',fontsize=18,fontweight='bold')
-        st='measurement %d of %d\n\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f\n\n'%(i+1,nmeas,round(median,3),round(left,3),round(right,3))
-        plt.annotate(st, xy=(0.62, 0.56), xycoords='axes fraction',fontsize=18)
+        st='measurement %d of %d\n\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f'%(i+1,nmeas,round(median,3),round(left,3),round(right,3))
+        plt.annotate(st, xy=(0.62, 0.65), xycoords='axes fraction',fontsize=18)
         st='MC sample size %d\nhistogram rule: %s'%(nsample,binning[BINMODE])
         plt.annotate(st, xy=(0.62, 0.55), xycoords='axes fraction',fontsize=13)
         if delog:
