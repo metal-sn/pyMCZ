@@ -13,17 +13,21 @@ From the commandline simply use as:
 ```
 MCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
 ```
--\<filename\>: the common filename of the _min and _max files
+-\<name\>: the Sn name which should be the common name of the _min and _max files
 
--nsample: the number of iterations desired
+-nsample: the number of MC samples desired
 
---path: the directory in which subdirectory "sn_data" is located. If not provided, will default to environmental variable MCMetdata that should be set to point to that directory
+--path: the directory in which subdirectory "sn_data" is located. If not provided, will default to environmental variable MCMetdata that should be set to point to that directory. _min _max (and _med) mst live in sn_data
 
---clobber: If set to true, will overwrite existing output files. Default false.
+--unpickle: if it exists, a pickle output files for this SN and this number of samples is read, instead of recalculating the metalicity
 
---delog: If set to true, result will be in natural space instead of log space. Default false.
+--binmode: how to choose the number of bins for plotting the histogram:'d' is based on Doane's formula (wilipedia's version), 's' is the sqrt of number of data, 't' is on 2*n**1/3 (default), 'bb' uses bayesian blocks (must have astroML installed or it defaults to 't')
 
---verbose: verbose mode. Default false.
+--clobber: If set to true, will overwrite existing output files. Default False.
+
+--delog: If set to true, result will be in natural space instead of log space. Default False.
+
+--verbose: verbose mode. Default False.
 
 
 ====================
@@ -60,13 +64,13 @@ the data should be in the above order, separated by any number of white spaces.
 ====================
 Output
 ====================
-All the results will be saved in the directory "\<fi\>" inside "bins" where bins will be generated in the directory provided by the --path arg.
+All the results will be saved in the directory "\<fi\>" inside "outputs" which will be creates in the directory provided by the --path arg.
 
 For a given \<fi\> and nSample, the following output files are generated:
 
-"\<fi\>_n"nSample"_sample.png": the gaussian that was sampled
+"\<fi\>_n"nSample"_X.csv": the metallicity and its uncertainty that was calculated, where X will correspond to the number of rows the input data contains
 
-"\<fi\>_n"nSample"_iX.csv": the metallicity and its uncertainty that was calculated, where X will correspond to the number of rows the input data contains
+"\<fi\>_n"nSample"_X.pkl": the metallicity and its uncertainty that was calculated stored in binary (pickled) format in a python dictionary
 
 "hist" folder, containing all the histograms generated
 
