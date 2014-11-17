@@ -64,7 +64,7 @@ the data should be in the above order, separated by any number of white spaces.
 ====================
 Output
 ====================
-All the results will be saved in the directory "\<fi\>" inside "bins" where bins will be generated in the directory provided by the --path arg.
+All the results will be saved in the directory "\<fi\>" inside "outputs" which will be creates in the directory provided by the --path arg.
 
 For a given \<fi\> and nSample, the following output files are generated:
 
