@@ -443,7 +443,8 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     Z94_Z=9.265-0.33*x-0.202*x**2-0.207*x**3-0.333*x**4 
 
     # new 3 June 2005:
-    Z94_Z[(x > 0.9)]=0.0
+    #2014 FED: changed moc value to None, not 0!
+    Z94_Z[(x > 0.9)]=None
 
 
 
@@ -533,7 +534,9 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
                       M91_Z[i]=12.0-2.939-0.2*x[i]-0.237*x[i]**2-0.305*x[i]**3-0.0283*x[i]**4-y[i]*(0.0047-0.0221*x[i]-0.102*x[i]**2-0.0817*x[i]**3-0.00717*x[i]**4)
 
     # NEW 3 June 2005:
-    M91_Z[(M91_Z_up < M91_Z_low)]=0.0
+    #2014 FED: changed moc value to None, not 0!
+
+    M91_Z[(M91_Z_up < M91_Z_low)]=None
 
 
     # #### New ionization parameter and metallicity diagnostics #######
@@ -615,9 +618,9 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
                     KD03new_abund_R23[j]=KD03new_abund[j]
 
 
-
-    KD03new_abund[(KD03new_abund_low > KD03new_abund_up)]=0.0
-    KD03new_abund_R23[(KD03new_abund_low > KD03new_abund_up)]=0.0
+    #2014 FED: changed moc value to None, not 0!
+    KD03new_abund[(KD03new_abund_low > KD03new_abund_up)]=None
+    KD03new_abund_R23[(KD03new_abund_low > KD03new_abund_up)]=None
 
 
     # calculating ionization parameter for those objects with [NII]/[OII],Ha & Hb
@@ -1037,4 +1040,5 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
          Zs[7]:PP04_N2_Z, Zs[8]:PP04_O3N2_Z, Zs[9]:Pi01_Z}
     return res
     #return [KD_comb_NEW,KD02_NIIOII_Z,KD03new_abund_R23,M91_Z,Z94_Z,KD03_NIIHa_abund,D02_Z,PP04_N2_Z,PP04_O3N2_Z,Pi01_Z]
+
 
