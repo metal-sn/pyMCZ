@@ -118,7 +118,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     logOIII49595007Hb=np.zeros(num)
 
     #if Ha or Hb is zero, cannot do red correction
-    if red_corr and not(sum(Ha_raw)==0 or sum(Hb_raw)==0): 
+    if red_corr and np.sum(Ha_raw)>0 and np.sum(Hb_raw)>0: 
         for i in range(num) :
 #            if not G:
             with np.errstate(invalid='ignore'):
@@ -127,7 +127,9 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
                     logHaHb[i]=np.log10(Ha_raw[i]/Hb_raw[i])
                     EB_V[i]=np.log10(2.86/(Ha_raw[i]/Hb_raw[i]))/(0.4*(k_Ha-k_Hb)) # E(B-V)
                 if EB_V[i] < 0.0 :
-                    EB_V[i]=0.00001
+                    EB_V[i]=-1
+                    break
+                    
          
 
                 if (NII6584_raw[i] != 0.0) and (OII3727_raw[i] != 0.0) :
