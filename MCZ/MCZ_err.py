@@ -274,7 +274,7 @@ def run((name, flux, err, path), nsample,delog=False, unpickle=False):
     print '{0:15} {1:20} {2:>13} - {3:>7} + {4:>7} {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
     for i in range(nm):
         fi=open(os.path.join(binp,'%s_n%d_%d.csv'%(name,nsample,i+1)),'w')
-        fi.write("%s, Median (Z), Left, Right\n"%name)
+        fi.write("%s, Median Oxygen abundance (12+log(O/H)), 16th percentile, 84th percentile\n"%name)
         
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         
