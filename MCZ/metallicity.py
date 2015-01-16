@@ -117,7 +117,8 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     logOIIHb=np.zeros(num)
     logOIII49595007Hb=np.zeros(num)
 
-    if red_corr : 
+    #if Ha or Hb is zero, cannot do red correction
+    if red_corr and not(sum(Ha_raw)==0 or sum(Hb_raw)==0): 
         for i in range(num) :
 #            if not G:
             with np.errstate(invalid='ignore'):
@@ -228,8 +229,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
                     logOIIHb[i]=np.log10(OII3727_raw[i]/Hb_raw[i])
          
             '''
-    if(sum(Ha_raw)==0 or sum(Hb_raw)==0):
-    	EB_V=np.ones(num)*-1
+    
 
     #print 'D02'
     #### Denicolo [NII]/Ha diagnostic Denicolo, Terlevich & Terlevich
