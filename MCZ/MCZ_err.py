@@ -134,6 +134,9 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         right=pc84
         maxleft=median-std*5
         maxright=median+std*5
+        if maxleft == maxright:
+            maxleft=median-0.2
+            maxright=median+0.2
 
         ######histogram######
         ###find appropriate bin size###
@@ -177,7 +180,6 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         if delog:
             plt.xlabel('O/H')
         elif Zs == "E(B-V)":
-            print data
             plt.xlabel('E(B-V) [mag]')
         else:
             plt.xlabel('12+log(O/H)')

@@ -127,9 +127,9 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
                     logHaHb[i]=np.log10(Ha_raw[i]/Hb_raw[i])
                     EB_V[i]=np.log10(2.86/(Ha_raw[i]/Hb_raw[i]))/(0.4*(k_Ha-k_Hb)) # E(B-V)
                 if EB_V[i] < 0.0 :
-                    EB_V[i]=-1
-                    break
+                    EB_V[i]=0.00001
                     
+
          
 
                 if (NII6584_raw[i] != 0.0) and (OII3727_raw[i] != 0.0) :
