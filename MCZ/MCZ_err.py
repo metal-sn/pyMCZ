@@ -134,9 +134,9 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         right=pc84
         maxleft=median-std*5
         maxright=median+std*5
-        if maxleft == maxright:
-            maxleft=median-0.2
-            maxright=median+0.2
+        if "%2f"%maxright=="%2f"%maxleft:
+            maxleft=median-1
+            maxright=median+1
 
         ######histogram######
         ###find appropriate bin size###
