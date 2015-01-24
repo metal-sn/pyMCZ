@@ -123,7 +123,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
     data,ignore,ignore=stats.sigmaclip(data,high=5.0,low=5.0)
     n=data.shape[0]
     
-    if data.shape[0]<=0:
+    if data.shape[0]<=0 or np.sum(data)<=0:
         print name,'is blank' ##if no data
         return "-1, -1, -1"    
     try:
@@ -134,6 +134,9 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         right=pc84
         maxleft=median-std*5
         maxright=median+std*5
+        if "%2f"%maxright=="%2f"%maxleft:
+            maxleft=median-1
+            maxright=median+1
 
         ######histogram######
         ###find appropriate bin size###
@@ -176,6 +179,8 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         plt.annotate(st, xy=(0.62, 0.55), xycoords='axes fraction',fontsize=13)
         if delog:
             plt.xlabel('O/H')
+        elif Zs == "E(B-V)":
+            plt.xlabel('E(B-V) [mag]')
         else:
             plt.xlabel('12+log(O/H)')
         plt.ylabel('relative counts')
@@ -184,7 +189,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         ###print out the confidence interval###
         print '{0:15} {1:20} {2:>13.3f} - {3:>7.3f} + {4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
 
-        return "%f, %f, %f"%(round(median,3), round(median-left,3), round(right-median,3))
+        return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3))
 
     except (OverflowError,AttributeError,ValueError):
         if VERBOSE: print data
@@ -273,13 +278,13 @@ def run((name, flux, err, path), nsample,delog=False, unpickle=False):
     ###Bin the results and save###
     print '{0:15} {1:20} {2:>13} - {3:>7} + {4:>7} {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
     for i in range(nm):
-        fi=open(os.path.join(binp,'%s_n%d_%d.csv'%(name,nsample,i+1)),'w')
-        fi.write("%s, Median (Z), Left, Right\n"%name)
+        fi=open(os.path.join(binp,'%s_n%d_%d.txt'%(name,nsample,i+1)),'w')
+        fi.write("%s\t Median Oxygen abundance (12+log(O/H))\t 16th percentile\t 84th percentile\n"%name)
         
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         
         for key in Zs:
-            s=key+", "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog)+'\n'
+            s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog)+'\n'
             fi.write(s)
         fi.close()
     
