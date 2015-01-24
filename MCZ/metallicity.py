@@ -21,7 +21,7 @@ import numpy as np
 G=False
 
 ##list of metallicity methods, in order calculated
-Zs=["KD02comb_updated","KD02_NIIOII","KD02_R23_updated","M91","Z94","KD02_NIIHa","D02","PP04_N2","PP04_O3N2","Pi01_Z"]
+Zs=["KD02comb_updated","KD02_NIIOII","KD02_R23_updated","M91","Z94","KD02_NIIHa","D02","PP04_N2","PP04_O3N2","Pi01_Z","E(B-V)"]
 
 def get_keys():
     return Zs
@@ -90,7 +90,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     k_OIII=(k_OIII5007+k_OIII4959)/2.
 
     # OIII=4959+5007, else OIII5007 is specified
-    EB_V=np.zeros(num)
+    EB_V=np.ones(num)*-1
     c_EB_V=np.zeros(num)
     logNIIOII=np.zeros(num)
     logNIIHa=np.zeros(num)
@@ -117,7 +117,8 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     logOIIHb=np.zeros(num)
     logOIII49595007Hb=np.zeros(num)
 
-    if red_corr : 
+    #if Ha or Hb is zero, cannot do red correction
+    if red_corr and np.sum(Ha_raw)>0 and np.sum(Hb_raw)>0: 
         for i in range(num) :
 #            if not G:
             with np.errstate(invalid='ignore'):
@@ -127,6 +128,8 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
                     EB_V[i]=np.log10(2.86/(Ha_raw[i]/Hb_raw[i]))/(0.4*(k_Ha-k_Hb)) # E(B-V)
                 if EB_V[i] < 0.0 :
                     EB_V[i]=0.00001
+                    
+
          
 
                 if (NII6584_raw[i] != 0.0) and (OII3727_raw[i] != 0.0) :
@@ -228,7 +231,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
                     logOIIHb[i]=np.log10(OII3727_raw[i]/Hb_raw[i])
          
             '''
-
+    
 
     #print 'D02'
     #### Denicolo [NII]/Ha diagnostic Denicolo, Terlevich & Terlevich
@@ -1037,7 +1040,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
 
     res={Zs[0]:KD_comb_NEW, Zs[1]:KD02_NIIOII_Z, Zs[2]:KD03new_abund_R23,
          Zs[3]:M91_Z, Zs[4]:Z94_Z, Zs[5]:KD03_NIIHa_abund, Zs[6]:D02_Z,
-         Zs[7]:PP04_N2_Z, Zs[8]:PP04_O3N2_Z, Zs[9]:Pi01_Z}
+         Zs[7]:PP04_N2_Z, Zs[8]:PP04_O3N2_Z, Zs[9]:Pi01_Z,Zs[10]:EB_V}
     return res
     #return [KD_comb_NEW,KD02_NIIOII_Z,KD03new_abund_R23,M91_Z,Z94_Z,KD03_NIIHa_abund,D02_Z,PP04_N2_Z,PP04_O3N2_Z,Pi01_Z]
 
