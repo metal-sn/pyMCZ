@@ -30,30 +30,32 @@ binning={'bb':'Bayesian blocks','d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2
 ##Returns  (flux array,num)
 ##############################################################################
 def readfile(filename):
-    a=open(filename,'r')
-    b=np.array([])
-    i=0
-    j=0
+    noheader=1
+    print filename
+    f=open(filename,'r')
+    l0=f.readline()
+    if l0.startswith('#') or l0.startswith(';'):
+        header=l0.strip().replace(";",'').replace("#",'').split(',');
+        l1=f.readline().split()
+        header=header[:len(l1)]
+    else:
+        noheader=0
+        l1=f.readline().split()
+        header=['galnum','[OII]3727','Hb','[OIII]4959','[OIII]5007','[OI]6300','Ha','[NII]6584','[SII]6717','[SII]6731','[SIII]9069','[SIII]9532','flag','E(B-V)','dE(B-V)','scale_blue','d scale_blue'][:len(l0.split())]
+    if 'flag' in header:
+        findex=header.index('flag')
+    cols=tuple([i for i in range(len(header)) if not i==findex])
     
-    for line in a:
-        err_count=0
-        strs=np.array(line.rstrip('\n').split())
-        i=strs.size
-        for word in range(i):
-            try:
-                strs[word]=strs[word].astype(np.float)
-            except ValueError:
-                err_count+=1
-                strs[word]=-1
-        strs=strs.astype(np.float)
-        if err_count<i/2-1:    
-            b=np.append(b,strs,axis=0)
-            j+=1
-    b.resize(j,i)
-    b=np.transpose(b)
-    a.close()
+    bstruct={}
+    for i,k in enumerate(header):
+        bstruct[k]=[i,0]
 
-    return b,j
+    b = np.loadtxt(filename,skiprows=noheader, usecols=cols, unpack=True)
+    for i,spline in enumerate(b):
+        bstruct[header[i]][1]=np.count_nonzero(spline)
+    j=len(b.transpose()[0])
+    print bstruct
+    return b,j,bstruct
 
 ##############################################################################
 ##returns appropriate bin size for the number of data
@@ -314,9 +316,9 @@ def in_mmm(filename,path):
     minfile=os.path.join(path,filename+"_min.txt")
     
     ###read the max, med, min flux files###    
-    maxf,nm=readfile(maxfile)
-    medf,num=readfile(medfile)
-    minf,nn=readfile(minfile)
+    maxf,nm, bsmax=readfile(maxfile)
+    medf,num,bsmed=readfile(medfile)
+    minf,nn, bsmin=readfile(minfile)
 
     ###calculate the flux error as 1/2 [(max-med)+(med-min)]###
     err=0.5*((maxf-medf)+(medf-minf))
@@ -329,8 +331,8 @@ def in_mm(filename, path):
     minfile=os.path.join(path,filename+"_min.txt")
     
     ###read the max, med, min flux files###    
-    maxf,nm=readfile(maxfile)
-    minf,nn=readfile(minfile)
+    maxf,nm,bsmax=readfile(maxfile)
+    minf,nn,bsmin=readfile(minfile)
     ###calculate the flux error as 1/2 [(max-min)]###
     err=0.5*(maxf - minf)
     medf= minf+err
