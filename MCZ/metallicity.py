@@ -21,7 +21,17 @@ import numpy as np
 G=False
 
 ##list of metallicity methods, in order calculated
-Zs=["KD02comb_updated","KD02_NIIOII","KD02_R23_updated","M91","Z94","KD02_NIIHa","D02","PP04_N2","PP04_O3N2","Pi01_Z","E(B-V)"]
+Zs=["KD02comb_updated", #always
+    "KD02_NIIOII", #Halpha, Hbeta,  [OII]3727, [NII]6584
+    "KD02_NIIHa",#Halpha, Hbeta,  [OII]3727, [NII]6584
+    "KD02_R23_updated", #Hbeta,  [OII]3727, [OIII]5007, [OIII]4959 
+    "M91", #Hbeta,  [OII]3727,  [OIII]5007, [OIII]4959 
+    "Z94", #Hbeta,  [OII]3727, [OIII]5007, [OIII]4959 
+    "PP04_N2",   #Halpha, [NII]6584
+    "PP04_O3N2", #Halpha, Hbeta,  [OIII]5007, [NII]6584
+    "Pi01_Z",  #Hbeta,  [OII]3727,  [OIII]5007
+    "D02", #Halpha, [NII]
+    "E(B-V)"] #Halpha, Hbeta]
 
 def get_keys():
     return Zs
@@ -33,11 +43,26 @@ def fz_roots(a):
     a[np.where(~np.isfinite(a))]=0.0
     rts= np.roots(a[::-1])
     if rts.size==0:
-      print 'fz_roots failed'
-      rts=np.zeros(a.size-1)
+        print 'fz_roots failed'
+    rts=np.zeros(a.size-1)
     return rts
 
-def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres=False):
+def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres=False): 
+
+                
+    '''"KD02comb_updated"=True,
+                "KD02_NIIOII"=True,
+                "KD02_NIIHa"=True,
+                "KD02_R23_updated"=True, 
+                "M91"=True, 
+                "Z94"=True, 
+                "PP04_N2"=True,
+                "PP04_O3N2"=True,
+                "Pi01_Z"=True,
+                "D02"=True,
+                "E(B-V)"=True,'''
+   
+   
     data[np.where(np.isfinite(data[1:,:])==False)]=0.0 #kills all non-finite terms      
 
     OII3727_raw=data[1]
@@ -120,7 +145,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     #if Ha or Hb is zero, cannot do red correction
     if red_corr and np.sum(Ha_raw)>0 and np.sum(Hb_raw)>0: 
         for i in range(num) :
-#            if not G:
+          if not G:
             with np.errstate(invalid='ignore'):
                 #print 'extinction correction ',i
                 if (Hb_raw[i] != 0.0) and (Ha_raw[i] != 0.0) :
