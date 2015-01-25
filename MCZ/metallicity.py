@@ -44,7 +44,7 @@ def fz_roots(a):
     rts= np.roots(a[::-1])
     if rts.size==0:
         print 'fz_roots failed'
-    rts=np.zeros(a.size-1)
+        rts=np.zeros(a.size-1)
     return rts
 
 def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres=False): 
@@ -84,7 +84,7 @@ def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres
     #  only do the calculations if stellar mass exists and is between 10**9 & 10**12
     #  and only if OIII, Hb, SII, NII and Ha are non-zero 
     # ** need to investigate the ones that are zero and whether they will
-    # make a difference to the AGN fraction and ionization parameters **
+    # make a difference to  the AGN fraction and ionization parameters **
     #
     # the ones without masses and without all lines will not be printed in
     # the output files, so need to also print their masses for readin

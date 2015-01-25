@@ -6,7 +6,7 @@ Monte Carlo method to calculate metalicity uncertainty from flux data.
 ====================
 Usage:
 ====================
-Place the _min, _max, and _med(optional) files in the "sn_data" folder.
+Place the _min, _max, and _mes(optional) files in the "sn_data" folder.
 
 
 From the commandline simply use as:
@@ -41,10 +41,10 @@ with common filename \<fi\>:
 
 \<fi\>_min.txt
 
-\<fi\>_med.txt 
+\<fi\>_mes.txt 
 
 
-where max = med+err, min=med-err. The _med file is optional.
+where max = mesured+err, min=mesured-err. The _mes file is optional.
 
 The format for each of the txt files should be as follows:
 
@@ -56,7 +56,7 @@ The format for each of the txt files should be as follows:
        
 galnum is the index used for matching the flux with the corresponding radius for calculating the gradient.
 
-The first row is optional - any row with more strings than numbers will be ignored
+The first row is optional - if can contain more keys than column, as long as the columns are listed in the same order as specified above, up to whichever line is of interest. Missing data should be filled in with 0s.
 
 the data should be in the above order, separated by any number of white spaces.
 
