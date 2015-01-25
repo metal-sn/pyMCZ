@@ -9,6 +9,8 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylabsetup
 import metallicity
 
+OLD=False
+
 #pickle may not be installed
 NOPICKLE=False
 try:
@@ -22,7 +24,7 @@ VERBOSE=False
 UNPICKLE=False
 RUNSIM=True
 BINMODE='t'
-binning={'bb':'Bayesian blocks','d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2 N^{1/3}$'}
+binning={'bb':'Bayesian blocks','k':"Knuth's rule",'d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2 N^{1/3}$'}
 
 ##############################################################################
 ##Reads the flux file and returns it as an array.
@@ -52,9 +54,9 @@ def readfile(filename):
 
     b = np.loadtxt(filename,skiprows=noheader, usecols=cols, unpack=True)
     for i,spline in enumerate(b):
-        bstruct[header[i]][1]=np.count_nonzero(spline)
+        bstruct[header[i]][1]=np.count_nonzero(spline)+sum(np.isnan(spline))
     j=len(b.transpose()[0])
-    print bstruct
+
     return b,j,bstruct
 
 ##############################################################################
@@ -143,13 +145,16 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         ######histogram######
         ###find appropriate bin size###
         ##if astroML is available use it to get Bayesian blocks
-        if BINMODE=='bb':
+        if BINMODE=='bb' or BINMODE=='k':
             try:
                 from astroML.plotting import hist as amlhist
-                distrib=amlhist(data, bins='blocks', normed=True)
+                if BINMODE=='bb':
+                    distrib=amlhist(data, bins='blocks', normed=True)
+                else:
+                    distrib=amlhist(data, bins='knuth', normed=True)
                 plt.clf()
             except:
-                print "bayesian blocks for histogram requires astroML to be installed"
+                print "bayesian blocks and knuth methods for histogram requires astroML to be installed"
                 print "defaulting to 2*n**1/3 "
                 ##otherwise 
                 numbin=getbinsize(data.shape[0],data)        
@@ -197,6 +202,63 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         if VERBOSE: print data
         print name, 'had infinities'
         return "-2, -2"
+##############################################################################
+##The input format generator
+##############################################################################
+def input_format(filename,path):
+    p = os.path.join(path,"sn_data") 
+    assert os.path.isdir(p), "bad data directory %s"%p
+    if os.path.isfile(os.path.join(p,filename+'_max.txt')) and os.path.isfile(os.path.join(p,filename+'_min.txt')):
+        if OLD:
+            if os.path.isfile(os.path.join(p,filename+'_med.txt')):
+                return in_mmm(filename,path=p,meas=True)
+            return in_mmm(filename,path=p)
+        else:
+            if os.path.isfile(os.path.join(p,filename+'_meas.txt')):
+                return ingest_data(filename,path=p)            
+
+    print "Unable to find _min and _max files ",filename+'_max.txt',filename+'_min.txt',"in directory ",p
+    return -1
+
+def ingest_data(filename,path):
+#    p=os.path.abspath('..')
+#    p+='\\sn_data\\'
+    
+    ###Initialize###
+    measfile=os.path.join(path,filename+"_meas.txt")
+    errfile=os.path.join(path,filename+"_err.txt")
+    
+    ###read the max, meas, min flux files###    
+    meas,nm, bsmeas=readfile(measfile)
+    err,nn, bserr=readfile(errfile)
+    bsmed=None
+
+    return (filename, meas, err, path, (bsmeas,bserr))
+
+def in_mmm(filename,path,meas=False):
+#    p=os.path.abspath('..')
+#    p+='\\sn_data\\'
+    
+    ###Initialize###
+    maxfile=os.path.join(path,filename+"_max.txt")
+    minfile=os.path.join(path,filename+"_min.txt")
+    
+    ###read the max, meas, min flux files###    
+    maxf,nm, bsmax=readfile(maxfile)
+    minf,nn, bsmin=readfile(minfile)
+    bsmed=None
+
+    if med:
+        medfile=os.path.join(path,filename+"_med.txt")
+        medf,num,bsmed=readfile(medfile)
+
+        ###calculate the flux error as 1/2 [(max-med)+(med-min)]###
+        #err=0.5*((maxf-medf)+(medf-minf))
+    else:
+        medf= minf+err
+
+    err=0.5*(maxf - minf)
+    return (filename, medf, err, path, (bsmin,bsmed,bsmax))
 
 ##############################################################################
 ## The main function. takes the flux and its error as input. 
@@ -209,7 +271,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def run((name, flux, err, path), nsample,delog=False, unpickle=False):
+def run((name, flux, err, path, bss), nsample,delog=False, unpickle=False):
     global RUNSIM
     assert(flux.shape == err.shape), "flux and err must be same dimensions" 
 
@@ -262,7 +324,7 @@ def run((name, flux, err, path), nsample,delog=False, unpickle=False):
         for i in range(newnsample):
             temp=flux+err*sample[i]
             warnings.filterwarnings("ignore")
-            t=metallicity.calculation(temp,nm,disp=VERBOSE)
+            t=metallicity.calculation(temp,nm,bss,disp=VERBOSE)
             for key in Zs:
                 res[key].append(t[key])
             
@@ -292,59 +354,13 @@ def run((name, flux, err, path), nsample,delog=False, unpickle=False):
     
         if VERBOSE: print "uncertainty calculation complete"
 
-##############################################################################
-##The input format generator
-##############################################################################
-def input_format(filename,path):
-    p = os.path.join(path,"sn_data") 
-    assert os.path.isdir(p), "bad data directory %s"%p
-    if os.path.isfile(os.path.join(p,filename+'_max.txt')) and os.path.isfile(os.path.join(p,filename+'_min.txt')):
-        if os.path.isfile(os.path.join(p,filename+'_med.txt')):
-            return in_mmm(filename,path=p)
-        return in_mm(filename,path=p)
-    
-    print "Unable to find _min and _max files ",filename+'_max.txt',filename+'_min.txt',"in directory ",p
-    return -1
-
-def in_mmm(filename,path):
-#    p=os.path.abspath('..')
-#    p+='\\sn_data\\'
-    
-    ###Initialize###
-    maxfile=os.path.join(path,filename+"_max.txt")
-    medfile=os.path.join(path,filename+"_med.txt")
-    minfile=os.path.join(path,filename+"_min.txt")
-    
-    ###read the max, med, min flux files###    
-    maxf,nm, bsmax=readfile(maxfile)
-    medf,num,bsmed=readfile(medfile)
-    minf,nn, bsmin=readfile(minfile)
-
-    ###calculate the flux error as 1/2 [(max-med)+(med-min)]###
-    err=0.5*((maxf-medf)+(medf-minf))
-    return (filename, medf, err, path)
-
-def in_mm(filename, path):
-
-    ###Initialize###
-    maxfile=os.path.join(path,filename+"_max.txt")
-    minfile=os.path.join(path,filename+"_min.txt")
-    
-    ###read the max, med, min flux files###    
-    maxf,nm,bsmax=readfile(maxfile)
-    minf,nn,bsmin=readfile(minfile)
-    ###calculate the flux error as 1/2 [(max-min)]###
-    err=0.5*(maxf - minf)
-    medf= minf+err
-    return (filename, medf, err, path)
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('name', metavar='<name>', type=str, help="the SN file name (root of the _min,_max file names")
     parser.add_argument('nsample', metavar='N', type=int, help="number of iterations, minimum 100")
     parser.add_argument('--clobber',default=False, action='store_true', help="replace existing output")
     parser.add_argument('--delog',default=False, action='store_true', help="result in natural, not log space. default is log space")
-    parser.add_argument('--binmode', default='t', type=str, choices=['d','s','t','bb'], help='method to determine bin size {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), Bayesian blocks}')
+    parser.add_argument('--binmode', default='t', type=str, choices=['d','s','t','bb'], help="method to determine bin size {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), k: Knuth's rule, bb: Bayesian blocks}")
     parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _max.txt and _min.txt files in a subdirectory sn_data)")
     parser.add_argument('--unpickle',   default=False, action='store_true', help="read the pickled realization instead of making a new one")
 
@@ -361,7 +377,7 @@ def main():
 
     if args.unpickle and NOPICKLE:
         args.unpickle = False
-        print "cannot use pickle on this machine, wont save and wont read saved realizations. Ctr-C to exit, Return to continue?\n"
+        print "cannot use pickle on this machine, wont save and won't read saved realizations. Ctr-C to exit, Return to continue?\n"
         raw_input();
 
     if args.path:
