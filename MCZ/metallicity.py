@@ -47,9 +47,12 @@ def fz_roots(a):
         rts=np.zeros(a.size-1)
     return rts
 
-def calculation(data,num,outfilename='blah.txt',red_corr=True,disp=False,saveres=False): 
+def calculation(data,num,(bsmeas,bserr),outfilename='blah.txt',red_corr=True,disp=False,saveres=False): 
 
-                
+    #for k in bsmeas.iterkeys():
+        #        print bsmeas[k][1]-bserr[k][1],
+        #        try: print bseas[k][1]-bserr[k][1]
+        #        except: pass
     '''"KD02comb_updated"=True,
                 "KD02_NIIOII"=True,
                 "KD02_NIIHa"=True,
