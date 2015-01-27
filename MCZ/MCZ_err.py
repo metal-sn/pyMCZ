@@ -9,6 +9,11 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylabsetup
 import metallicity
 
+allines=['[OII]3727','Hb','[OIII]4959','[OIII]5007','[OI]6300','Ha','[NII]6584','[SII]6717','[SII]6731','[SIII]9069','[SIII]9532']
+morelines=['flag','E(B-V)','dE(B-V)','scale_blue','d scale_blue']
+
+
+
 OLD=False
 
 #pickle may not be installed
@@ -26,6 +31,13 @@ RUNSIM=True
 BINMODE='t'
 binning={'bb':'Bayesian blocks','k':"Knuth's rule",'d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2 N^{1/3}$'}
 
+def is_number(s):
+        try:
+                float(s)
+                return True
+        except ValueError:
+                return False
+
 ##############################################################################
 ##Reads the flux file and returns it as an array.
 ##Ignores non-numeric lines
@@ -33,31 +45,115 @@ binning={'bb':'Bayesian blocks','k':"Knuth's rule",'d':"Doane's formula",'s':r'$
 ##############################################################################
 def readfile(filename):
     noheader=1
+    findex=-1
     print filename
     f=open(filename,'r')
     l0=f.readline()
+    l1=f.readline().split()
     if l0.startswith('#') or l0.startswith(';'):
         header=l0.strip().replace(";",'').replace("#",'').split(',');
-        l1=f.readline().split()
+        header[0]=header[0].replace(' ','')
         header=header[:len(l1)]
     else:
         noheader=0
-        l1=f.readline().split()
-        header=['galnum','[OII]3727','Hb','[OIII]4959','[OIII]5007','[OI]6300','Ha','[NII]6584','[SII]6717','[SII]6731','[SIII]9069','[SIII]9532','flag','E(B-V)','dE(B-V)','scale_blue','d scale_blue'][:len(l0.split())]
+        header=['galnum']+alllines+['flag']+morelines
+        header=header[:len(l1)]
+
+
+    #print header
+    formats=['i']+['f']*(len(header)-1)
     if 'flag' in header:
         findex=header.index('flag')
-    cols=tuple([i for i in range(len(header)) if not i==findex])
+        formats[findex]='S10'
+    #cols=tuple([i for i in range(len(header)) if not i==findex])
+    #print formats
     
     bstruct={}
     for i,k in enumerate(header):
         bstruct[k]=[i,0]
 
-    b = np.loadtxt(filename,skiprows=noheader, usecols=cols, unpack=True)
-    for i,spline in enumerate(b):
-        bstruct[header[i]][1]=np.count_nonzero(spline)+sum(np.isnan(spline))
-    j=len(b.transpose()[0])
-
+    b = np.loadtxt(filename,skiprows=noheader, dtype={'names':header,'formats':formats})
+    #usecols=cols, unpack=True)
+    
+    for i,k in enumerate(header):
+        #print b[k]
+        if is_number(b[k][0]):
+            bstruct[k][1]=np.count_nonzero(b[k])+sum(np.isnan(b[k]))
+    j=len(b['galnum'])
     return b,j,bstruct
+
+##############################################################################
+##The input format generator
+##############################################################################
+def input_format(filename,path):
+    p = os.path.join(path,"sn_data") 
+    assert os.path.isdir(p), "bad data directory %s"%p
+    if os.path.isfile(os.path.join(p,filename+'_max.txt')) and os.path.isfile(os.path.join(p,filename+'_min.txt')):
+        if OLD:
+            if os.path.isfile(os.path.join(p,filename+'_med.txt')):
+                return in_mmm(filename,path=p,meas=True)
+            return in_mmm(filename,path=p)
+        else:
+            if os.path.isfile(os.path.join(p,filename+'_meas.txt')):
+                return ingest_data(filename,path=p)            
+
+    print "Unable to find _min and _max files ",filename+'_max.txt',filename+'_min.txt',"in directory ",p
+    return -1
+
+def ingest_data(filename,path):
+#    p=os.path.abspath('..')
+#    p+='\\sn_data\\'
+    
+    ###Initialize###
+    measfile=os.path.join(path,filename+"_meas.txt")
+    errfile=os.path.join(path,filename+"_err.txt")
+    
+    ###read the max, meas, min flux files###    
+    meas,nm, bsmeas=readfile(measfile)
+    err,nn, bserr=readfile(errfile)
+    bsmed=None
+    #print meas,err
+
+    return (filename, meas, err, nm, path, (bsmeas,bserr))
+
+def in_mmm(filename,path,meas=False):
+#    p=os.path.abspath('..')
+#    p+='\\sn_data\\'
+    
+    ###Initialize###
+    maxfile=os.path.join(path,filename+"_max.txt")
+    minfile=os.path.join(path,filename+"_min.txt")
+    
+    ###read the max, meas, min flux files###    
+    maxf,nm, bsmax=readfile(maxfile)
+    minf,nn, bsmin=readfile(minfile)
+    bsmed=None
+
+    if med:
+        medfile=os.path.join(path,filename+"_med.txt")
+        medf,num,bsmed=readfile(medfile)
+
+        ###calculate the flux error as 1/2 [(max-med)+(med-min)]###
+        #err=0.5*((maxf-medf)+(medf-minf))
+    else:
+        medf= minf+err
+
+    err=0.5*(maxf - minf)
+    return (filename, medf, err, path, (bsmin,bsmed,bsmax))
+
+
+
+##############################################################################
+##sets which metallicity scales can be calculated based on the available lines
+#############################################################################
+
+def setscales(bss):
+    Zs= metallicity.get_keys()
+    scales={}
+    #set all to true for now
+    for s in Zs:
+        scales[s]=True
+    return scales
 
 ##############################################################################
 ##returns appropriate bin size for the number of data
@@ -203,64 +299,6 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         print name, 'had infinities'
         return "-2, -2"
 ##############################################################################
-##The input format generator
-##############################################################################
-def input_format(filename,path):
-    p = os.path.join(path,"sn_data") 
-    assert os.path.isdir(p), "bad data directory %s"%p
-    if os.path.isfile(os.path.join(p,filename+'_max.txt')) and os.path.isfile(os.path.join(p,filename+'_min.txt')):
-        if OLD:
-            if os.path.isfile(os.path.join(p,filename+'_med.txt')):
-                return in_mmm(filename,path=p,meas=True)
-            return in_mmm(filename,path=p)
-        else:
-            if os.path.isfile(os.path.join(p,filename+'_meas.txt')):
-                return ingest_data(filename,path=p)            
-
-    print "Unable to find _min and _max files ",filename+'_max.txt',filename+'_min.txt',"in directory ",p
-    return -1
-
-def ingest_data(filename,path):
-#    p=os.path.abspath('..')
-#    p+='\\sn_data\\'
-    
-    ###Initialize###
-    measfile=os.path.join(path,filename+"_meas.txt")
-    errfile=os.path.join(path,filename+"_err.txt")
-    
-    ###read the max, meas, min flux files###    
-    meas,nm, bsmeas=readfile(measfile)
-    err,nn, bserr=readfile(errfile)
-    bsmed=None
-
-    return (filename, meas, err, path, (bsmeas,bserr))
-
-def in_mmm(filename,path,meas=False):
-#    p=os.path.abspath('..')
-#    p+='\\sn_data\\'
-    
-    ###Initialize###
-    maxfile=os.path.join(path,filename+"_max.txt")
-    minfile=os.path.join(path,filename+"_min.txt")
-    
-    ###read the max, meas, min flux files###    
-    maxf,nm, bsmax=readfile(maxfile)
-    minf,nn, bsmin=readfile(minfile)
-    bsmed=None
-
-    if med:
-        medfile=os.path.join(path,filename+"_med.txt")
-        medf,num,bsmed=readfile(medfile)
-
-        ###calculate the flux error as 1/2 [(max-med)+(med-min)]###
-        #err=0.5*((maxf-medf)+(medf-minf))
-    else:
-        medf= minf+err
-
-    err=0.5*(maxf - minf)
-    return (filename, medf, err, path, (bsmin,bsmed,bsmax))
-
-##############################################################################
 ## The main function. takes the flux and its error as input. 
 ##  filename - a string 'filename' common to the three flux files
 ##  flux - np array of the fluxes
@@ -271,13 +309,15 @@ def in_mmm(filename,path,meas=False):
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def run((name, flux, err, path, bss), nsample,delog=False, unpickle=False):
+def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
     global RUNSIM
-    assert(flux.shape == err.shape), "flux and err must be same dimensions" 
-
+    assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
+    print len(flux['galnum']),nm
+    assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
+    assert(len(err['galnum'])== nm), "flux and err must be same dimensions" 
+    
     newnsample=int(nsample+0.1*nsample)
     p=os.path.join(path,'..')
-    nm = flux.shape[1]
 
     ###retrieve the metallicity keys
     Zs= metallicity.get_keys()
@@ -319,15 +359,29 @@ def run((name, flux, err, path, bss), nsample,delog=False, unpickle=False):
         res={}
         for key in Zs:
             res[key]=[]
-            
+
         #do the iterations
+        temp={}
+        delkeys=[]
+        for k in bss[0].iterkeys():
+            if k=='flag' or k=='galnum' or bss[0][k][1]==0 :#or bss[1][k][1]==bss[0][k][1]:
+                delkeys.append(k)
+        for k in delkeys:
+                del bss[0][k]
+                del bss[1][k]
+
+        scales=setscales(bss[0])
+
         for i in range(newnsample):
-            temp=flux+err*sample[i]
-            warnings.filterwarnings("ignore")
-            t=metallicity.calculation(temp,nm,bss,disp=VERBOSE)
+            temp={}#np.zeros((len(bss[0]),nm),float)
+            for j,k in enumerate(bss[0].iterkeys()):
+                #print k,bss[0][k][1], bss[1][k][1]
+                temp[k]=flux[k]+err[k]*sample[i]
+                warnings.filterwarnings("ignore")
+            t=metallicity.calculation(temp,nm,bss,scales,disp=VERBOSE)
             for key in Zs:
                 res[key].append(t[key])
-            
+
         #recast the result into np.array
         for key in Zs:
             res[key]=np.array(res[key])
