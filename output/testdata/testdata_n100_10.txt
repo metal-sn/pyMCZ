@@ -1,0 +1,12 @@
+testdata	 Median Oxygen abundance (12+log(O/H))	 16th percentile	 84th percentile
+KD02comb_updated	 -1, -1, -1
+KD02_NIIOII	 -1, -1, -1
+KD02_NIIHa	 -1, -1, -1
+KD02_R23_updated	 -1, -1, -1
+M91	 -1, -1, -1
+Z94	 -1, -1, -1
+PP04_N2	 9.120000	 0.000000	 0.000000
+PP04_O3N2	 9.370000	 0.000000	 0.000000
+Pi01_Z	 8.897000	 0.029000	 0.062000
+D02	 7.063000	 0.106000	 0.082000
+E(B-V)	 0.571000	 0.107000	 0.160000
