@@ -206,7 +206,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
 ##The input format generator
 ##############################################################################
 def input_format(filename,path):
-    p = os.path.join(path,"sn_data") 
+    p = os.path.join(path,"input") 
     assert os.path.isdir(p), "bad data directory %s"%p
     if os.path.isfile(os.path.join(p,filename+'_max.txt')) and os.path.isfile(os.path.join(p,filename+'_min.txt')):
         if OLD:
@@ -222,7 +222,7 @@ def input_format(filename,path):
 
 def ingest_data(filename,path):
 #    p=os.path.abspath('..')
-#    p+='\\sn_data\\'
+#    p+='\\input\\'
     
     ###Initialize###
     measfile=os.path.join(path,filename+"_meas.txt")
@@ -237,7 +237,7 @@ def ingest_data(filename,path):
 
 def in_mmm(filename,path,meas=False):
 #    p=os.path.abspath('..')
-#    p+='\\sn_data\\'
+#    p+='\\input\\'
     
     ###Initialize###
     maxfile=os.path.join(path,filename+"_max.txt")
@@ -361,7 +361,7 @@ def main():
     parser.add_argument('--clobber',default=False, action='store_true', help="replace existing output")
     parser.add_argument('--delog',default=False, action='store_true', help="result in natural, not log space. default is log space")
     parser.add_argument('--binmode', default='t', type=str, choices=['d','s','t','bb'], help="method to determine bin size {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), k: Knuth's rule, bb: Bayesian blocks}")
-    parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _max.txt and _min.txt files in a subdirectory sn_data)")
+    parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _max.txt and _min.txt files in a subdirectory called input)")
     parser.add_argument('--unpickle',   default=False, action='store_true', help="read the pickled realization instead of making a new one")
 
     parser.add_argument('--verbose',default=False, action='store_true', help="verbose mode")
@@ -383,7 +383,7 @@ def main():
     if args.path:
         path=args.path
     else:
-        assert (os.getenv("MCMetdata"))," the _max, _min (and _med) data must live in a folder named sn_data. pass a path to the sn_data folder, or set up the environmental variable MCMetdata pointing to the path where sn_data lives "
+        assert (os.getenv("MCMetdata"))," the _max, _min (and _med) data must live in a folder named input. pass a path to the input folder, or set up the environmental variable MCMetdata pointing to the path where input lives "
         path=os.getenv("MCMetdata")
     assert(os.path.isdir(path)),"pass a path or set up the environmental variable MCMetdata pointing to the path where the _min _max _med files live"
 
