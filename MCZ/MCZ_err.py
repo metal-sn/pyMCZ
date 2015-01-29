@@ -203,7 +203,63 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         print name, 'had infinities'
         return "-2, -2"
 ##############################################################################
-##The input format generator
+#The input format generator
+##############################################################################
+ def input_format(filename,path):
+     p = os.path.join(path,"input") 
+     assert os.path.isdir(p), "bad data directory %s"%p
+     if os.path.isfile(os.path.join(p,filename+'_max.txt')) and os.path.isfile(os.path.join(p,filename+'_min.txt')):
+         if OLD:
+             if os.path.isfile(os.path.join(p,filename+'_med.txt')):
+                 return in_mmm(filename,path=p,meas=True)
+             return in_mmm(filename,path=p)
+         else:
+             if os.path.isfile(os.path.join(p,filename+'_meas.txt')):
+                 return ingest_data(filename,path=p)            
+ 
+     print "Unable to find _min and _max files ",filename+'_max.txt',filename+'_min.txt',"in directory ",p
+     return -1
+ 
+ def ingest_data(filename,path):
+ #    p=os.path.abspath('..')
+ #    p+='\\input\\'
+     
+     ###Initialize###
+     measfile=os.path.join(path,filename+"_meas.txt")
+     errfile=os.path.join(path,filename+"_err.txt")
+     
+     ###read the max, meas, min flux files###    
+     meas,nm, bsmeas=readfile(measfile)
+     err,nn, bserr=readfile(errfile)
+     bsmed=None
+ 
+     return (filename, meas, err, path, (bsmeas,bserr))
+ 
+ def in_mmm(filename,path,meas=False):
+ #    p=os.path.abspath('..')
+ #    p+='\\input\\'
+     
+     ###Initialize###
+     maxfile=os.path.join(path,filename+"_max.txt")
+     minfile=os.path.join(path,filename+"_min.txt")
+     
+     ###read the max, meas, min flux files###    
+     maxf,nm, bsmax=readfile(maxfile)
+     minf,nn, bsmin=readfile(minfile)
+     bsmed=None
+ 
+     if med:
+         medfile=os.path.join(path,filename+"_med.txt")
+         medf,num,bsmed=readfile(medfile)
+ 
+         ###calculate the flux error as 1/2 [(max-med)+(med-min)]###
+         #err=0.5*((maxf-medf)+(medf-minf))
+     else:
+         medf= minf+err
+ 
+     err=0.5*(maxf - minf)
+     return (filename, medf, err, path, (bsmin,bsmed,bsmax))
+ 
 ##############################################################################
 def input_format(filename,path):
     p = os.path.join(path,"input") 
