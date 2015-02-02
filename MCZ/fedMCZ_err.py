@@ -367,8 +367,8 @@ def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
         
         #initialize the dictionary
         res={}
-#        for key in Zs:
-#            res[key]=[]
+        for key in Zs:
+            res[key]=[[] for i in range(nm)]
 
         #do the iterations
         temp={}
@@ -383,9 +383,8 @@ def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
         scales=setscales(bss[0])
         red_corr=True
         import diagnostics as dd
-        diags=dd.diagnostics(newnsample)
-
         for i in range(nm):
+            diags=dd.diagnostics(newnsample)
             print "\n\nmeasurement ",i+1
             #for i in range(newnsample):
             temp={}#np.zeros((len(bss[0]),nm),float)
@@ -408,17 +407,15 @@ def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
                 if not diags.mds[k]==None:
                     print ' {0:4} {1:4}'.format( np.mean(diags.mds[k]),np.std(diags.mds[k])),
                 print ""
-                
-                #raw_input()
             
-            #print t
-            #res[i]=t
-            #for key in Zs:
-            #   res[key].append(t[key])
-
+            for key in diags.mds.iterkeys():
+#                print "here",res[key]#,diags.mds[key]
+                res[key][i]=diags.mds[key]
+        for key in diags.mds.iterkeys():
+            res[key]=np.array(res[key]).T
         #recast the result into np.array
-##        for key in Zs:
- ##           res[key]=np.array(res[key])
+        ##        for key in Zs:
+        ##           res[key]=np.array(res[key])
         
         if VERBOSE: print "Iteration Complete"
     
@@ -436,8 +433,12 @@ def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         
         for key in Zs:
-            s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog)+'\n'
-            fi.write(s)
+            try:
+                s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog)+'\n'
+                fi.write(s)
+            except :#KeyError, IndexError:
+                print "missing key ",key
+
         fi.close()
     
         if VERBOSE: print "uncertainty calculation complete"

@@ -26,38 +26,39 @@ class diagnostics:
 
         #metallicity diagnostics to be returned
         self.mds={
-            'EB_V':None,
+            'E(B-V)':None,
             #
             ###Kobulnicky parameterization of Zaritzky et al. (1994) 
             ###Z94 = Zaritsky, D., Kennicutt, R. C., & Huchra, J. P. 1994, 
             ###ApJ, 420, 87
-            'Z94_Z':None,
+            'Z94':None,
             #
             ###McGaugh, S.S., 1991, ApJ, 380, 140'
-            'M91_Z':None,         
+            'M91':None,         
             #
             ### D02_Z Denicolo [NII]/Ha diagnostic Denicolo, Terlevich & Terlevich (2002),  MNRAS, 330, 69
-            'D02_Z':None,
+            'D02':None,
             #
             ### PP04_N2_Z, PP04_O3N2_Z Pettini & Pagel diagnostics - Pettini & Pagel (2004), MNRAS, 348, L59
-            'PP04_N2_Z':None,
-            'PP04_O3N2_Z':None,
+            'PP04_N2':None,
+            'PP04_O3N2':None,
             ##Pilyugin method.  Based on [OIII],[OII], Hbeta 
             ##calibrated from Te method'
-            'Pi01_Z':None,
+            'Pi01':None,
             #
             ### Kewley & Dopita (2002) (KD02) estimates of abundance ##
-            'KD02_N2O2_Z':None, 
+            'KD02_N2O2':None, 
             #
             #KD02 = Kewley, L. J., & Dopita, M. A., 2002, ApJ, submitted '
-            'KD_comb_NEW':None, 
+            'KD02comb_updated':None, 
             #
             #Kewley, L. J., & Dopita, M. A., 2003 
-            'KD03new_abund_R23':None,
-            'KD03_N2Ha_abund':None,
+            'KD03new_R23':None,
+            'KD03_N2Ha':None,
             #
             #C01 = Charlot, S., & Longhetti, M., 2001, MNRAS, 323, 887'
-            'C01_ZR23':None
+            'C01_R23':None,
+            'C01':None
         }
 
 
@@ -77,9 +78,9 @@ class diagnostics:
         except:pass
         try:print "\nHb", np.mean(self.Hb),self.Hb
         except:pass
-        try:print  "\nE(B-V)",np.mean(self.mds['EB_V']),self.mds['EB_V']
+        try:print  "\nE(B-V)",np.mean(self.mds['E(B-V)']),self.mds['E(B-V)']
         except:pass 
-        try:       print  "\nZ94_Z",np.mean(self.mds['Z94_Z']),self.mds['Z94_Z']
+        try:       print  "\nZ94_Z",np.mean(self.mds['Z94']),self.mds['Z94']
         except:pass 
         try:       print  "\nR23",np.mean(self.R23),self.R23
         except:pass 
@@ -104,8 +105,8 @@ class diagnostics:
 
     def dustcorrect(self,l1,l2,flux=False):
         if not flux:
-            return 0.4*self.mds['EB_V']*(l1-l2)
-        return 10**(0.4*self.mds['EB_V']*(l1-l2))        
+            return 0.4*self.mds['E(B-V)']*(l1-l2)
+        return 10**(0.4*self.mds['E(B-V)']*(l1-l2))        
 
     def setHab(self,Ha,Hb):
         self.Ha=Ha
@@ -134,7 +135,7 @@ class diagnostics:
                 self.logO2O35007Hb=np.log10((self.O23727/self.Hb)* self.dustcorrect(k_O2,k_Hb,flux=True))+ (self.O35007/self.Hb)*self.dustcorrect(k_O35007,k_Hb,flux=True)
 
         if self.hasHb and self.hasO23727:
-            self.logO2Hb=np.log10(self.O23727/self.Hb)+self.dustcorrect(k_O2,k_Hb)#0.4*self.mds['EB_V']*(k_O2-k_Hb) 
+            self.logO2Hb=np.log10(self.O23727/self.Hb)+self.dustcorrect(k_O2,k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
 
         # never used
         #if self.hasHa:
@@ -143,7 +144,7 @@ class diagnostics:
 
         if self.hasO35007:
             if self.hasHb :
-                self.logO3Hb=np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb)#0.4*self.mds['EB_V']*(k_O35007-k_Hb)
+                self.logO3Hb=np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb)#0.4*self.mds['E(B-V)']*(k_O35007-k_Hb)
                 self.hasO3Hb=True
                 #if self.hasO23727:
                 #self.logO2O35007Hb=np.log10((self.O23727+self.O35007)/self.Hb)
@@ -179,9 +180,9 @@ class diagnostics:
 
     def calcEB_V(self):
         #logHaHb=np.log10(Ha/Hb)
-        self.mds['EB_V']=np.log10(2.86/(self.Ha/self.Hb))/(0.4*(k_Ha-k_Hb)) # E(B-V)
-        #print self.mds['EB_V']
-        self.mds['EB_V'][self.mds['EB_V']<=0]=0.00001
+        self.mds['E(B-V)']=np.log10(2.86/(self.Ha/self.Hb))/(0.4*(k_Ha-k_Hb)) # E(B-V)
+        #print self.mds['E(B-V)']
+        self.mds['E(B-V)'][self.mds['E(B-V)']<=0]=0.00001
 
     def calcNIIOII(self):
         if self.hasN2 and self.hasO23727 :
@@ -213,21 +214,21 @@ class diagnostics:
 
     def calcNIISII(self):
         if self.hasS26717 and self.hasN2:
-            self.N2S2=self.N26584/self.S26717+self.dustcorrect(k_N2,k_S2,flux=True)#0.4*self.mds['EB_V']*(k_N2-k_S2) 
-            self.logN2S2=np.log10(self.N26584/self.S26717)+self.dustcorrect(k_N2,k_S2)#0.4*self.mds['EB_V']*(k_N2-k_S2) 
+            self.N2S2=self.N26584/self.S26717+self.dustcorrect(k_N2,k_S2,flux=True)#0.4*self.mds['E(B-V)']*(k_N2-k_S2) 
+            self.logN2S2=np.log10(self.N26584/self.S26717)+self.dustcorrect(k_N2,k_S2)#0.4*self.mds['E(B-V)']*(k_N2-k_S2) 
             self.hasN2S2=True
         else: 
             print "WARNING: needs SII6717 and NII6584 to calculate NIISII: did you run setN2() and setS?"
 
         if self.hasHa and self.hasN2:
-            self.logN2Ha = np.log10(self.N26584/self.Ha)+self.dustcorrect(k_N2,k_Ha)#0.4*self.mds['EB_V']*(k_N2-k_Ha) 
+            self.logN2Ha = np.log10(self.N26584/self.Ha)+self.dustcorrect(k_N2,k_Ha)#0.4*self.mds['E(B-V)']*(k_N2-k_Ha) 
             self.hasN2Ha=True
         else: 
             print "WARNING: needs NII6584 and Ha to calculate NIIHa: did you run setHab()?"
 
     def calcSIIHa(self):
         if self.hasS26717 and self.hasHa:
-            self.logS2Ha=np.log10(self.S26717/self.Ha)+self.dustcorrect(k_S2,k_Ha)#0.4*self.mds['EB_V']*(k_S2-k_Ha) 
+            self.logS2Ha=np.log10(self.S26717/self.Ha)+self.dustcorrect(k_S2,k_Ha)#0.4*self.mds['E(B-V)']*(k_S2-k_Ha) 
         else: 
             print "WARNING: needs SII6717 and Ha to calculate SIIHa: did you run setHab() and setS()?"
 
@@ -237,13 +238,13 @@ class diagnostics:
 
     def calcD02_Z(self):
         if self.hasN2Ha:
-            self.mds['D02_Z']    = 9.12+0.73*self.logN2Ha
+            self.mds['D02'] = 9.12+0.73*self.logN2Ha
         else:
             print "WARNING: need N2Ha to do this. did you run calclogNIISI"
 
     def calcPP04_N2_Z(self):
         if self.hasN2Ha:
-            self.mds['PP04_N2_Z']= 9.37 + 2.03*self.logN2Ha + 1.26*self.logN2Ha**2 + 0.32*self.logN2Ha**3
+            self.mds['PP04_N2']= 9.37 + 2.03*self.logN2Ha + 1.26*self.logN2Ha**2 + 0.32*self.logN2Ha**3
         else:
             print "WARNING: need N2Ha to do this. did you run calclogNIISI"
 
@@ -252,8 +253,8 @@ class diagnostics:
         if self.logR23==None:
             print "Must first calculate R23"
         else:
-            self.mds['Z94_Z']=9.265-0.33*self.logR23-0.202*self.logR23**2-0.207*self.logR23**3-0.333*self.logR23**4         
-            self.mds['Z94_Z'][(self.logR23 > 0.9)]=None
+            self.mds['Z94']=9.265-0.33*self.logR23-0.202*self.logR23**2-0.207*self.logR23**3-0.333*self.logR23**4         
+            self.mds['Z94'][(self.logR23 > 0.9)]=None
     
     def Pmethod(self):
         # #### P-method #####
@@ -280,9 +281,9 @@ class diagnostics:
         P_abund_up=(P_R23+726.1+842.2*P+337.5*P**2)/(85.96+82.76*P+43.98*P**2+1.793*P_R23)
         P_abund_low=(P_R23+106.4+106.8*P-3.40*P**2)/(17.72+6.60*P+6.95*P**2-0.302*P_R23)
 
-        self.mds['Pi01_Z']=P_abund_up.copy()
-        self.mds['Pi01_Z'][(self.Z_init_guess < 8.4)]=P_abund_low[(self.Z_init_guess < 8.4)].copy()
-        self.mds['Pi01_Z'][(self.Z_init_guess >= 8.4)]=P_abund_up[(self.Z_init_guess >= 8.4)].copy()
+        self.mds['Pi01']=P_abund_up.copy()
+        self.mds['Pi01'][(self.Z_init_guess < 8.4)]=P_abund_low[(self.Z_init_guess < 8.4)].copy()
+        self.mds['Pi01'][(self.Z_init_guess >= 8.4)]=P_abund_up[(self.Z_init_guess >= 8.4)].copy()
 
     def calcPi01_Z_old(self):
         # P-method 2001 upper branch (derecated and commented out)
@@ -291,8 +292,8 @@ class diagnostics:
             P = 10**self.logO3O2/(1+10**self.logO3O2)
             P_R23=10**self.logR23
             P_abund_old=(P_R23+54.2+59.45*P+7.31*P**2)/(6.07+6.71*P+0.371*P**2+0.243*P_R23)
-            self.mds['Pi01_Z_old']=np.zeros(self.nm)
-            self.mds['Pi01_Z_old'][Z_init_guess >= 8.4]=P_abund_old[Z_init_guess >= 8.4]
+            self.mds['Pi01_old']=np.zeros(self.nm)
+            self.mds['Pi01_old'][Z_init_guess >= 8.4]=P_abund_old[Z_init_guess >= 8.4]
         else:
             print "WARNING: need OIIIOII to calculate Pi01_Z_old, did you set them up with  setOlines()?"
         
@@ -302,17 +303,17 @@ class diagnostics:
         if self.hasO35007O2 and self.hasO3Hb:
             x2=self.O2O35007/1.5
             x3=(10**self.logO3Hb)/2.
-            self.mds['C01_ZR23']=np.zeros(self.nm)        
-            self.mds['C01_ZR23'][self.O2O35007<0.8]=np.log10(3.78e-4 * (self.O2O35007[self.O2O35007<0.8]/1.5)**0.17 * x3[self.O2O35007<0.8]**(-0.44))+12.0    
+            self.mds['C01_R23']=np.zeros(self.nm)        
+            self.mds['C01_R23'][self.O2O35007<0.8]=np.log10(3.78e-4 * (self.O2O35007[self.O2O35007<0.8]/1.5)**0.17 * x3[self.O2O35007<0.8]**(-0.44))+12.0    
          
-            self.mds['C01_ZR23'][ self.O2O35007 >= 0.8]=np.log10(3.96e-4 * x3[self.O2O35007 >= 0.8]**(-0.46))+12.0   
+            self.mds['C01_R23'][ self.O2O35007 >= 0.8]=np.log10(3.96e-4 * x3[self.O2O35007 >= 0.8]**(-0.46))+12.0   
         else:
             print "WARNING: need [OIII]5700, [OII]3727, and Ha to calculate calcC01_ZR23, did you set them up with  setOlines()?"        
 
         # Charlot 01 calibration: (case A) based on [N2]/[SII]##
         # available but deprecated
         if self.hasN2S2:
-            C01_Z=np.log10(5.09e-4*((self.O2O35007/1.5)**0.17)*(((10**self.logN2S2)/0.85)**1.17))+12
+            self.mds['C01']=np.log10(5.09e-4*((self.O2O35007/1.5)**0.17)*(((10**self.logN2S2)/0.85)**1.17))+12
         else:
             print "WARNING: need [OIII]5700, [OII]3727, and Ha to calculate calcC01_ZR23, did you set them up with  setOlines() and ?"        
 
@@ -320,9 +321,9 @@ class diagnostics:
 
     def calcPP04_O3N2_Z(self):
         if self.hasO3Hb and self.hasN2Ha:
-            self.mds['PP04_O3N2_Z']=8.73 - 0.32*(self.logO3Hb-self.logN2Ha)
+            self.mds['PP04_O3N2']=8.73 - 0.32*(self.logO3Hb-self.logN2Ha)
         else:
-            print "WARNING: need O3Hb and N2Ha to calculate PP04_O3N2_Z, did you set them up?"
+            print "WARNING: need O3Hb and N2Ha to calculate PP04_O3N2, did you set them up?"
 
     def calcM91(self):
         # ## calculating M91 calibration using [N2O2] as 
@@ -339,17 +340,17 @@ class diagnostics:
         # Z_init=Z94_Z        
         # Z_init=KD02N2O2_Z
 
-        self.mds['M91_Z']=np.zeros(self.nm)
+        self.mds['M91']=np.zeros(self.nm)
         M91_Z_low=12.0-4.944+0.767*self.logR23+0.602*self.logR23**2-self.logO3O2*(0.29+0.332*self.logR23-0.331*self.logR23**2)
         M91_Z_up=12.0-2.939-0.2*self.logR23+-0.237*self.logR23**2-0.305*self.logR23**3-0.0283*self.logR23**4-self.logO3O2*(0.0047-0.0221*self.logR23-0.102*self.logR23**2-0.0817*self.logR23**3-0.00717*self.logR23**4)
         indx,=np.where((np.abs(self.logO3O2)>0) & (np.abs(self.logR23)>0) & (self.Z_init_guess < 8.4))
 
-        self.mds['M91_Z'][indx]=12.0-4.944+0.767*self.logR23[indx]+0.602*self.logR23[indx]**2-self.logO3O2[indx]*(0.29+0.332*self.logR23[indx]-0.331*self.logR23[indx]**2)
+        self.mds['M91'][indx]=12.0-4.944+0.767*self.logR23[indx]+0.602*self.logR23[indx]**2-self.logO3O2[indx]*(0.29+0.332*self.logR23[indx]-0.331*self.logR23[indx]**2)
         indx,=np.where((np.abs(self.logO3O2)>0) & (np.abs(self.logR23)>0) & (self.Z_init_guess >= 8.4))
-        self.mds['M91_Z'][indx]=12.0-2.939-0.2*self.logR23[indx]-0.237*self.logR23[indx]**2-0.305*self.logR23[indx]**3-0.0283*self.logR23[indx]**4-self.logO3O2[indx]*(0.0047-0.0221*self.logR23[indx]-0.102*self.logR23[indx]**2-0.0817*self.logR23[indx]**3-0.00717*self.logR23[indx]**4)
+        self.mds['M91'][indx]=12.0-2.939-0.2*self.logR23[indx]-0.237*self.logR23[indx]**2-0.305*self.logR23[indx]**3-0.0283*self.logR23[indx]**4-self.logO3O2[indx]*(0.0047-0.0221*self.logR23[indx]-0.102*self.logR23[indx]**2-0.0817*self.logR23[indx]**3-0.00717*self.logR23[indx]**4)
 
         #2014 FED: changed wrong values to None
-        self.mds['M91_Z'][(M91_Z_up < M91_Z_low)]=None
+        self.mds['M91'][(M91_Z_up < M91_Z_low)]=None
 
     def calcKD02_N2O2_Z(self):
         ### Kewley & Dopita (2002) (KD02) estimates of abundance ##
@@ -359,7 +360,7 @@ class diagnostics:
         # rms = 0.04 for
         # log(O/H)+12 > 8.6
         # uses equation (4) from paper:
-        self.mds['KD02_N2O2_Z']=np.zeros(self.nm)
+        self.mds['KD02_N2O2']=np.zeros(self.nm)
         if self.hasN2 and self.hasO23727 and self.hasHa and self.hasHb:         
             for i in range(self.nm):
                 k=3
@@ -369,7 +370,7 @@ class diagnostics:
                     else:
                         # between 7.5 and 9.4
                         if (abs(self.N2O2_roots[i][k]) >= 7.5) and (abs(self.N2O2_roots[i][k]) <= 9.4) :
-                            self.mds['KD02_N2O2_Z'][i]=abs(self.N2O2_roots[i][k]) 
+                            self.mds['KD02_N2O2'][i]=abs(self.N2O2_roots[i][k]) 
                             k=0
                         k=k-1
         else:
@@ -377,13 +378,13 @@ class diagnostics:
 
     def calcKD03_NHa(self):
         # calculating [N2]/Ha abundance estimates using [O3]/[O2] also
-        if self.mds['KD02_N2O2_Z'] ==None:
+        if self.mds['KD02_N2O2'] ==None:
             self.calcKD02_N2O2_Z()
-            if self.mds['KD02_N2O2_Z'] ==None:
+            if self.mds['KD02_N2O2'] ==None:
                 print "WARNING: without KD02_N2O2_Z cannot calculate KD03_NHa"
                 return -1
         ##why iterating???Z_new_N2Ha=np.zeros((niter,self.nm))
-        Z_new_N2Ha=self.mds['KD02_N2O2_Z'].copy()  # was 8.6
+        Z_new_N2Ha=self.mds['KD02_N2O2'].copy()  # was 8.6
 
         '''
         ##why iterating???
@@ -408,7 +409,7 @@ class diagnostics:
                 
                 
         #N2Halogq=logq
-        self.mds['KD03_N2Ha_abund']=Z_new_N2Ha[niter-1,:]
+        self.mds['KD03_N2Ha']=Z_new_N2Ha[niter-1,:]
         '''
 
         if self.hasN2 and self.hasHa:
@@ -417,19 +418,19 @@ class diagnostics:
                 #metallicities for comparison
                 #used to include 0.0*logO3O2(j)
                 logq=(32.81 -1.153*self.logO3O2**2 + 
-                       self.mds['KD02_N2O2_Z']*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2**2+ self.mds['KD02_N2O2_Z']*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2**2))
+                       self.mds['KD02_N2O2']*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2**2+ self.mds['KD02_N2O2']*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2**2))
             else :
                 logq=7.37177
                 #       no_O3O2_yes_HaHb_flag(noO3O2)=j
             Z_new_N2Ha=(7.04 + 5.28*self.logN2Ha+6.28*self.logN2Ha**2+2.37*self.logN2Ha**3)-logq*(-2.44-2.01*self.logN2Ha-0.325*self.logN2Ha**2+0.128*self.logN2Ha**3)+10**(self.logN2Ha-0.2)*logq*(-3.16+4.65*self.logN2Ha)
             
                 
-            self.mds['KD03_N2Ha_abund']=Z_new_N2Ha
+            self.mds['KD03_N2Ha']=Z_new_N2Ha
 
         else:
             print "WARNING: need NII6584  and Ha to calculate this. did you run  setHab() and setNII()?"
 
-    def 
+
 
 
 

@@ -23,16 +23,17 @@ G=True#False
 
 ##list of metallicity methods, in order calculated
 Zs=["KD02comb_updated", #always
-    "KD02_NIIOII", #Halpha, Hbeta,  [OII]3727, [NII]6584
-    "KD02_NIIHa",#Halpha, Hbeta,  [OII]3727, [NII]6584
-    "KD02_R23_updated", #Hbeta,  [OII]3727, [OIII]5007, [OIII]4959 
+    "KD02_N2O2", #Halpha, Hbeta,  [OII]3727, [NII]6584
+    "KD03_N2Ha",#Halpha, Hbeta,  [OII]3727, [NII]6584
+    "KD03new_R23", #Hbeta,  [OII]3727, [OIII]5007, [OIII]4959 
     "M91", #Hbeta,  [OII]3727,  [OIII]5007, [OIII]4959 
     "Z94", #Hbeta,  [OII]3727, [OIII]5007, [OIII]4959 
     "PP04_N2",   #Halpha, [NII]6584
     "PP04_O3N2", #Halpha, Hbeta,  [OIII]5007, [NII]6584
-    "Pi01_Z",  #Hbeta,  [OII]3727,  [OIII]5007
+    "Pi01",  #Hbeta,  [OII]3727,  [OIII]5007
     "D02", #Halpha, [NII]
-    "E(B-V)"] #Halpha, Hbeta]
+    "E(B-V)", #Halpha, Hbeta]
+    "C01_R23","C01"]
 
 def get_keys():
     return Zs
@@ -91,7 +92,7 @@ def calculation(diags,measured,num,(bsmeas,bserr),outfilename='blah.txt',red_cor
     diags.calcPP04_O3N2_Z()
     diags.calcKD02_N2O2_Z()
     diags.calcKD03_NHa()
-    diags.calcC01_ZR23()
+    #diags.calcC01_ZR23()
     diags.calcM91()
 
 '''
