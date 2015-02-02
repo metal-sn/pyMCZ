@@ -1066,9 +1066,10 @@ def calculation(data,num,(bsmeas,bserr),outfilename='blah.txt',red_corr=True,dis
     if saveres:
         wf.close()
 
-    res={Zs[0]:KD_comb_NEW, Zs[1]:KD02_NIIOII_Z, Zs[2]:KD03new_abund_R23,
-         Zs[3]:M91_Z, Zs[4]:Z94_Z, Zs[5]:KD03_NIIHa_abund, Zs[6]:D02_Z,
-         Zs[7]:PP04_N2_Z, Zs[8]:PP04_O3N2_Z, Zs[9]:Pi01_Z,Zs[10]:EB_V}
+    res={Zs[0]:KD_comb_NEW, Zs[1]:KD02_NIIOII_Z, Zs[2]:KD03_NIIHa_abund,
+         Zs[3]:KD03new_abund_R23,Zs[4]:M91_Z, Zs[5]:Z94_Z, Zs[6]:PP04_N2_Z, 
+         Zs[7]:PP04_O3N2_Z,
+         Zs[8]:Pi01_Z,Zs[9]:D02_Z,Zs[10]:EB_V}
     return res
     #return [KD_comb_NEW,KD02_NIIOII_Z,KD03new_abund_R23,M91_Z,Z94_Z,KD03_NIIHa_abund,D02_Z,PP04_N2_Z,PP04_O3N2_Z,Pi01_Z]
 
