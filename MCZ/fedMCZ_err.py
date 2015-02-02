@@ -30,7 +30,7 @@ VERBOSE=False
 UNPICKLE=False
 RUNSIM=True
 BINMODE='t'
-binning={'bb':'Bayesian blocks','k':"Knuth's rule",'d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2 N^{1/3}$'}
+binning={'bb':'Bayesian blocks','k':"Knuth's rule",'d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2 N^{1/3}$', 'kd':'Kernel Density'}
 
 def is_number(s):
     if not type(s) is np.string_:
@@ -169,7 +169,7 @@ def getbinsize(n,data,):
         k=1+np.log(n)+np.log(1+(g1*s1))
     elif BINMODE=='s':
         k=np.sqrt(n)
-    elif BINMODE=='t':
+    else:
         k=2.*n**(1./3.)
     return k
 
@@ -214,6 +214,7 @@ def checkhist(snname,Zs,nsample,i,path):
 ## delog - if true de-logs the data. False by default
 ##############################################################################
 def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
+    global BINMODE
     
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
@@ -243,33 +244,63 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         if "%2f"%maxright=="%2f"%maxleft:
             maxleft=median-1
             maxright=median+1
-
+        if left==right and right==median:
+            print "no disrtibution:",right,left,median
+            
+            return "-2, -2"
         ######histogram######
-        ###find appropriate bin size###
-        ##if astroML is available use it to get Bayesian blocks
-        if BINMODE=='bb' or BINMODE=='k':
+        ##if sklearn is available use it to get Kernel Density
+        if BINMODE=='kd':
             try:
-                from astroML.plotting import hist as amlhist
-                if BINMODE=='bb':
-                    distrib=amlhist(data, bins='blocks', normed=True)
-                else:
-                    distrib=amlhist(data, bins='knuth', normed=True)
-                plt.clf()
+                from sklearn.neighbors import KernelDensity
             except:
-                print "bayesian blocks and knuth methods for histogram requires astroML to be installed"
-                print "defaulting to 2*n**1/3 "
-                ##otherwise 
-                numbin=getbinsize(data.shape[0],data)        
-                distrib=np.histogram(data, numbin, density=True)
-        else:
+                print '''sklearn is not available, 
+                thus we cannot compute kernel density. 
+                switching to bayesoan blocks'''
+                BINMODE='bb'
+        if BINMODE=='kd':
+            bw=(data.max()-data.min())/4.
+            if bw >0:
+                kde = KernelDensity(kernel='tophat', bandwidth=bw).fit(data[:, np.newaxis])
+                bins=np.linspace(maxleft,maxright,1000)[:, np.newaxis]
+                log_dens = kde.score_samples(bins)
+                dens=np.exp(log_dens)
+                #print dens
+                plt.fill(bins[:,0], dens/dens.max(), fc='#AAAAFF')
             numbin=getbinsize(data.shape[0],data)        
             distrib=np.histogram(data, numbin, density=True)            
-        ###make hist###
-        counts, bins=distrib[0],distrib[1]
-        widths=np.diff(bins)
-        countsnorm=counts/np.max(counts)
+            ###make hist###
+            counts, bins=distrib[0],distrib[1]
+            widths=np.diff(bins)
+            countsnorm=counts/np.max(counts)
+            plt.bar(bins[:-1],countsnorm,widths,color=['gray'], alpha=0.3)
 
-        ###plot hist###
+        ###find appropriate bin size###
+        ##if astroML is available use it to get Bayesian blocks
+        else:
+            if BINMODE=='bb' or BINMODE=='k':
+                try:
+                    from astroML.plotting import hist as amlhist
+                    if BINMODE=='bb':
+                        distrib=amlhist(data, bins='blocks', normed=True)
+                    else:
+                        distrib=amlhist(data, bins='knuth', normed=True)
+                    plt.clf()
+                except:
+                    print "bayesian blocks and knuth methods for histogram requires astroML to be installed"
+                    print "defaulting to 2*n**1/3 "
+                    ##otherwise 
+                    numbin=getbinsize(data.shape[0],data)        
+                    distrib=np.histogram(data, numbin, density=True)
+            else:
+                numbin=getbinsize(data.shape[0],data)        
+                distrib=np.histogram(data, numbin, density=True)            
+            ###make hist###
+            counts, bins=distrib[0],distrib[1]
+            widths=np.diff(bins)
+            countsnorm=counts/np.max(counts)
+
+            ###plot hist###
         plt.bar(bins[:-1],countsnorm,widths,color=['gray'])
         plt.minorticks_on()
         plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
@@ -316,7 +347,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
 def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
-    global RUNSIM
+    global RUNSIM,BINMODE
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     print len(flux['galnum']),nm
     assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
@@ -397,22 +428,24 @@ def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
             #res[i]
 
             metallicity.calculation(diags,temp,nm,bss,scales,red_corr=red_corr,disp=VERBOSE)
-#            diags.printme()
+            #diags.printme()
 #            s=key+"\t "+savehist(t,'test','EB_V',100,i,binp,nm,delog=delog)+'\n'
 #            plt.hist(t)
 #            plt.show()
-            for k in diags.mds.iterkeys():
-                if k in ['KD_comb_NEW']: print '*',
-                print '{0:20}'.format(k),
-                if not diags.mds[k]==None:
-                    print ' {0:4} {1:4}'.format( np.mean(diags.mds[k]),np.std(diags.mds[k])),
-                print ""
+#            for k in diags.mds.iterkeys():
+#                if k in ['KD_comb_NEW']: print '*',
+#                print '{0:20}'.format(k),
+#                if not diags.mds[k]==None:
+#                    print ' {0:4} {1:4}'.format( stats.nanmean(diags.mds[k]),stats.nanstd(diags.mds[k])),
+#                print ""
             
             for key in diags.mds.iterkeys():
-#                print "here",res[key]#,diags.mds[key]
+                #print "here",res[key]#,diags.mds[key]
                 res[key][i]=diags.mds[key]
         for key in diags.mds.iterkeys():
             res[key]=np.array(res[key]).T
+            #print res[key]
+            #raw_input()
         #recast the result into np.array
         ##        for key in Zs:
         ##           res[key]=np.array(res[key])
@@ -431,13 +464,10 @@ def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
         fi.write("%s\t Median Oxygen abundance (12+log(O/H))\t 16th percentile\t 84th percentile\n"%name)
         
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
-        
         for key in Zs:
-            try:
+            if len(res[key].shape)>1 and key in res.keys():
                 s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog)+'\n'
                 fi.write(s)
-            except :#KeyError, IndexError:
-                print "missing key ",key
 
         fi.close()
     
@@ -449,7 +479,7 @@ def main():
     parser.add_argument('nsample', metavar='N', type=int, help="number of iterations, minimum 100")
     parser.add_argument('--clobber',default=False, action='store_true', help="replace existing output")
     parser.add_argument('--delog',default=False, action='store_true', help="result in natural, not log space. default is log space")
-    parser.add_argument('--binmode', default='t', type=str, choices=['d','s','t','bb'], help="method to determine bin size {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), k: Knuth's rule, bb: Bayesian blocks}")
+    parser.add_argument('--binmode', default='t', type=str, choices=['d','s','t','bb','kd'], help="method to determine bin size {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), k: Knuth's rule, bb: Bayesian blocks, kd: Kernel Density}")
     parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _max.txt and _min.txt files in a subdirectory sn_data)")
     parser.add_argument('--unpickle',   default=False, action='store_true', help="read the pickled realization instead of making a new one")
 
