@@ -78,7 +78,7 @@ def calculation(data,num,(bsmeas,bserr),outfilename='blah.txt',red_corr=True,dis
     SII6731_raw=np.zeros(num)
     SIII9069_raw=np.zeros(num)
     SIII9532_raw=np.zeros(num)
-    SII67176731_raw=data[11]
+    SII67176731_raw=data[8]#data[11]
     SIII90699532_raw=np.zeros(num)
     OI6300_raw=data[5]
     OIII49595007_raw=OIII4959_raw + OIII5007_raw
@@ -569,7 +569,7 @@ def calculation(data,num,(bsmeas,bserr),outfilename='blah.txt',red_corr=True,dis
 
     M91_Z[(M91_Z_up < M91_Z_low)]=None
 
-
+#######################okokokokokokokokokokokokokokokokokokokoko#############
     # #### New ionization parameter and metallicity diagnostics #######
     # NEW R23 diagnostics from Kobulnicky & Kewley 
     # See NEW_fitfin.coefs
@@ -596,6 +596,8 @@ def calculation(data,num,(bsmeas,bserr),outfilename='blah.txt',red_corr=True,dis
 
     # ionization parameter
         logq[i,:]=(32.81 -1.153*logOIIIOII**2 + Z_new[i,:]*(-3.396 -0.025*logOIIIOII + 0.1444*logOIIIOII**2))/(4.603  -0.3119*logOIIIOII -0.163*logOIIIOII**2+Z_new[i,:]*(-0.48 +0.0271*logOIIIOII+ 0.02037*logOIIIOII**2))
+
+        print logq[i,:],Z_new[i,:]
 
     # maximum of R23 curve:
         for j in range(num) :
@@ -667,14 +669,12 @@ def calculation(data,num,(bsmeas,bserr),outfilename='blah.txt',red_corr=True,dis
                         logq_final[i]=(32.81 + 0.0*logOIIIOII[i]-1.153*logOIIIOII[i]**2 +KD02_NIIOII_Z[i]*(-3.396 -0.025*logOIIIOII[i] + 0.1444*logOIIIOII[i]**2))/(4.603  -0.3119*logOIIIOII[i] -0.163*logOIIIOII[i]**2+KD02_NIIOII_Z[i]*(-0.48 +0.0271*logOIIIOII[i]+ 0.02037*logOIIIOII[i]**2))
                     else:
                         logq_final[i]=logq[nite-1,i]
-        
-       
-       
             if (NII6584_raw[i] == 0.0) and (OII3727_raw[i] != 0.0) :
                 if (OIII5007_raw[i] != 0.0) :
                     if (Hb_raw[i] != 0.0) and (Ha_raw[i] != 0.0) :
                         logq_final[i]=logq[nite-1,i]
-                        
+                    
+
 
     # ### KD02 [NII]/[OII] estimate ###
     # (can be used for for log(O/H)+12 > 8.6 only)
@@ -684,7 +684,6 @@ def calculation(data,num,(bsmeas,bserr),outfilename='blah.txt',red_corr=True,dis
     #KD02_NIIOII2_Z=np.zeros(num)
 
     KD02_NIIOII2_Z=np.log10(8.511e-4*(1.54020+1.26602*logNIIOII+0.167977*logNIIOII**2))+12.
-
 
     # if [NII]/[OII] after extinction correction is less than -1.5, then check the data.
     # if it is only slightly less than 1.5, then this can be a result of either noisy

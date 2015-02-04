@@ -403,7 +403,8 @@ def run((name, flux, err, path, bss), nsample,delog=False, unpickle=False):
         
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         #print res['E(B-V)']
-        print res['E(B-V)'].shape
+        print res['E(B-V)'].shape,name,key,nsample,i,binp,nm
+        raw_input()
         for key in Zs:
             s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog)+'\n'
             fi.write(s)
