@@ -283,11 +283,11 @@ def run((name, flux, err, path, bss), nsample,delog=False, unpickle=False):
     Zs= metallicity_stable.get_keys()
 
     ###make necessary paths
-    if not os.path.exists(os.path.join(p,'output','%s'%name)):
-        os.makedirs(os.path.join(p,'output','%s'%name))
-    if not os.path.exists(os.path.join(p,'output','%s'%name,'hist')):
-        os.makedirs(os.path.join(p,'output','%s'%name,'hist'))
-    binp=os.path.join(p,'output','%s'%name)
+    if not os.path.exists(os.path.join(p,'outputstable','%s'%name)):
+        os.makedirs(os.path.join(p,'outputstable','%s'%name))
+    if not os.path.exists(os.path.join(p,'outputstable','%s'%name,'hist')):
+        os.makedirs(os.path.join(p,'outputstable','%s'%name,'hist'))
+    binp=os.path.join(p,'outputstable','%s'%name)
     picklefile=os.path.join(binp,'%s_n%d.pkl'%(name,nsample))
 
     if VERBOSE: print "output files will be stored in ",binp

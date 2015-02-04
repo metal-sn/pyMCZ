@@ -417,36 +417,18 @@ class diagnostics:
                 # calculating logq using the [N2]/[O2] 
                 #metallicities for comparison
                 #used to include 0.0*logO3O2(j)
-                logq=(32.81 -1.153*self.logO3O2**2 + 
+                self.logq=(32.81 -1.153*self.logO3O2**2 + 
                        self.mds['KD02_N2O2']*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2**2+ self.mds['KD02_N2O2']*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2**2))
             else :
-                logq=7.37177
+                self.logq=7.37177
                 #       no_O3O2_yes_HaHb_flag(noO3O2)=j
-            Z_new_N2Ha=(7.04 + 5.28*self.logN2Ha+6.28*self.logN2Ha**2+2.37*self.logN2Ha**3)-logq*(-2.44-2.01*self.logN2Ha-0.325*self.logN2Ha**2+0.128*self.logN2Ha**3)+10**(self.logN2Ha-0.2)*logq*(-3.16+4.65*self.logN2Ha)
+            Z_new_N2Ha=(7.04 + 5.28*self.logN2Ha+6.28*self.logN2Ha**2+2.37*self.logN2Ha**3)-self.logq*(-2.44-2.01*self.logN2Ha-0.325*self.logN2Ha**2+0.128*self.logN2Ha**3)+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
             
                 
             self.mds['KD03_N2Ha']=Z_new_N2Ha
 
         else:
             print "WARNING: need NII6584  and Ha to calculate this. did you run  setHab() and setNII()?"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def calclims():
         # calculating upper and lower metallicities for objects without
@@ -466,4 +448,26 @@ class diagnostics:
                 
                 Z_new_N2Ha_up=(7.04 + 5.28*logN2Ha+6.28*logN2Ha**2+2.37*logN2Ha**3)-logq_up*(-2.44-2.01*logN2Ha-0.325*logN2Ha**2+0.128*logN2Ha**3)+10**(logN2Ha-0.2)*logq_up*(-3.16+4.65*logN2Ha)
             '''
+
+
+
+    def calcKK04(self):
+        if self.mds['KD02_N2O2']=None:
+            # ### KD02 [NII]/[OII] estimate ###
+            # (can be used for for log(O/H)+12 > 8.6 only)
+            # uses equation (5) from paper, this should be identical 
+            # to the estimate above for abundances log(O/H)+12 > 8.6
+            
+            self.mds['KD02_N2O2']=np.log10(8.511e-4*(1.54020+1.26602*self.logN2O2+0.167977*self.logN2O2**2))+12.
+
+
+        # ionization parameter
+        
+        logq_final=np.zeros(self.nm)
+        if self.hasN2 and self.hasO23727 and self.hasHb and self.hasHa:
+            logq_final=(32.81 + 0.0*self.logO3O2-1.153*self.logO3O2**2 +self.mds['KD02_N2O2']*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603  -0.3119*self.logO3O2 -0.163*self.logO3O2**2+self.mds['KD02_N2O2']*(-0.48 +0.0271*self.logO3O2+ 0.02037*self.logO3O2**2))
+            logq_final[self.mds['KD02_N2O2']<=8.4]=self.logq[self.mds['KD02_N2O2']<=8.4]
+
+        if  not self.hasN2 and self.hasO23727 and self.hasO35007_raw and self.hasHb and self.hasHa:
+            logq_final=logq
 
