@@ -91,16 +91,10 @@ def readfile(filename):
 def input_format(filename,path):
     p = os.path.join(path,"input") 
     assert os.path.isdir(p), "bad data directory %s"%p
-    if OLD:
-        if os.path.isfile(os.path.join(p,filename+'_max.txt')) and os.path.isfile(os.path.join(p,filename+'_min.txt')):
-
-            if os.path.isfile(os.path.join(p,filename+'_med.txt')):
-                return in_mmm(filename,path=p,meas=True)
-    else:
-        if os.path.isfile(os.path.join(p,filename+'_err.txt')):
-            if os.path.isfile(os.path.join(p,filename+'_meas.txt')):
-                return ingest_data(filename,path=p)            
-    print "Unable to find _min and _max files or _meas and _err files ",filename+'_max.txt',filename+'_min.txt',"in directory ",p
+    if os.path.isfile(os.path.join(p,filename+'_err.txt')):
+        if os.path.isfile(os.path.join(p,filename+'_meas.txt')):
+            return ingest_data(filename,path=p)            
+    print "Unable to find _meas and _err files ",filename+'_meas.txt',filename+'_err.txt',"in directory ",p
     return -1
 
 def ingest_data(filename,path):
@@ -111,37 +105,8 @@ def ingest_data(filename,path):
     ###read the max, meas, min flux files###    
     meas,nm, bsmeas=readfile(measfile)
     err, nn, bserr =readfile(errfile)
-    bsmed=None
-    #print meas,err
-
+    print bsmeas.keys()
     return (filename, meas, err, nm, path, (bsmeas,bserr))
-
-def in_mmm(filename,path,meas=False):
-#    p=os.path.abspath('..')
-#    p+='\\sn_data\\'
-    
-    ###Initialize###
-    maxfile=os.path.join(path,filename+"_max.txt")
-    minfile=os.path.join(path,filename+"_min.txt")
-    
-    ###read the max, meas, min flux files###    
-    maxf,nm, bsmax=readfile(maxfile)
-    minf,nn, bsmin=readfile(minfile)
-    bsmed=None
-
-    if med:
-        medfile=os.path.join(path,filename+"_med.txt")
-        medf,num,bsmed=readfile(medfile)
-
-        ###calculate the flux error as 1/2 [(max-med)+(med-min)]###
-        #err=0.5*((maxf-medf)+(medf-minf))
-    else:
-        medf= minf+err
-
-    err=0.5*(maxf - minf)
-    return (filename, medf, err, path, (bsmin,bsmed,bsmax))
-
-
 
 ##############################################################################
 ##sets which metallicity scales can be calculated based on the available lines
@@ -231,7 +196,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
     n=data.shape[0]
     
     if data.shape[0]<=0 or np.sum(data)<=0:
-        print name,' cannot be calculated' ##if no data
+        print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(name.split('_')[0],Zs,-1,-1,-1)
         return "-1, -1, -1"    
     try:
         ###find C.I.###
@@ -244,10 +209,10 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         if "%2f"%maxright=="%2f"%maxleft:
             maxleft=median-1
             maxright=median+1
-        if left==right and right==median:
-            print "no disrtibution:",right,left,median
-            
-            return "-2, -2"
+        if round(right,5)==round(left,5) and round(left,5)==round(median,5):
+            print '{0:15} {1:20} {2:>13.3f} - {3:>7.3f} + {4:>7.3f} (no distribution)'.format(name.split('_')[0],Zs,median,0,0 )
+
+            return "-2,-2"
         ######histogram######
         ##if sklearn is available use it to get Kernel Density
         if BINMODE=='kd':
@@ -328,7 +293,6 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         
         ###print out the confidence interval###
         print '{0:15} {1:20} {2:>13.3f} - {3:>7.3f} + {4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
-
         return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3))
 
     except (OverflowError,AttributeError,ValueError):
@@ -346,7 +310,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
+def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=False, dust_corr=True):
     global RUNSIM,BINMODE
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     print len(flux['galnum']),nm
@@ -412,23 +376,25 @@ def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
                 del bss[1][k]
 
         scales=setscales(bss[0])
-        red_corr=True
         import diagnostics as dd
         for i in range(nm):
             diags=dd.diagnostics(newnsample)
             print "\n\nmeasurement ",i+1
             #for i in range(newnsample):
-            temp={}#np.zeros((len(bss[0]),nm),float)
+            fluxi={}#np.zeros((len(bss[0]),nm),float)
             for j,k in enumerate(bss[0].iterkeys()):
-                #print k,bss[0][k][1], bss[1][k][1]
-                temp[k]=flux[k][i]*np.ones(len(sample))+err[k][i]*sample
+                print '{0:15} '.format(k),
+                #print bss[0][k][1], bss[1][k][1]
+                #print_options.set_float_precision(2)
+                print '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
+                fluxi[k]=flux[k][i]*np.ones(len(sample))+err[k][i]*sample
                 warnings.filterwarnings("ignore")
-            #t,red_corr=metallicity.calculation(temp,nm,bss,scales,red_corr=red_corr,disp=VERBOSE)
-            #res,red_corr=
-            #res[i]
 
-            metallicity.calculation(diags,temp,nm,bss,scales,red_corr=red_corr,disp=VERBOSE)
-            #diags.printme()
+            success=metallicity.calculation(diags,fluxi,nm,bss,smass,disp=VERBOSE, dust_corr=dust_corr)
+            if success==-1:
+                print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717','Ha','Hb' and 6.0<Smass<14 MSun"
+            print "measurement %d-------------------------------------------------------------"%(i+1)
+#            diags.printme()
 #            s=key+"\t "+savehist(t,'test','EB_V',100,i,binp,nm,delog=delog)+'\n'
 #            plt.hist(t)
 #            plt.show()
@@ -440,8 +406,12 @@ def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
 #                print ""
             
             for key in diags.mds.iterkeys():
-                #print "here",res[key]#,diags.mds[key]
+                #print "here",key,res[key],diags.mds[key]
                 res[key][i]=diags.mds[key]
+                #print res[key]
+#            for key in diags.mds.iterkeys():
+                if res[key][i]==None:
+                    res[key][i]=[float('NaN')]*len(sample)
         for key in diags.mds.iterkeys():
             res[key]=np.array(res[key]).T
             #print res[key]
@@ -465,7 +435,7 @@ def run((name, flux, err, nm, path, bss), nsample,delog=False, unpickle=False):
         
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
-            if len(res[key].shape)>1 and key in res.keys():
+            if len(res[key].shape)>1:
                 s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog)+'\n'
                 fi.write(s)
 
@@ -484,7 +454,8 @@ def main():
     parser.add_argument('--unpickle',   default=False, action='store_true', help="read the pickled realization instead of making a new one")
 
     parser.add_argument('--verbose',default=False, action='store_true', help="verbose mode")
-
+    parser.add_argument('--mass',default=10, type=float,help="stellar mass, which can be validated")
+    parser.add_argument('--nodust',default=False, action='store_true', help=" dont do dust corrections (default is to do it)")
     args=parser.parse_args()
 
     global CLOBBER
@@ -509,10 +480,11 @@ def main():
     if args.nsample>=100:
         fi=input_format(args.name, path=path)
         if fi!=-1:
-            run(fi,args.nsample,delog=args.delog, unpickle=args.unpickle)
+            run(fi,args.nsample,args.mass,delog=args.delog, unpickle=args.unpickle, dust_corr=(not args.nodust))
     else:
         print "nsample must be at least 100"
     
+
 if __name__ == "__main__":
     main()
     #files=['sn2006ss','ptf10eqi-z']
