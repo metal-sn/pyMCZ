@@ -12,6 +12,7 @@
 ## disp - if True prints the results, default False
 ## saveres - if True appends the results onto outfilename, True by default
 ##############################################################################
+import sys
 import numpy as np
 from pylab import hist,show
 
@@ -38,62 +39,77 @@ Zs=["KD02comb_updated", #always
 def get_keys():
     return Zs
 
+
 ##############################################################################
 ##fz_roots function as used in the IDL code  FED:reference the code here!
 ##############################################################################
 
-def calculation(diags,measured,num,(bsmeas,bserr),outfilename='blah.txt',red_corr=True,disp=False,saveres=False): 
+def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False): 
 
     raw_lines={}
-
     for k in measured.iterkeys():
         #kills all non-finite terms 
         measured[k][np.where(np.isfinite(measured[k][:])==False)]=0.0 
         raw_lines[k]=measured[k]
-    
-    
-    raw_lines['[OIII]4959']=raw_lines['[OIII]5007']/3.
+        #print k, raw_lines[k][0]
 
+    raw_lines['[OIII]4959']=raw_lines['[OIII]5007']/3.
+    raw_lines['[OIII]49595007']=raw_lines['[OIII]4959']+raw_lines['[OIII]5007']
+    
     diags.setHab(raw_lines['Ha'],raw_lines['Hb'])
     
 
     #if Ha or Hb is zero, cannot do red correction
-    if red_corr and diags.hasHa and diags.hasHb:
+    if dust_corr and diags.hasHa and diags.hasHb:
         with np.errstate(invalid='ignore'):
             #print 'extinction correction ',i
             diags.calcEB_V()
-    elif red_corr:
+    elif dust_corr:
         response=raw_input("WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!! Continuing without reddening correction? [Y/n]\n").lower()
         assert(not (response.startswith('n'))),"please fix the input file to include Halpha and Hbeta measurements"
-        red_corr=False
-        diags.EB_V=np.ones(len(raw_lines['Ha']))*1e-5
+        dust_corr=False
+        diags.mds['E(B-V)']=np.ones(len(raw_lines['Ha']))*1e-5
     else:
-        diags.EB_V=np.ones(len(raw_lines['Ha']))*1e-5
-        
+        diags.unsetdustcorrect()
+        diags.mds['E(B-V)']=np.ones(len(raw_lines['Ha']))*1e-5
+
 
     #####setting up lines first
+
+    for k in ['[OII]3727','[OIII]5007','[OI]6300','[OIII]4959',
+              '[SII]6717','[SII]6731','[SIII]9069','[SIII]9532'
+              '[OII]3727','[OIII]5007','[OI]6300','[OIII]4959',
+              '[NII]6584','[SIII]9532']:
+        if k not in raw_lines or len(raw_lines[k])==1:
+            raw_lines[k]=np.array([0.]*num)
+
+
     diags.setOlines(raw_lines['[OII]3727'], raw_lines['[OIII]5007'], raw_lines['[OI]6300'], raw_lines['[OIII]4959'])
     diags.setNII(raw_lines['[NII]6584'])
-    diags.setS(raw_lines['[SII]6717'],raw_lines['[SII]6731'],raw_lines['[SIII]9069'],raw_lines['[SIII]9532']),
-
+    diags.setSII(raw_lines['[SII]6717'],raw_lines['[SII]6731'],raw_lines['[SIII]9069'],raw_lines['[SIII]9532'])
+    if diags.checkminimumreq(dust_corr,Smass) == -1:
+        return -1
+        
     diags.calcNIIOII()
     diags.calcNIISII()
-    diags.calcSIIHa()
+
 
     diags.calcR23()
     #diags.calcS23()
 
-    diags.calcZ94_Z()
+    diags.initialguess()
+
     diags.calcD02_Z()
-    diags.calcPP04_N2_Z()
-
+    diags.calcPP04()
+    diags.calcZ94()
     diags.Pmethod()
-
-    diags.calcPP04_O3N2_Z()
-    diags.calcKD02_N2O2_Z()
-    diags.calcKD03_NHa()
-    #diags.calcC01_ZR23()
     diags.calcM91()
 
 
-    diags.calcKK04()
+    diags.calcKD02_N2O2()
+    diags.calcKD03_N2Ha()
+    diags.calcC01_ZR23()
+
+
+    diags.calcKD03R23()
+    diags.calcKDcombined()
