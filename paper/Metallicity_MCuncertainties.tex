@@ -24,7 +24,7 @@
 \begin{document}
 \title{Monte Carlo Method for Calculating Uncertainty in Oxygen Abundance from Strong-Line Flux Measurements}
 
-\author{Seung Man Oh\altaffilmark{1,2}, Maryam Modjaz\altaffilmark{1}, David Fierroz\altaffilmark{1}, Federica Bianco\altaffilmark{1}, Yuqian Liu\altaffilmark{1}, Lisa Kewley\altaffilmark{3,4}}
+\author{Author order to be determined: Maryam Modjaz\altaffilmark{1}, Federica Bianco\altaffilmark{1}, Seung Man Oh\altaffilmark{1,2}, David Fierroz\altaffilmark{1}, Yuqian Liu\altaffilmark{1}, Lisa Kewley\altaffilmark{3,4}}
 \altaffiltext{1}{Center for Cosmology and Particle Physics, New York University, 4 Washington Place, New York, NY 10003, USA}
  \altaffiltext{2}{NYU Abu Dhabi PO Box 129188 Abu Dhabi, UAE}
  \altaffiltext{3}{Australian National University, Research School for Astronomy \& Astrophysics, Mount Stromlo Observatory, Cotter Road, Weston, ACT 2611, Australia }
@@ -32,7 +32,7 @@
  
  
 \begin{abstract}
-We present here a Python implementation for the determination of the strong-emission-line estimators of oxygen abundance by \citet{kewley02}. The standard strong line Metallicity scales and diagnostics \text{IMPROVE} have been used to estimate metal abundance by using emission line ratios. Here we introduce Monte Carlo resampling to these methods in order to better characterize an oxygen abundance confidence region.  We output probability distributions, measured values for metallicity and, when desired for reddening E(B-V). We test our code on emission lines measurements from a sample of galaxies ($z<0.15$) and compare our metallicity results with those from previous methods. \textbf{MODIFY AT THE END,}. We show that our metallicity estimate is consistent with previous methods but yields smaller uncertainties. The code is open source and can be found at www.github.com/snyugroup.
+\textbf{MODIFY \& FINALIZE AT THE END:} We present an open-source Python code for the determination of the strong-emission-line estimators of oxygen abundance in the standard scales, based on the original IDL-code in \citet{kewley02}. The standard strong line Metallicity scales and diagnostics \text{IMPROVE} have been used to estimate metal abundance by using emission line ratios. Here we introduce Monte Carlo resampling to these methods in order to better characterize an oxygen abundance confidence region.  We output probability distributions, measured values for metallicity and, when desired, for reddening E(B-V). We test our code on emission lines measurements from a sample of galaxies ($z<0.15$) and compare our metallicity results with those from previous methods. . We show that our metallicity estimate is consistent with previous methods but yields smaller uncertainties. The code is open source and can be found at www.github.com/snyugroup.
 \end{abstract}
  
 \section{Introduction}
@@ -43,24 +43,22 @@ The low quantity of carbon, oxygen, nitrogen, sulfur and iron among other elemen
 %Metals are produced in the cores of stars during their fusion lifecycle but also during the extreme conditions of stellar explosions. For example, the majority of iron comes from thermonuclear explosions (SN Ia) while nearly all of oxygen is the result of core collapse (SN Ib, Ic, \& II). Since new stars are born from the clouds these explosions produce, metallicity will increase with each passing generation. Stars like our Sun, which are results of multiple generations of star formation, are often found in the more active parts of the galaxy, such as the disk, and are referred to as Population I stars. Population I stars have higher metallicity than older Population II stars, which are also present in the disk but are the exclusive members of the low activity galactic halo. Population III stars would be first generation stars with zero metallicity, but have yet to be observed.
 %Besides age, metallicity also influences stellar temperature. Metals are more effective at absorbing energy coming from the interior of the star in the stellar atmosphere so their presence increases the stellar opacity. With greater absorption and opacity the radius expands to a size larger than it would be without metals and this larger size results in a cooler effective temperature. While metallicity can help indicate age or activity it's temperature and density dependencies require parameterization to properly be estimated.
 
-However, for almost all astronomical objects, metallicity cannot be measured directly. The oxygen abundance in the gas-phase is the canonical choice of metallicity indicator for interstellar medium (ISM) studies, since oxygen is the most abundant metal and only weakly depleted onto dust grains (in contrast to refractory elements such as Mg, Si, Fe, with Fe being depleted by more than a factor of 10 in Orion; see \citealt{simondiaz11-orion}). The oxygen abundance\footnote{We note that in many cases in the literature, including here, the terms metallicity and oxygen abundance are used interchangeably.} is expressed as  $12 + \log_{10}(\frac{O}{H})$ where $O$ and $H$ are the number fractions of Oxygen and Hydrogen, respectively. Importantly, oxygen exhibits very strong nebular lines in the optical wavelength range of HII regions (e.g., \citealt{pagel79,osterbrock89,tremonti04}), and thus, well-established diagnostic techniques have been developed (e.g., \citealt{kewley02,pettini04,kobulnicky04,kewley08}). 
+However, for almost all astronomical objects, metallicity cannot be measured directly. The oxygen abundance in the gas-phase is the canonical choice of metallicity indicator for interstellar medium (ISM) studies, since oxygen is the most abundant metal and only weakly depleted onto dust grains (in contrast to refractory elements such as Mg, Si, Fe, with Fe being depleted by more than a factor of 10 in Orion; see \citealt{simondiaz11-orion}). The oxygen abundance\footnote{We note that in many cases in the literature, including here, the terms metallicity and oxygen abundance are used interchangeably.} is expressed as  $12 + \log_{10}(\frac{O}{H})$ where $O$ and $H$ are the number fractions of Oxygen and Hydrogen, respectively. Importantly, oxygen exhibits very strong nebular lines in the optical wavelength range of HII regions (e.g., \citealt{pagel79,osterbrock89,tremonti04}), and thus, many different diagnostic techniques have been developed (e.g., \citealt{kewley02,pettini04,kobulnicky04,kewley08}), which are discussed in the next section.
 
-\subsection{Oxygen Abundance diagnostics}
-The "classical" way to estimate the oxygen abundance is the electron temperature ($T_e$) method, which estimates the electron temperature and density of the nebula using a number of oxygen lines with different ionization states, including the auroral [OIII] $\lambda$4363 line, to then directly estimate the OII and OIII abundances to obtain the total oxygen abundance, after correcting for the unseen stages of ionization. However, the auroral [OIII] $\lambda$4363 line is very weak, even in low-metallicity environments, and saturates at higher metallicity $-$ thus, other methods had to be developed that use other, stronger lines, in the spectra of HII regions. These are called strong-line methods and are the subject of this manuscript. Strong-line methods can be basically categorized into two types: theoretical methods, that rely on calibrating various observed line ratios using photoionization methods (basically theoretically simulating HII regions, using stellar model atmospheres, stellar populations and photoionization models) and empirical ones that calibrate various observed line ratios using observed $T_e$-based metallicities. 
+\subsection{The different oxygen abundance diagnostics}
+The "classical" way to estimate the oxygen abundance is the electron temperature ($T_e$) method, which estimates the electron temperature and density of the nebula using a number of oxygen lines with different ionization states, including the auroral [OIII] $\lambda$4363 line, to then directly estimate the OII and OIII abundances to obtain the total oxygen abundance, after correcting for the unseen stages of ionization. However, the auroral [OIII] $\lambda$4363 line is very weak, even in low-metallicity environments, and saturates at higher metallicity (since oxygen NIR fine structure lines are cooling the nebula at higher metallicities) $-$ thus, other methods had to be developed that use other, stronger lines, in the spectra of HII regions. \textbf{MENTION DOPITA's results since the SN people are not aware of the recent developements }These are called strong-line methods and are the subject of this manuscript. Strong-line methods can be basically categorized into two types: theoretical methods, that rely on calibrating various observed line ratios using photoionization methods (basically theoretically simulating HII regions, using stellar model atmospheres, stellar populations and photoionization models) and empirical ones that calibrate various observed line ratios using observed $T_e$-based metallicities. 
 
 
-For the theoretical strong-line method, one ratio that is commonly used to determine the metallicity of galaxies is ([OII] $\lambda 3727$ $+$ [OIII] $\lambda 4959,\lambda 5007$)$/$H$_\beta$ \citep{pagel79} and is referred to as R23. The drawback of this method is that it is double-valued with metallicity, and thus other line ratios need to be used to break the degeneracy between the high values ("upper branch") and the low values ("lower branch") of the R23 metallicities. Furthermore, \citet{kewley02} showed the importance of ionization parameter, which can be physically understood to correspond to the maximum velocity of an ionized front that can be driven by the local radiation field of hot massive stars that are ionizing the ISM gas, that needs to be taken into account in the various strong-line methods, as HII regions for the same metallicity but with different ionization parameters produce different line strengths . Calibrations of R23 by \citet{mcgaugh91} (hereafter M91) and by \citet{kewley02} (hereafter KD02) use different theoretical photoionization models and take ionization parameter into account, while other calibrations such as of \citet{zaritsky94} (hereafter Z94) do not. Thus, Z94 is mostly valid for only metal-rich galaxies.  KD02 use an iterative process and two different ratios [NII]$/$[OII] and [NII]$/$H$_\alpha$ to break the R23 degeneracy in order to arrive at the metallicity estimate. 
+For the theoretical strong-line method, one ratio that is commonly used to determine the metallicity of galaxies is ([OII] $\lambda 3727$ $+$ [OIII] $\lambda 4959,\lambda 5007$)$/$H$_\beta$ \citep{pagel79} and is referred to as R23. The drawback of this method is that it is double-valued with metallicity, and thus other line ratios need to be used to break the degeneracy between the high values ("upper branch") and the low values ("lower branch") of the R23 metallicities. Furthermore, \citet{kewley02} showed the importance of ionization parameter, which can be physically understood to correspond to the maximum velocity of an ionized front that can be driven by the local radiation field of hot massive stars that are ionizing the ISM gas. This ionization parameter needs to be taken into account in the various strong-line methods, as HII regions at the same metallicity but with different ionization parameters produce different line strengths. Calibrations of R23 by \citet{mcgaugh91} (hereafter M91) and by \citet{kewley02} (hereafter KD02) use different theoretical photoionization models and take ionization parameter into account, while other calibrations such as of \citet{zaritsky94} (hereafter Z94) do not. Thus, Z94 is mostly valid for only metal-rich galaxies.  M91 and KD02 use an iterative process to break the R23 degeneracy  (KD02 uses different ratios [NII]$/$[OII] and [NII]$/$H$_\alpha$) and to also constrain the ionization parameter $q$ in order to arrive at the metallicity estimate.
 
 %The most direct way to estimate metallicity in spectra is to measure line fluxes absorbed or emitted by metals and non-metals. While iron lines may be present in stellar spectra, iron is less commonly found in gaseous nebulae than oxygen is. Not only is oxygen more abundant but it emits several strong lines ([OI] $\lambda 6300$, [OII] $\lambda 3727,7318,7324$, [OIII] $\lambda 4363, 4959, 5007$) visible at optical wavelengths that can also be used to quantify temperature and density. For this reason 
 %While the ratio of oxygen to hydrogen line flux correlate with metallicity, the ratio of two [OIII] lines, one auroral $\lambda 4363$ and the other an excitation line at $\lambda 5007$ can be used to determine what is called the Ionization Correction Factor (ICF) (Kewley \& Dopita 2002).
-As to empirical strong-line methods, the most commonly used one is by \citet{pettini04} (hereafter PP04). PP04 used HII regions with Te-based metallicities to derive empirical fits to strong-line ratios, and introduce the line ratios of ([NII]$/$H$_\alpha$ (N2) and ([OIII]$/$H$_\beta$)$/$([NII]$/$H$_\alpha$ (O2N2) as metallicity diagnostics. Since PP04-N2 employs two closely spaced lines (Halpha and NII), which are not affected by stellar absorption, nor uncertain reddening, and are easily observed in one simple spectroscopic setup, it has become an often-used scale for at least low-z SN host galaxy studies (e.g. see metal-analysis by e.g,. \citet{sanders12,modjaz12_proc,leloudas14}. However, it is important to remember that this scale has a number of short-comings: it does not take into account the impact of ionization parameter, was initially derived based on only 137 extragalactic HII regions, and the nitrogen emission line employed saturates at high metallicity (CHECK!), and thus this method may not be well-suited for high-metallicity galaxies. An updated calibration by \citet{marino13} based on many more Te-based metallicities (almost three time larger that that of PP04) derives a significantly shallower slope between O3N2 index and oxygen abundance than the PP04 calibration.
+As to empirical strong-line methods, the most commonly used one is that by \citet{pettini04} (hereafter PP04). PP04 used HII regions with Te-based metallicities to derive empirical fits to strong-line ratios, and introduce the line ratios of ([NII]$/$H$_\alpha$ (N2) and ([OIII]$/$H$_\beta$)$/$([NII]$/$H$_\alpha$ (O2N2) as metallicity diagnostics. Since PP04-N2 employs two closely spaced lines (Halpha and NII), which are not affected by stellar absorption, nor uncertain reddening, and are easily observed in one simple spectroscopic setup, it has become an often-used scale for at least low-z SN host galaxy studies (e.g. see metal-analysis by e.g,. \citet{sanders12,modjaz12_proc,leloudas14}. However, it is important to remember that this scale has a number of short-comings: it does not take into account the impact of ionization parameter, was initially derived based on only 137 extragalactic HII regions, and the nitrogen emission line employed saturates at high metallicity (CHECK!), and thus this method may not be well-suited for high-metallicity galaxies. An updated calibration by \citet{marino13} based on many more Te-based metallicities (almost three time larger that that of PP04) derives a significantly shallower slope between O3N2 index and oxygen abundance than the PP04 calibration.
 
 
-As can be seen, each scale has different advantages and disadvantages and may be used in different metallicity regimes (see detailed discussion in e.g.,  \citealt{kewley02,stasinska02,kewley08,moustakas10,dopita13,blanc15}). Thus, this open-source code outputs the oxygen abundance in the main 6 metallicity scales (for which the KD02 diagnostic has four outputs and the PP04 diagnostic has two outputs). While there is a long-standing debate about which diagnostic to use, as there are systematic metallicity offsets between different methods (recombination lines vs.  strong-line method vs. "direct" $T_e$ method, see the above sources), \textbf{the relative metallicity trends can be considered robust, if the analysis is performed self-consistently in the same scale, and trends are seen across different scales \citep{kewley08,moustakas10}}. Note however, that while there are conversion values between different scales \citep{kewley08}, they apply for large data sets, since those conversion values were derived based on ten thousands of SDSS galaxies, and thus should be used with caution (or not at all) for smaller samples. In addition, there the debate about the value of the solar oxygen abundance value \citep{asplund09_rev,chaffau11}, such that the absolute oxygen calibration is still uncertain.
+As can be seen, each scale has different advantages and disadvantages and may be used in different metallicity regimes (see detailed discussion in e.g.,  \citealt{kewley02,stasinska02,kewley08,moustakas10,dopita13,blanc15}). Thus, this open-source code outputs the oxygen abundance in the main 6 metallicity scales (for which the KD02 diagnostic has four outputs and the PP04 diagnostic has two outputs). While there is a long-standing debate about which diagnostic to use, as there are systematic metallicity offsets between different methods (recombination lines vs.  strong-line method vs. "direct" $T_e$ method, see the above sources), \emph{the relative metallicity trends can be considered robust, if the analysis is performed self-consistently in the same scale, and trends are seen across different scales \citep{kewley08,moustakas10}}. Note however, that while there are conversion values between different scales \citep{kewley08}, they apply for large data sets, since those conversion values were derived based on ten thousands of SDSS galaxies, and thus should be used with caution (or not at all) for smaller samples. In addition, there the debate about the value of the solar oxygen abundance value \citep{asplund09_rev,chaffau11}, such that the absolute oxygen calibration is still uncertain.
 
 
-
-We assume that the observed emission lines to be used to indicate metallicity are from HII regions and are not due to non-thermal excitation by e.g., AGN or interstellar shocks from SNe or stellar winds.  Tests to exclude data contaminated by such non-thermal sources have to be executed by using the recommended line ratios by e.g., \citealt{baldwin81,kauffmann03,kewley06_sdss}. 
 
 
 Here we introduce the open-source code "". pro .. In \S~\ref{method_sec} we describe our method, the input and output values of the code. In \S~\ref{comp_sec}, we compare our method of obtaining abundance uncertainties to previous methods in the literature. 
@@ -74,25 +72,51 @@ Here we introduce the open-source code "". pro .. In \S~\ref{method_sec} we desc
 %\end{figure}
 
 
-\section{Method}\label{method_sec}
+\section{Description of Metallicity code}\label{method_sec}
 
-For computing oxygen abundances, we use the iterative code by Kewley \& Dopita (2002), which has been updated in \citet{kewley08} and reflects .. \textbf{LISA: YOUR INPUT HERE:what is the update??} which was initially written in IDL.  We translated it into python, added the new feature of obtaining uncertainties on the metallicity outputs via bootstrap resampling, and made it open source via github, as we explain below.
 
-Emission line flux values are fed into our Python implementation as in the original code by Kewley \& Dopita, which is written in IDL and hereafter referred to as IDL02. The inputs are emission line flux values and their uncertainties for the following lines: H$\alpha$, H$\beta$, [OI] 6300, [OII] 3727, [OIII] 4959, [OIII] 5007, [NII] 6584, [SII] 6717, [SII] 6731, SIII 9532, and SIII 9096 and their uncertainties. If the fluxes for the specified lines are not available, the entry is left to 0 and the outputted oxygen abundance scales will be in only metallicity scales that use the line fluxes provided. 
-The inputted line fluxes are corrected for reddening by using the observed Balmer decrement, for which H$\alpha$ and  H$\beta$ flux values are needed to be provided. We assume case B recombination and thus, the standard value of 2.86 as the
+\begin{figure*}[!HT]
+%\epsscale{0.6}
+\begin{center}
+\centerline{
+\includegraphics[width=0.95\columnwidth]{exampledata_n50000_KD02comb_updated_1.ps}
+\includegraphics[width=0.95\columnwidth]{exampledata_n50000_PP04_O3N2_1.ps}
+}
+\vspace{0.2in}
+\centerline{
+\includegraphics[width=0.95\columnwidth]{exampledata_n50000_M91_1.ps}
+\includegraphics[width=0.95\columnwidth]{exampledata_n50000_E(B-V)_1.ps}
+}
+\caption{WILL UPDATE WITH NEW FIGURES BASED ON A PUBLISHED SN WITH SIGNFICANT E(B-V) AND WRITE MORE TEXT. Examples of confidence region determined by the algorithm, shaded in tan color.}
+ \label{metallicity_distribution}
+\end{center}
+\vspace{-0.5in}
+\end{figure*}
+
+
+For computing oxygen abundances, we use the iterative code by Kewley \& Dopita (2002), which has been updated in \citet{kewley08} and reflects .. \textbf{LISA: YOUR INPUT HERE:what is the update??} which was initially written in IDL.  We translated it into python, added the new feature of obtaining uncertainties on the metallicity outputs via Monte Carlo resampling, and made it open source via github, as we explain below.
+
+We assume that the observed emission lines to be used to indicate metallicity originate in HII regions and are not due to non-thermal excitation by e.g., AGN or interstellar shocks from SNe or stellar winds.  Tests to exclude data contaminated by such non-thermal sources have to be executed by using the recommended line ratios by e.g., \citealt{baldwin81,kauffmann03,kewley06_sdss} prior to running this code. Furthermore these lines should have all the correct calibration (at least correct relative calibration) and should have a signal-to-noise ratio (S/N) of at least 3. The latter is important for the success of the Monte Carlo resampling technique as described below.
+
+\subsection{Input and Output of code}
+Emission line flux values are fed into our Python implementation as in the original code by Kewley \& Dopita, which is written in IDL and hereafter referred to as IDL02. The inputs are emission line flux values and their uncertainties for the following lines: H$\alpha$, H$\beta$, [OI] 6300, [OII] 3727, [OIII] 4959, [OIII] 5007, [NII] 6584, [SII] 6717, [SII] 6731, SIII 9532, and SIII 9096 \textbf{CHECK!} and their uncertainties. If the fluxes for the specified lines are not available, the entry is left to 0 and the outputted oxygen abundance scales will be in only metallicity scales that use the line fluxes provided. As part of the code, the inputted line fluxes are corrected for reddening by using the observed Balmer decrement, for which H$\alpha$ and  H$\beta$ flux values are needed to be provided. We assume case B recombination and thus, the standard value of 2.86 as the
 intrinsic H$\alpha$/H$\beta$ ratio \citep{osterbrock89}, and apply the standard Galactic reddening law with $R_V$ = 3.1 \citep{cardelli89}. However, the user can choose other extinction laws and $R_V$ values, if desired, given the code's open-source nature.
 
 While other parameters, such as the ionization parameter $q$ and the electron density (using the $SiII$ lines) are computed as long as the necessary lines are provided, they are not outputted in the current version of our code $-$ however, the reader is welcome to easily modify the code to suite their needs, given it's an open-source code.
 
 As output, we obtain metallicity values and their uncertainties in the following calibrations, as discussed in detail in \citet{kewley02,kewley08}: \citet{kewley02}(KD02, for the 4 following computations: R23, using the NIIOII ratio, using the NII/Halpha ratio, and a combined method that uses the optimal method given the input line fluxes), \citet{mcgaugh91} (M91), \citet{zaritsky94} (Z94), \citet{pilyugin01} (P01), \citet{denicolo02} (D02), 
-\citet{pettini04} (2 computations: PP04-N2, PP04-O3N2). If the line fluxes necessary for specific scales are not provided, the output will be $-1$.  
+\citet{pettini04} (2 computations: PP04-N2, PP04-O3N2) \textbf{CHECK WITH FINAL CODE}. If the line fluxes necessary for specific scales are not provided, the output  metallicities will -1    \textbf{CHECK WITH FINAL CODE}.
 
-The novel aspect of our work is that we introduce a Monte Carlo (MC) algorithm to obtain numerous iterations and random sampling to obtain a more robust result with respect to the uncertainty in the input values. We apply the bootstrapping method which is a resampling technique for error estimation (e.g., \citealt{efron79,hastie09,andrae10}. Given a data set with error bars from which some parameters are estimated, bootstrapping consists of resampling the data to produce alternative data sets. Here we generate a distribution of possible inputs by generating a gaussian distribution centered on the line flux measurement value, with a standard deviation corresponding to the measurement error, where we have made the assumption that the line flux error is gaussian distributed in nature. Every iteration randomly takes an input value from this distribution (for each inputted line) to run the calculations. This effectively emulates conducting multiple experiments when repeated observation is impractical or impossible, as in the case of the emission line flux data, and thus generates alternative data sets. We generated $N$ bootstrap samples of emission line fluxes (where an appropriate value of $N=50,000$ is determined below) and calculated the metallicity for each set of line fluxes. At the end of the iterations, likelihood distributions of the oxygen abundance value are generated for each scale by binning the results to histograms and deriving a confidence region  (see below).
 
-This MC bootstrap approach takes into account the impact of the uncertain reddening (due to the uncertainties in the measurement of the 
-H$\alpha$ and H$\beta$ fluxes), when the option for de-reddened metallicities is chosen. Since for each bootstrap iteration, a new reddening value is calculated based on the resampled H$\alpha$ and H$\beta$ fluxes, which is used to compute the de-reddened metallicity value, the derived distribution of metallicity values takes into account the uncertain redding. As part of the optional output, a distribution plot for E(B-V) will be provided, along with confidence intervals  \textbf{add the feature of getting error bars on E(B-V)???}. If either H$\alpha$ or H$\beta$ flux is not provided, then no reddening correction can be applied and the computed metallicity will not be  reddening-corrected. 
 
-However, we note that our code naturally does not include the \emph{systematic} uncertainty of each scale, which are e.g., $\sim$ 0.07 dex for PP04-O2N2.  Thus systematic errors can be as large, if not larger than the statistical errors. 
+\subsection{Computing Uncertainties}
+The novel aspect of our work is that we introduce a Monte Carlo (MC) resampling method to obtain numerous iterations via random sampling to obtain a more robust result for error estimation (e.g., \citealt{efron79,hastie09,andrae10}. Given a data set with error bars from which certain parameters are estimated, Monte Carlo resampling consists of resampling the data from its error distribution to produce alternative data sets. Here we generate a distribution of possible inputs by generating a gaussian error distribution centered on the measured line flux value, with a standard deviation corresponding to the measurement error, where we have made the assumption that the line flux error is gaussian distributed in nature\footnote{In case the user provides their own probability distribution for the emission line uncertainties (e.g. from fitting Gaussians to the emission lines via MCMC methods, the user is welcome to easily modify the code to suite their needs, given its open-source nature}. Every iteration randomly takes an input value from this distribution (for each inputted line) to run the calculations. This effectively simulates conducting multiple experiments when repeated observation is impractical or impossible, as in the case of the emission line flux data, and thus generates alternative data sets. We generated $N$ Monte Carlo samples of emission line fluxes (where an appropriate value of $N=50,000$ is determined below) and calculated the metallicity for each set of line fluxes. At the end of $N$ iterations, a parameter estimate distribution of oxygen abundance is generated for each scale by binning the results to histograms, and metallicity confidence regions are measured  (see below)\footnote{However, note this method is a conservative approach, since it overestimates the intrinsic metallicity uncertainty, as we are centering this error distribution on the measured values instead of the (unknown) true values \citep{andrae10}.} . This is done for each scale. The fiftieth (50\%) percentile, i.e.  the median, is reported as the measured value. The output of our code includes the oxygen abundance measurements plus confidence regions in all scales, as well as plots of the likelihood distributions of the oxygen abundance value in all scales. 
+Figure \ref{metallicity_distribution} shows the metallicity estimate distribution for 4 representative scales - those are the same plots that are outputted as part of our code for all scales (not all shown here). As can be seen, the metallicity distributions are rarely Gaussian, for two reasons: first, since the metallicities are computed based on log values of line flux ratios, symmetric error bars in linear space will translate into asymmetric error bars in log space; and seconds, since some metallicity computations (especially those that include $R_{23}$) are non-linear since they choose an upper vs lower branch by breaking the degeneracy.
+
+This MC resampling approach takes into account the impact of the uncertain reddening (due to the uncertainties in the measurement of the 
+H$\alpha$ and H$\beta$ fluxes), when the option for de-reddened metallicities is chosen. Since for each iteration, a new reddening value is calculated based on the resampled H$\alpha$ and H$\beta$ fluxes, which is used to compute the de-reddened metallicity value, the derived distribution of metallicity values takes into account the uncertain redding. As part of the optional output, a probability distribution plot for E(B-V) is provided (see last plot in figure~\ref{metallicity_distribution}, along with confidence intervals derived using the same method as for the metallicity measurements. If either H$\alpha$ or H$\beta$ flux is not provided, then no reddening correction can be applied and the computed metallicity will not be  reddening-corrected and the E(B-V) output will be set to blank.
+
+We note that our code  does not output the \emph{systematic} uncertainty of each scale, which are e.g., $\sim$ 0.07 dex (or 0.14 dex \textbf{CHECK}) for PP04-O2N2.  Thus systematic errors can be as large, if not larger, than the statistical errors, however, if all metallicity measurements are in the \emph{same} scale and only \emph{relative} comparisons are made, then the systematic error does not have any impact (by definition!). 
 
 %However, the
 %relative metallicity difference measured between a given pair
@@ -103,65 +127,56 @@ However, we note that our code naturally does not include the \emph{systematic} 
 
 %from Kewley & Ellison08: The cause of the metallicity calibration discrepancies remains unclear. The discrepancy has been attributed to either an unknown problem with the photoionization models (Kennicutt et al. 2003) or temperature gradients or fluctuations that may cause metallicities based on the electron temperature method to underestimate the true metallicities (Stasin«ska 2002, 2005; Bresolin 2006). Until this discrepancy is resolved, the absolute metallicity scale is uncertain.
 
-\subsection{Histogram Bin Size and Confidence Region}
+\subsubsection{Histogram Bin Size and Confidence Region}
 
-Choosing the binning for a histogram is not trivial and \citet{hogg08} describes various data analysis recipes for selecting a histogram bin size. Too many bins will result in many empty bins and an "over-fit" histogram, while too few bins may lose features of a probability distribution. Using a bin size of $\sqrt{N}$ was recommended, but this proved to be slightly over-fitting, and after a number of tests, we found $2* \sqrt[3]{N}$ to be appropriate for most cases.
+Choosing the binning for a histogram is not trivial and \citet{hogg08} describes various data analysis recipes for selecting a histogram bin size. Too many bins will result in many empty bins and an "over-fit" histogram, while too few bins may lose features of a probability distribution. While for our default option, we use Rice Rule (e.g., \citealt{hastie09}), namely using $2* \sqrt[3]{N}$ as a number for our bins (which was appropriate for most of our test cases), we enable a number of binning options from which the user can choose, including Bayesian blocks, Knuth's rule and Doane's formula (\textbf{Fed's input here!}).
 
-In determining the confidence region interval, there are broadly three approaches (e.g., \citealt{andrae10}): choosing a symmetric interval, the shortest interval , or  a central interval.  We determined the confidence interval using the ``central" method, because it ensures that the algorithm finds the proper boundaries even in the case of multiple peaks (i.e., multimodal likelihood distributions) and for asymmetric, non-Gaussian, distributions. With the "central" method we determined the  confidence interval by choosing the left and right boundaries so that the region outside the confidence interval each equally contains $16\%$ of the total distribution for one standard deviation confidence interval - in analogy to the one-sigma-interval of the Gaussian distribution. While the histograms at sufficiently high $N$, where $N$ is the total number of iterations, yielded single peaked results, at lower $N$ there were occasional multiple peaks resulting from an non-smooth gaussian being sampled. In selecting the value of $N$, we found that around $N=50,000$ provides reliably smooth histograms. The fiftieth (50\%) percentile, i.e.  the median, is reported as the measured value.
+%Using a bin size of $\sqrt{N}$ was recommended, but this proved to be slightly over-fitting, and after a number of tests, we found $2* \sqrt[3]{N}$ to be appropriate for most cases.
 
+Since the metallicity distributions are rarely Gaussian, we cannot just fit a Gaussian and report the 1-$\sigma$ intervals. In determining the confidence region intervals for asymmetric and multi-modal distributions, there are broadly three approaches (e.g., \citealt{andrae10}): choosing a symmetric interval, the shortest interval , or  a central interval.  We determined the confidence interval using the ``central" method, because it ensures that the algorithm finds the proper boundaries even in the case of multiple peaks (i.e., multimodal likelihood distributions) and for asymmetric, non-Gaussian, distributions. With the "central" method we determined the  confidence interval by choosing the left and right boundaries such that the region outside the confidence interval each equally contains $16\%$ of the total distribution for one standard deviation confidence interval - in analogy to the one-sigma-interval of the Gaussian distribution. 
+ While the histograms at sufficiently high $N$, where $N$ is the total number of iterations, yielded single peaked results, at lower $N$ there were occasional multiple peaks resulting from a non-smooth gaussian being sampled. In selecting the value of $N$, we found that around $N=50,000$ provides reliably smooth histograms. 
 
-\begin{figure*}[!HT]
-\epsscale{0.6}
-\begin{center}
-\centerline{
-\includegraphics[width=0.75\columnwidth]{sn2006ss_n50000_KD02_R23_updated_1.pdf}
-\includegraphics[width=0.75\columnwidth]{sn2006ss_n50000_KD02comb_updated_1.pdf}
-}
-\centerline{
-\includegraphics[width=0.75\columnwidth]{sn2006ss_n50000_M91_1.pdf}
-\includegraphics[width=0.75\columnwidth]{sn2006ss_n50000_PP04_O3N2_1.pdf}
-}
-\caption{Examples of confidence region determined by the algorithm, shaded in tan color.}
-\end{center}
-\end{figure*}
+In summary, the output for the measured value corresponds to the fiftieth (50\%) percentile, while the lower error bar corresponds to the 50$^{th}$-16$^{th}$ percentile and the upper error bar corresponds to 84$^{th}$-50$^{th}$ of the metallicity parameter estimate distribution. However, we urge that the reader always inspect the appropriate metallicity distribution plots, which are also outputted, to check for themselves whether the outputted median and confidence regions properly represent the full metallicity distribution.
 
 
 
-\section{Comparison }\label{comp_sec}
-(will edit more)
-A previous method for determining the uncertainty in the oxygen abundance (as used in \citealt{modjaz08_Z,kewley10,rupke10,modjaz11} was an analytic approach of propagating the emission-line flux uncertainties: it found the difference in maximum and minimum possible abundances via maximizing and minimizing, respectively, the various line ratios. For comparison we computed the metallicities and their errors in these 2 ways (both analytic and using bootstrap) for 3 representative scales. We plot our results and the residuals in Fig.\ref{comp_anal_bootstrap}. There are a number of important points in Fig  MC method has a smaller uncertainty than the analytic method (mean of xx dex). This could be attributed to it reflecting on a more realistic confidence region. The method used the worst case scenario 
-Although the flux probability distribution function is assumed to be symmetric, the metallicity errors are asymmetric because they are derived from the log of minimized and maximized flux ratios.
-
-\begin{figure*}[h!]
-  \includegraphics[trim = 20mm 0mm 20mm 0mm, clip]{abcomparison2.pdf}
-  \caption{Comparison of metallicity estimation between the analytic method and our bootstrap method. Flux measurements come from 19 galaxies previously measured in \citet{modjaz11}. To add asymmetric errors in quadrature we use $residual_{min}=\sqrt {x_{max}^2 + y_{min}^2}$ and $residual_{max}=\sqrt {x_{min}^2 + y_{max}^2}$.}
- \label{comp_anal_bootstrap}
-\end{figure*}
 
 
-Rupke: Errors were propagated primarily using analytic
-expressions, but for abundance and gradient errors we employed
-Monte Carlo methods.
+\section{Comparison to prior uncertainty computation and other works }\label{comp_sec}
 
 
+A previous method for determining the uncertainty in the oxygen abundance (as used in \citealt{modjaz08_Z,kewley10,rupke10,modjaz11}) was an \emph{analytic} approach of propagating the emission-line flux uncertainties: it found the maximum and minimum abundances via maximizing and minimizing, respectively, the various line ratios by adding/subtracting to the measured line values their uncertainties. For comparison we computed the metallicities and their errors in both ways (both analytic and using our current MC resampling method) for 3 representative scales. We plot our results and the residuals in Fig.\ref{comp_anal_MC}, which shows a number of important points: i) The metallicity reported as the 50th percentile of the metallicity parameter distribution from the MC resampling method is completely consistent with the analytically derived metallicity -  well within the respective error bars - and thus, the prior published results still stand. ii) The MC resampling method has smaller error bars than the analytic method, especially for the scales of M91 and KD02. This is easily understandable, since the analytic method assumes the worst-case-scenario, as it basically yields 2 metallicity parameter draws (the "minimum" and "maximum") which are in the tail of the full metallicity probability/likelihood distribution. However, the MC resampling method is the more appropriate method as it empirically characterizes the full parameter estimation distribution.
+%assumes that \textbf{all} emission line measurement have been drawn from the 68\% tail of the error distribution and 
 
-Here we discuss comparisons with the literature. 
+\begin{figure}[ht!]
+%  \includegraphics[trim = 10mm 0mm 10mm 0mm, clip]{abcomparison6.eps}
+  \includegraphics[width=1.2\columnwidth]{abcomparison6.eps}
+   \caption{\textbf{FINISH}.Comparison of metallicity estimation between the analytic method and our Monte Carlo resampling method (top) and their residuals (bottom) for 3 different metallicity scales. Flux measurements come from 19 galaxies previously measured in \citet{modjaz11}. To add asymmetric errors in quadrature we use $residual_{min}=\sqrt {x_{max}^2 + y_{min}^2}$ and $residual_{max}=\sqrt {x_{min}^2 + y_{max}^2}$.}
+ \label{comp_anal_MC}
+\end{figure}
 
-IZI:
+%Although the flux probability distribution function is assumed to be symmetric, the metallicity errors are asymmetric because they are derived from the log of minimized and maximized flux ratios.
+%Rupke: Errors were propagated primarily using analytic expressions, but for abundance and gradient errors we employed Monte Carlo methods.
 
-\citet{blanc15} employ Bayesian inference for deriving using photoionization codes 
-given a set of observed line fluxes and an input
-photoionization model
+\subsection{Comparison with other works}
 
-Using the MC method for finding uncertainty in metallicity has been done by  IZI -> FILL IN 
-only for one scale and calibration method
+%Here we perform a literature review of both 
 
-Sanders: 
-by propagation of the uncertainties in the line flux measurements
-and the 0.07 dex diagnostic systematic error.
-( line flux errors from MCMC fitting of a gaussian to emission lines)
+
+The field SN host metallicity studies has been rapidly developing as these kinds of studies may be crucial avenues for constraining the progenitor systems of different kinds of explosions- however, many of the works do not show how they compute their statistical errors (e.g., \citet{anderson10,leloudas11,sanders12,leloudas14}). While \citet{sanders12} compute the line flux errors from a Markov-Chain Monte Carlo fitting of a gaussian to the emission lines, they only mention in passing that they propagate the line flux uncertainties into the metallicity measurements, but do not describe how.
+
+%by propagation of the uncertainties in the line flux measurements
+%and the 0.07 dex diagnostic systematic error.
+%( line flux errors from MCMC fitting of a gaussian to emission lines)
+
+In contrast, the general metallicity field has considered in detail how to estimate the uncertainties in measured metallicities- however, none of those codes are open-source and many of them are for specific scales which were chosen by the authors:  \citet{moustakas10} also use MC resampling to estimate the metallicity uncertainties (in their case using 500 trials which seems to lead to a Gaussian distribution) but only do this for two scale, KK04 and \citet{pilyugin05}. For computing the metallicities of the SDSS star forming galaxies, \citet{tremonti04} fit a combination of stellar population synthesis and CLOUDY photoionization models to the observed strong emission lines [OII], Hbeta, OIII, Halpha, NII and SII and report the median of the metallicity likelihood distribution as the metallicity estimate, with the width of the distribution giving the 1 $\sigma$ (Gaussian) error. However, this is constitutes their own scale, the T04 scale.
+
+In the last stages of preparing this manuscript \citet{blanc15} was published.  \citet{blanc15} employ Bayesian inference for doing something similar to \citet{tremonti04} - they use Bayesian inference to derive the joint and marginalized posterior probability density functions for metallicity and ionization parameter $q$ given a set of observed line fluxes and an input photoionization model. They provide a publicly available IDL implementation of their method named $IZI$ (inferring metallicities (Z) and ionization parameters) on the author's website.
+
 
 \section{Conclusions}\label{comp_sec}
+
+ \textbf{FINISH}. We hope that this open-access code will be used in many different fields where gas-phase metallicities are important, including in the emerging field of SN and GRB host galaxies, where either it is not described how they got  or no error bars are computed (e.g., \citealt{lunnan14}).
 
 \acknowledgements
 M. Modjaz is supported in parts by the NSF CAREER award AST-1352405 and by NSF award AST-1413260. 
@@ -171,7 +186,8 @@ is operated by the Jet Propulsion Laboratory, California Institute
 of Technology, under contract with the National Aeronautics
 and Space Administration.
 
-%\begin{figure*}[!H]
+
+
 %\epsscale{1.0}
 %\begin{center}
 %\csvautotabular{table1.csv}
@@ -180,7 +196,7 @@ and Space Administration.
 %\end{center}
 %\end{figure*}
 
-%\clearpage
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%\clearpage
@@ -189,4 +205,8 @@ and Space Administration.
 %\bibliography{refs}
 \bibliography{/Users/maryammodjaz/Dropbox/refs}
 
+\appendix
+
+\section{Minimum Code validation}
+\textbf{WORK WITH FED - and any other code specific things}
 \end{document}
