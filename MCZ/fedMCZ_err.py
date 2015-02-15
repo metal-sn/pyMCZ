@@ -438,7 +438,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
             if len(res[key].shape)>1:
                 s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog)+'\n'
                 fi.write(s)
-
+        
         fi.close()
     
         if VERBOSE: print "uncertainty calculation complete"

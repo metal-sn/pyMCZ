@@ -1,5 +1,8 @@
 import numpy as np
 import pylab as pl
+import sys
+import scipy.stats as stats
+import numpy.polynomial.polynomial as nppoly
 niter=5  # number of iteations+1 for KD02 methods
 
 k_Ha=2.535  # CCM Rv=3.1
@@ -14,16 +17,23 @@ k_O3=(k_O35007+k_O34959)/2.
 k_N2=2.44336 # CCM Rv=3.1
 k_S2=2.38089 # CCM Rv=3.1
 
-
-
+MINMASS= 6.0
+MAXMASS=14.0
+DUSTCORRECT=True
 
 class diagnostics:
     def __init__(self,num):
         self.nm=num
 
-        self.Ha,self.Hb=None,None
         self.hasHa,self.hasHb=False,False
+        self.hasO2,self.hasO3=False,False
+        self.hasS2,self.hasN2=False,False
 
+        self.hasO3Hb=False
+        self.hasO3O2=False
+
+        self.hasN2O2=False
+        self.hasN2S2=False
         #metallicity diagnostics to be returned
         self.mds={
             'E(B-V)':None,
@@ -86,221 +96,286 @@ class diagnostics:
         except:pass 
         try:       print "\nlog(R23)", np.mean(self.logR23),self.logR23
         except:pass 
-        try:        print  "\nlog([NII][OII])",np.mean(self.logN2O2),self.logN2O2
+        try:        print  "\nlog([NII][OII])",stat.nanmean(self.logN2O2),self.logN2O2
         except:pass
-        try:        print  "\nlog([OIII][OII])",np.mean(self.logO3O2),self.logO3O2
+        try:        print  "\nlog([OIII][OII])",stat.nanmean(self.logO3O2),self.logO3O2
         except:pass
-
+        for k in self.mds.iterkeys():
+            print "\n",k,
+            try: print stats.nanmean(self.mds[k]), np.stdev(self.mds[k])
+            except: print self.mds[k]
     
 
-    def fz_roots(self):        
-        rts=np.zeros((self.nm,4),dtype=complex)
-        self.N2O2_coef[np.where(~np.isfinite(self.N2O2_coef))]=0.0
-        for i in range(self.nm):
+    def checkminimumreq(self,red_corr, Smass):
+        if Smass<MINMASS or Smass > MAXMASS :
+            print "will not calculate for this mass: %f MSun"%Smass
+            return -1
+        if red_corr:
+            if not self.hasHa :
+                return -1
+            if not self.hasHb :
+                return -1
+            if not self.hasO2 :
+                return -1
+            if not self.hasO3 :
+                return -1
+            if not self.hasS2 :
+                return -1
+            if not self.hasN2 :
+                return -1
 
-            rts[i]= np.roots(self.N2O2_coef[i][::-1])#::-1][0])
-        if rts.size==0:
-            print 'fz_roots failed'
-        return rts
+
+
+    def fz_roots(self,coef): 
+        if len(coef.shape)==1:
+            coef[~(np.isfinite(coef))]=0.0
+            rts= np.roots(coef[::-1])
+            if rts.size==0:
+                print 'fz_roots failed'
+                rts=np.zeros(coef.size-1)
+            return rts
+
+        else:
+            '''
+            print "coefs shape",coef.shape
+            '''
+            rts=np.zeros((coef.shape[0],coef.shape[1]-1),dtype=complex)
+            coef[np.where(~np.isfinite(coef))]=0.0
+
+            for i in range(coef.shape[0]):
+                rts[i]= np.roots(coef[i][::-1])#::-1][0])
+            if rts.size==0:
+                print 'fz_roots failed'
+            return rts
+
+    def unsetdustcorrect(self):
+        global DUSTCORRECT
+        DUSTCORRECT=False
 
     def dustcorrect(self,l1,l2,flux=False):
-        if not flux:
-            return 0.4*self.mds['E(B-V)']*(l1-l2)
-        return 10**(0.4*self.mds['E(B-V)']*(l1-l2))        
+        global DUSTCORRECT
+        if DUSTCORRECT:
+            if not flux:
+                return 0.4*self.mds['E(B-V)']*(l1-l2)
+            return 10**(0.4*self.mds['E(B-V)']*(l1-l2))        
+        else:
+            return 1.0
 
     def setHab(self,Ha,Hb):
         self.Ha=Ha
         self.Hb=Hb
-        if (self.Ha > 0).any():
+        if sum(self.Ha > 0):
             self.hasHa=True
-        if (self.Hb > 0).any():
+        if sum(self.Hb > 0):
             self.hasHb=True
 
     def setOlines(self, O23727, O35007, O16300, O34959):
-        self.O23727 =O23727
-        self.O35007=O35007
-        if (self.O35007>0).any() : self.hasO35007=True
-        if (self.O23727>0).any() : self.hasO23727=True
-        if self.hasO23727 and self.hasO35007:
-            O35007toO23727=self.O35007/self.O23727
-            O23727toO35007=self.O23727/self.O35007
-            self.logO35007O2=np.log10( O35007toO23727 )+self.dustcorrect(k_O3,k_O2)
-            self.logO2O35007=np.log10( O23727toO35007 )+self.dustcorrect(k_O2,k_O3)
+        self.O23727 = O23727
+        self.O35007 = O35007
+
+
+        if sum(self.O35007>0) : self.hasO3=True
+        if sum(self.O23727>0) : self.hasO2=True
+        if self.hasO2 and self.hasO3:
+            self.logO35007O2=np.log10( self.O35007/self.O23727 )+self.dustcorrect(k_O3,k_O2)
+            self.logO2O35007=np.log10( self.O23727/self.O35007 )+self.dustcorrect(k_O2,k_O3)
+
             #self.logO2O35007Hb=np.log10((self.O23727+self.O35007)/self.Hb)
             # ratios for other diagnostics - slightly different ratios needed
             self.O35007O2=10**(self.logO35007O2)
             self.O2O35007=10**(self.logO2O35007)
-            self.hasO35007O2 =True
+
             if self.hasHb:
                 self.logO2O35007Hb=np.log10((self.O23727/self.Hb)* self.dustcorrect(k_O2,k_Hb,flux=True))+ (self.O35007/self.Hb)*self.dustcorrect(k_O35007,k_Hb,flux=True)
 
-        if self.hasHb and self.hasO23727:
-            self.logO2Hb=np.log10(self.O23727/self.Hb)+self.dustcorrect(k_O2,k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
+        else: 
+            print "WARNING: needs O lines and  and Ha/b: did you run setHab()?"
+        if self.hasHb :
+            if self.hasO2:
+                self.logO2Hb=np.log10(self.O23727/self.Hb)+self.dustcorrect(k_O2,k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
+            if self.hasO3:
+                self.logO3Hb=np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O3,k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
+                self.hasO3Hb=True
+                if not O34959 == None and sum(O34959>0):
+                    self.logO349595007Hb=np.log10(10**(np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb))+10**(np.log10(O34959/self.Hb)+self.dustcorrect(k_O34959,k_Hb)))
+                    self.O34959p5007=O34959 + self.O35007
+                    self.logO3O2=np.log10((self.O34959p5007)/self.O23727)+self.dustcorrect(k_O3,k_O2)
+                    self.hasO3O2=True
 
         # never used
         #if self.hasHa:
             #logO1Ha=np.log10(O16300/self.Ha)+self.dustcorrect(k_O1,k_Ha)
 
 
-        if self.hasO35007:
-            if self.hasHb :
-                self.logO3Hb=np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb)#0.4*self.mds['E(B-V)']*(k_O35007-k_Hb)
-                self.hasO3Hb=True
-                #if self.hasO23727:
-                #self.logO2O35007Hb=np.log10((self.O23727+self.O35007)/self.Hb)
-            
-            if (O34959>0).any():
-                self.logO349595007Hb=np.log10(10**(np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb))+10**(np.log10(O34959/self.Hb)+self.dustcorrect(k_O34959,k_Hb)))
-                self.O34959p5007=O34959 + self.O35007
-                if self.hasO23727:
-                    self.logO3O2=np.log10((self.O34959p5007)/self.O23727)+self.dustcorrect(k_O3,k_O2)        
-                    self.hasO3O2=True
-
-        #O3O2[i]=1.347*O35007O2[i]
-        #logO3O2[i]=np.log10(O3O2[i])
-
     def setNII(self,N26584):
-        if (N26584>0).any():
+        if not N26584==None and sum(N26584>0):
             self.N26584=N26584
             self.hasN2=True
+            if self.hasHa :
+                self.logN2Ha = np.log10(self.N26584/self.Ha)+self.dustcorrect(k_N2,k_Ha)#0.4*self.mds['E(B-V)']*(k_N2-k_Ha) 
+            else: 
+                print "WARNING: needs NII6584 and Ha to calculate NIIHa: did you run setHab()?"
             
-    def setS(self,S26717,S26731=[0],S39069=[0],S39532=[0]):
-        if (S26717>0).any():
+    def setSII(self,S26717,S26731,S39069,S39532):
+        if not S26717==None and sum(S26717>0)>0:
             self.S26717=S26717
-            self.hasS26717=True
-        if (S26731>0).any():
+            self.hasS2=True
+            if self.hasHa:
+                self.logS2Ha=np.log10(self.S26717/self.Ha)+self.dustcorrect(k_S2,k_Ha)               
+            else: 
+                print "WARNING: needs SII6717 and Ha to calculate SIIHa: did you run setHab() and setS()?"
+        if not S26731==None and sum(S26731>0)>0:
             self.S26731=S26731
-            self.hasS26731=True
-        if (S39069>0).any():
+            self.hasS2=True
+        if not S39069==None and sum(S39069>0)>0:
             self.S39069=S39069
             self.hasS39069=True
-        if (S39532>0).any():
+        if not S39532==None and sum(S39532>0)>0:
             self.S39532=S39532
             self.hasS39532=True
+
 
     def calcEB_V(self):
         #logHaHb=np.log10(Ha/Hb)
         self.mds['E(B-V)']=np.log10(2.86/(self.Ha/self.Hb))/(0.4*(k_Ha-k_Hb)) # E(B-V)
         #print self.mds['E(B-V)']
         self.mds['E(B-V)'][self.mds['E(B-V)']<=0]=0.00001
-
-    def calcNIIOII(self):
-        if self.hasN2 and self.hasO23727 :
-            self.hasN2O2=True
-            self.logN2O2=np.log10(self.N26584/self.O23727)+self.dustcorrect(k_N2,k_O2) 
-            self.N2O2_coef=np.array([[0,-532.15451,96.373260,-7.8106123,0.23928247]]*self.nm).T# q=2e7 line (approx average)
-            self.N2O2_coef[0]=self.N2O2_coef[0]+self.N2O2_coef0-self.logN2O2
-            self.N2O2_coef=self.N2O2_coef.T
-            # finding roots for == (4)
-            self.N2O2_roots=np.array([self.fz_roots()])[0]          
-
-    def calcR23(self):
-        #R23 NEW Comb, [NII]/Ha: KK04 = Kobulnicky & Kewley, 2004, submitted'
-        if  self.hasO3O2 and self.hasO23727 and self.hasHb:
-            self.R23=((self.O23727/self.Hb)*self.dustcorrect(k_O2,k_Hb, flux=True) + (self.O34959p5007/self.Hb)*self.dustcorrect(k_O3,k_Hb, flux=True) )
-            self.logR23=np.log10(self.R23)
-
-            if self.hasO35007O2:
-                # R23 but without [O3]4959
-                self.R23_5007=(1./self.O35007O2 + 1.)/(1./self.O35007O2 + 1.347)*self.R23  
         
-    def calcS23(self):
-        #the original code here uses S267176731, which is however set to 6717 as default
-        if  self.hasS26717 :
-            if self.hasS39069 and self.hasHb:
-                self.logS23=np.log10((self.S26717/self.Hb)*self.dustcorrect(k_S2,k_Hb,flux=True) + (S39069/self.Hb)*self.dustcorrect(k_S3,k_Hb,flux=True))                                 
-            self.logS3S2=np.log10(S39069/self.S26717)+self.dustcorrect(k_S3,k_S2)
-
-
     def calcNIISII(self):
-        if self.hasS26717 and self.hasN2:
+        if self.hasS2 and self.hasN2:
             self.N2S2=self.N26584/self.S26717+self.dustcorrect(k_N2,k_S2,flux=True)#0.4*self.mds['E(B-V)']*(k_N2-k_S2) 
             self.logN2S2=np.log10(self.N26584/self.S26717)+self.dustcorrect(k_N2,k_S2)#0.4*self.mds['E(B-V)']*(k_N2-k_S2) 
             self.hasN2S2=True
         else: 
             print "WARNING: needs SII6717 and NII6584 to calculate NIISII: did you run setN2() and setS?"
 
+    def calcNIIOII(self):
+        if self.hasN2 and self.hasO2:
+            self.logN2O2=np.log10(self.N26584/self.O23727)+self.dustcorrect(k_N2,k_O2) 
+            self.hasN2O2=True
+            N2O2_coef=np.array([[self.N2O2_coef0,-532.15451,96.373260,-7.8106123,0.23928247]]*self.nm).T# q=2e7 line (approx average)
+            N2O2_coef[0]-=self.logN2O2
+            N2O2_coef=N2O2_coef.T
+            # finding roots for == (4)
+            self.N2O2_roots=np.array([self.fz_roots(N2O2_coef)])[0]          
+
+
+    def calcR23(self):
+        #R23 NEW Comb, [NII]/Ha: KK04 = Kobulnicky & Kewley, 2004, submitted'
+        if  self.hasO3   and self.hasO2 and self.hasHb:
+            self.R23=((self.O23727/self.Hb)*self.dustcorrect(k_O2,k_Hb, flux=True) + (self.O34959p5007/self.Hb)*self.dustcorrect(k_O3,k_Hb, flux=True) )
+            self.logR23=np.log10(self.R23)
+            self.R23_5007=(1./self.O35007O2 + 1.)/(1./self.O35007O2 + 1.347)*self.R23  
+        else:
+            print "WARNING: need O3, O2, Hb"
+
+    def calcS23(self):
+        #the original code here uses S267176731, which is however set to 6717 as default
+        if  self.hasS2 :
+            if self.hasS39069 and self.hasHb:
+                self.logS23=np.log10((self.S26717/self.Hb)*self.dustcorrect(k_S2,k_Hb,flux=True) + (S39069/self.Hb)*self.dustcorrect(k_S3,k_Hb,flux=True))                                 
+            self.logS3S2=np.log10(S39069/self.S26717)+self.dustcorrect(k_S3,k_S2)
+
+
+    def initialguess(self):
+        # Initial Guess - appearing in LK code as of Nov 2006
+        # upper branch: if no lines are available, metallicity is set to 8.7        
+        self.Z_init_guess=np.zeros(self.nm)+8.7 
+        # use [N2]/Ha 
+        N2O2=np.zeros(self.nm)
         if self.hasHa and self.hasN2:
-            self.logN2Ha = np.log10(self.N26584/self.Ha)+self.dustcorrect(k_N2,k_Ha)#0.4*self.mds['E(B-V)']*(k_N2-k_Ha) 
-            self.hasN2Ha=True
-        else: 
-            print "WARNING: needs NII6584 and Ha to calculate NIIHa: did you run setHab()?"
-
-    def calcSIIHa(self):
-        if self.hasS26717 and self.hasHa:
-            self.logS2Ha=np.log10(self.S26717/self.Ha)+self.dustcorrect(k_S2,k_Ha)#0.4*self.mds['E(B-V)']*(k_S2-k_Ha) 
-        else: 
-            print "WARNING: needs SII6717 and Ha to calculate SIIHa: did you run setHab() and setS()?"
-
-
-
+            self.Z_init_guess[(self.logN2Ha < -1.3)&(self.N26584 != 0.0)]=8.2
+            self.Z_init_guess[(self.logN2Ha < -1.1)&(self.logN2Ha >= -1.3)&(self.N26584 != 0.0)]=8.4
+            self.Z_init_guess[(self.logN2Ha >=-1.1)&(self.N26584 != 0.0)]=8.7
+            if self.hasHb and self.hasO2:
+                N2O2=self.N26584*self.Ha*self.Hb*self.O23727
+        #use [N2]/[O2]
+        if self.hasN2 and self.hasO2:            
+            if not self.hasN2O2:
+                print "WARNING: must calculate logN2O2 first"
+                calcNIIOII()
+            self.Z_init_guess[(self.logN2O2 < -1.2)&(N2O2 != 0.0)]=8.2  #  1.2 using low-Z gals,
+            self.Z_init_guess[(self.logN2O2 >=-1.2)&(N2O2 != 0.0)]=8.7  # 1.1 using HIi regions
 #######################these are the metallicity diagnostics##################
 
     def calcD02_Z(self):
-        if self.hasN2Ha:
+        # [NII]/Ha Denicolo, Terlevich & Terlevich (2002), MNRAS, 330, 69
+        if self.hasN2 and self.hasHa:
             self.mds['D02'] = 9.12+0.73*self.logN2Ha
         else:
-            print "WARNING: need N2Ha to do this. did you run calclogNIISI"
+            print "WARNING: need N2Ha to do this. did you run setHab and setNII"
 
-    def calcPP04_N2_Z(self):
-        if self.hasN2Ha:
-            self.mds['PP04_N2']= 9.37 + 2.03*self.logN2Ha + 1.26*self.logN2Ha**2 + 0.32*self.logN2Ha**3
+    def calcPP04(self):
+        # [NII]/Ha Pettini & Pagel (2004), MNRAS, 348, L59
+        if self.hasN2 and self.hasHa:
+            self.mds['PP04_N2']= nppoly.polyval(self.logN2Ha,[9.37, 2.03, 1.26, 0.32])
+#9.37 + 2.03*self.logN2Ha + 1.26*self.logN2Ha**2 + 0.32*self.logN2Ha**3
+            if self.hasO3Hb :
+                self.mds['PP04_O3N2']=8.73 - 0.32*(self.logO3Hb-self.logN2Ha)
+            else:
+                print "WARNING: need O3Hb PP04_O3N2"
         else:
-            print "WARNING: need N2Ha to do this. did you run calclogNIISI"
+            print "WARNING: need N2Ha to do this. did you run setHab and setNII"
 
-    def calcZ94_Z(self):
+
+    def calcZ94(self):
         ### calculating z from Kobulnicky parameterization of Zaritzky et al. (1994) 
         if self.logR23==None:
-            print "Must first calculate R23"
-        else:
-            self.mds['Z94']=9.265-0.33*self.logR23-0.202*self.logR23**2-0.207*self.logR23**3-0.333*self.logR23**4         
+            print "WARNING Must first calculate R23"
+            self.calcR23()
+            if self.logR23==None:
+                print "WARNING Cannot compute this without R23"
+        if not self.logR23==None:
+            self.mds['Z94']=nppoly.polyval(self.logR23, [9.265,-0.33,-0.202,-0.207,-0.333])
             self.mds['Z94'][(self.logR23 > 0.9)]=None
     
     def Pmethod(self):
         # #### P-method #####
         #make sure you run calclogOOs and calclogO2Hb first
-        R3=10**self.logO349595007Hb
-        R2=10**self.logO2Hb
-        P = R3/(R2+R3)
-        P_R23=R2+R3
+        if self.hasO3 and self.hasO2 and self.hasHb:
+            R3=10**self.logO349595007Hb
+            R2=10**self.logO2Hb
+            P = R3/(R2+R3)
+            P_R23=R2+R3
         
-        # NEW Initial Guess - Nov 1 2006
-        self.Z_init_guess=np.zeros(self.nm)+8.7 # upper branch if nothing else
-        # [N2]/Ha if no [N2]/[O2]
-        if self.hasHa:
-            self.Z_init_guess[(self.logN2Ha < -1.3)&(self.N26584 != 0.0)&(self.hasHa != 0)]=8.2
-            self.Z_init_guess[(self.logN2Ha < -1.1)&(self.N26584 != 0.0)&(self.hasHa != 0.0)&(self.logN2Ha >= -1.3)]=8.4
-            self.Z_init_guess[(self.logN2Ha >=-1.1)&(self.N26584 != 0.0)&(self.hasHa != 0.0)]=8.7
-            N2O2_lines=self.N26584*self.Ha*self.Hb*self.O23727
+            P_abund_up =(P_R23+726.1+842.2*P+337.5*P**2)/(85.96+82.76*P+43.98*P**2+1.793*P_R23)
+            P_abund_low=(P_R23+106.4+106.8*P-3.40*P**2)/(17.72+6.60*P+6.95*P**2-0.302*P_R23)
+            if self.Z_init_guess==None:
+                self.initialguess()
+            self.mds['Pi01']=P_abund_up
+            self.mds['Pi01'][self.Z_init_guess <  8.4]=P_abund_low[self.Z_init_guess <  8.4]
+        else:
+            print "WARNING: need O3, O2, Hb"
 
-            if self.hasN2O2:
-                # [N2]/[O2] if at all possible
-                self.Z_init_guess[(self.logN2O2 < -1.2)&(N2O2_lines != 0.0)]=8.2  #  1.2 using low-Z gals,
-                self.Z_init_guess[(self.logN2O2 >= -1.2)&(N2O2_lines != 0.0)]=8.7  # 1.1 using HIi regions
-        
-        P_abund_up=(P_R23+726.1+842.2*P+337.5*P**2)/(85.96+82.76*P+43.98*P**2+1.793*P_R23)
-        P_abund_low=(P_R23+106.4+106.8*P-3.40*P**2)/(17.72+6.60*P+6.95*P**2-0.302*P_R23)
-
-        self.mds['Pi01']=P_abund_up.copy()
-        self.mds['Pi01'][(self.Z_init_guess < 8.4)]=P_abund_low[(self.Z_init_guess < 8.4)].copy()
-        self.mds['Pi01'][(self.Z_init_guess >= 8.4)]=P_abund_up[(self.Z_init_guess >= 8.4)].copy()
 
     def calcPi01_Z_old(self):
         # P-method 2001 upper branch (derecated and commented out)
         # available but deprecated
-        if self.hasO2O2:
+        if self.Z_init_guess==None:
+            self.initialguess()
+        if self.hasO3O2 and self.hasO3  and self.hasO2:
             P = 10**self.logO3O2/(1+10**self.logO3O2)
-            P_R23=10**self.logR23
-            P_abund_old=(P_R23+54.2+59.45*P+7.31*P**2)/(6.07+6.71*P+0.371*P**2+0.243*P_R23)
+            if self.logR23==None:
+                print "WARNING: Must first calculate R23"
+                self.calcR23()
+                if self.logR23==None:
+                    print "WARNING: Cannot compute this without R23"
+            if  self.hasHb:
+                R3=10**self.logO349595007Hb
+                R2=10**self.logO2Hb
+                P = R3/(R2+R3)
+                P_R23=R2+R3
+                P_R23=10**self.logR23
+                P_abund_old=(P_R23+54.2+59.45*P+7.31*P**2)/(6.07+6.71*P+0.371*P**2+0.243*P_R23)
             self.mds['Pi01_old']=np.zeros(self.nm)
-            self.mds['Pi01_old'][Z_init_guess >= 8.4]=P_abund_old[Z_init_guess >= 8.4]
+            self.mds['Pi01_old'][self.Z_init_guess >= 8.4]=P_abund_old[self.Z_init_guess >= 8.4]
         else:
             print "WARNING: need OIIIOII to calculate Pi01_Z_old, did you set them up with  setOlines()?"
         
     def calcC01_ZR23(self):
         # Charlot 01 R23 calibration: (case F) ##        
         # available but deprecated
-        if self.hasO35007O2 and self.hasO3Hb:
+        if self.hasO3 and self.hasO2 and self.hasO3Hb:
             x2=self.O2O35007/1.5
             x3=(10**self.logO3Hb)/2.
             self.mds['C01_R23']=np.zeros(self.nm)        
@@ -312,18 +387,14 @@ class diagnostics:
 
         # Charlot 01 calibration: (case A) based on [N2]/[SII]##
         # available but deprecated
-        if self.hasN2S2:
+        if not self.hasN2S2:
+            self.calcNIISII()
+            print "WARNING: trying to calculate logNIISII"
+        if self.hasN2S2 and self.hasO3 and self.hasO2 and self.hasO3Hb:
             self.mds['C01']=np.log10(5.09e-4*((self.O2O35007/1.5)**0.17)*(((10**self.logN2S2)/0.85)**1.17))+12
         else:
             print "WARNING: need [OIII]5700, [OII]3727, and Ha to calculate calcC01_ZR23, did you set them up with  setOlines() and ?"        
 
-
-
-    def calcPP04_O3N2_Z(self):
-        if self.hasO3Hb and self.hasN2Ha:
-            self.mds['PP04_O3N2']=8.73 - 0.32*(self.logO3Hb-self.logN2Ha)
-        else:
-            print "WARNING: need O3Hb and N2Ha to calculate PP04_O3N2, did you set them up?"
 
     def calcM91(self):
         # ## calculating M91 calibration using [N2O2] as 
@@ -339,135 +410,470 @@ class diagnostics:
         
         # Z_init=Z94_Z        
         # Z_init=KD02N2O2_Z
+        if self.logR23==None:
+            print "WARNING: Must first calculate R23"
+            self.calcR23()
+        if self.logR23==None:
+            print "WARNING: Cannot compute this without R23"
+                
 
-        self.mds['M91']=np.zeros(self.nm)
-        M91_Z_low=12.0-4.944+0.767*self.logR23+0.602*self.logR23**2-self.logO3O2*(0.29+0.332*self.logR23-0.331*self.logR23**2)
-        M91_Z_up=12.0-2.939-0.2*self.logR23+-0.237*self.logR23**2-0.305*self.logR23**3-0.0283*self.logR23**4-self.logO3O2*(0.0047-0.0221*self.logR23-0.102*self.logR23**2-0.0817*self.logR23**3-0.00717*self.logR23**4)
-        indx,=np.where((np.abs(self.logO3O2)>0) & (np.abs(self.logR23)>0) & (self.Z_init_guess < 8.4))
+        else:
+            if self.Z_init_guess==None:
+                self.initialguess()
+                
+            self.mds['M91']=np.zeros(self.nm)
+            M91_Z_low=nppoly.polyval(self.logR23,[12.0-4.944,0.767,0.602])-self.logO3O2*nppoly.polyval(self.logR23,[0.29,0.332,-0.331])
+            M91_Z_up=nppoly.polyval(self.logR23,[12.0-2.939,-0.2,-0.237,-0.305,-0.0283])-self.logO3O2*nppoly.polyval(self.logR23,[0.0047,-0.0221,-0.102,-0.0817,-0.00717])
 
-        self.mds['M91'][indx]=12.0-4.944+0.767*self.logR23[indx]+0.602*self.logR23[indx]**2-self.logO3O2[indx]*(0.29+0.332*self.logR23[indx]-0.331*self.logR23[indx]**2)
-        indx,=np.where((np.abs(self.logO3O2)>0) & (np.abs(self.logR23)>0) & (self.Z_init_guess >= 8.4))
-        self.mds['M91'][indx]=12.0-2.939-0.2*self.logR23[indx]-0.237*self.logR23[indx]**2-0.305*self.logR23[indx]**3-0.0283*self.logR23[indx]**4-self.logO3O2[indx]*(0.0047-0.0221*self.logR23[indx]-0.102*self.logR23[indx]**2-0.0817*self.logR23[indx]**3-0.00717*self.logR23[indx]**4)
+            indx,=np.where((np.abs(self.logO3O2)>0) & (np.abs(self.logR23)>0) & (self.Z_init_guess < 8.4))
+            self.mds['M91'][indx]=nppoly.polyval(self.logR23[indx],[12.0-4.944,0.767,0.602])-self.logO3O2[indx]*nppoly.polyval(self.logR23[indx],[0.29,0.332,-0.331])
 
-        #2014 FED: changed wrong values to None
-        self.mds['M91'][(M91_Z_up < M91_Z_low)]=None
+            indx,=np.where((np.abs(self.logO3O2)>0) & (np.abs(self.logR23)>0) & (self.Z_init_guess >= 8.4))
 
-    def calcKD02_N2O2_Z(self):
-        ### Kewley & Dopita (2002) (KD02) estimates of abundance ##
+            self.mds['M91'][indx]=nppoly.polyval(self.logR23[indx],[12.0-2.939,-0.2,-0.237,-0.305,-0.0283])-self.logO3O2[indx]*nppoly.polyval(self.logR23[indx],[0.0047,-0.0221,-0.102,-0.0817,-0.00717])
+
+            #2014 FED: changed wrong values to None
+            self.mds['M91'][(M91_Z_up < M91_Z_low)]=None
+
+    def calcKD02_N2O2(self):
+        ##  Kewley & Dopita (2002) estimates of abundance 
         ##  KD02
         # KD02 [N2]/[O2] estimate (can be used for whole log(O/H)+12 range, 
         # but rms scatter increases to 0.11 rms for log(O/H)+12 < 8.6
         # rms = 0.04 for
         # log(O/H)+12 > 8.6
-        # uses equation (4) from paper:
+        # uses equation (4) from KD02 paper
+        # FED: i vectorized the hell out of this function!!! 
+        # from a 7 dimensional if/for loop to 1 if and 1 for :D
         self.mds['KD02_N2O2']=np.zeros(self.nm)
-        if self.hasN2 and self.hasO23727 and self.hasHa and self.hasHb:         
-            for i in range(self.nm):
-                k=3
-                while k>=0:
-                    if not (self.N2O2_roots[i][k].imag) == 0.0 :        
-                        k=k-1
-                    else:
-                        # between 7.5 and 9.4
-                        if (abs(self.N2O2_roots[i][k]) >= 7.5) and (abs(self.N2O2_roots[i][k]) <= 9.4) :
-                            self.mds['KD02_N2O2'][i]=abs(self.N2O2_roots[i][k]) 
-                            k=0
-                        k=k-1
+        if self.hasN2 and self.hasO2 and self.hasHa and self.hasHb:         
+            if not self.hasN2O2:
+                print "WARNING: must calculate logN2O2 first"
+                self.calcNIIOII()
+                if self.N2O2_root:
+                    print "cannot calculate N2O2"
+                    return -1
+            roots=self.N2O2_roots.T
+            for k in range(3,-1,-1):
+                indx2=(abs(roots[k]) >= 7.5) * (abs(roots[k]) <= 9.4) * (roots[k][:].imag ==  0.0 )
+                self.mds['KD02_N2O2'][indx2]=abs(roots[k][indx2]) 
         else:
             print "WARNING: need NII6584 and OII3727 and Ha and Hb to calculate this. did you run setO() setHab() and setNII()?"
+        return 1
 
-    def calcKD03_NHa(self):
+
+
+    def calcKD03_N2Ha(self):
         # calculating [N2]/Ha abundance estimates using [O3]/[O2] also
-        if self.mds['KD02_N2O2'] ==None:
-            self.calcKD02_N2O2_Z()
-            if self.mds['KD02_N2O2'] ==None:
-                print "WARNING: without KD02_N2O2_Z cannot calculate KD03_NHa"
+        if self.mds['KD02_N2O2'] == None:
+            self.calcKD02_N2O2()
+            if self.mds['KD02_N2O2'] == None:
+                print "WARNING: without KD02_N2O2 cannot calculate KD03_NHa"
                 return -1
-        ##why iterating???Z_new_N2Ha=np.zeros((niter,self.nm))
-        Z_new_N2Ha=self.mds['KD02_N2O2'].copy()  # was 8.6
 
-        '''
-        ##why iterating???
-        for i in range(niter-1):
-            # ionization parameter
-            if (self.N26584 != 0.0).any() :
-                if self.hasHa and self.hasHb:
-                    if self.hasO3O2 :
+        Z_new_N2Ha=self.mds['KD02_N2O2'].copy()  # was 8.6
+        self.logq=7.37177
+
+        if self.hasN2 :
+            if self.hasHa:
+                if self.hasO3O2 :        
+                    for ii in range(4):
                         # calculating logq using the [N2]/[O2] 
                         #metallicities for comparison
-                        #used to include 0.0*logO3O2(j)
-                        logq[i]=(32.81 -1.153*self.logO3O2**2 + 
-                                 KD02_N2O2_Z*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2**2+KD02_N2O2_Z*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2**2))
-                    else :
-                        logq[i]=([7.37177]*self.nm)
-                        #       no_O3O2_yes_HaHb_flag(noO3O2)=j
+                        self.logq=(32.81 -1.153*self.logO3O2**2 + Z_new_N2Ha*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2**2+ Z_new_N2Ha*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2**2)) 
+
+                        Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
+
                 else:
-                    logq[i]=([7.37177]*self.nm)
-#                    logN2Ha=np.log10(self.N26584/self.Ha)
-                Z_new_N2Ha[i+1]=(7.04 + 5.28*self.logN2Ha+6.28*self.logN2Ha**2+2.37*self.logN2Ha**3)-logq[i]*(-2.44-2.01*self.logN2Ha-0.325*self.logN2Ha**2+0.128*self.logN2Ha**3)+10**(self.logN2Ha-0.2)*logq[i]*(-3.16+4.65*self.logN2Ha)
-       
-                
-                
-        #N2Halogq=logq
-        self.mds['KD03_N2Ha']=Z_new_N2Ha[niter-1,:]
-        '''
-
-        if self.hasN2 and self.hasHa:
-            if self.hasO3O2 :
-                # calculating logq using the [N2]/[O2] 
-                #metallicities for comparison
-                #used to include 0.0*logO3O2(j)
-                self.logq=(32.81 -1.153*self.logO3O2**2 + 
-                       self.mds['KD02_N2O2']*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2**2+ self.mds['KD02_N2O2']*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2**2))
-            else :
+                    self.logq=7.37177
+            else:        
                 self.logq=7.37177
-                #       no_O3O2_yes_HaHb_flag(noO3O2)=j
-            Z_new_N2Ha=(7.04 + 5.28*self.logN2Ha+6.28*self.logN2Ha**2+2.37*self.logN2Ha**3)-self.logq*(-2.44-2.01*self.logN2Ha-0.325*self.logN2Ha**2+0.128*self.logN2Ha**3)+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
-            
-                
-            self.mds['KD03_N2Ha']=Z_new_N2Ha
+                self.logN2Ha=np.log10(self.N26584/self.Ha)
 
+            Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
+
+            self.mds['KD03_N2Ha']=Z_new_N2Ha
         else:
             print "WARNING: need NII6584  and Ha to calculate this. did you run  setHab() and setNII()?"
 
-    def calclims():
+
+
+
+    def calcKD03R23(self):
         # calculating upper and lower metallicities for objects without
         # Hb  and for objects without [O3] and/or [O2]
         Hb_up_ID=np.zeros(100)
-        logq_low=6.9
-        logq_up=8.38
         if self.hasN2 and self.hasHa:
-            logN2Ha=np.log10(self.N26584/self.Ha)
-            # ionization parameter
-            Z_new_N2Ha_low=(7.04 + 5.28*logN2Ha+6.28*logN2Ha**2+2.37*logN2Ha**3)-logq_low*(-2.44-2.01*logN2Ha-0.325*logN2Ha**2+0.128*logN2Ha**3)+10**(logN2Ha-0.2)*logq_low*(-3.16+4.65*logN2Ha)
-            Z_new_N2Ha_up= (7.04 + 5.28*logN2Ha+6.28*logN2Ha**2+2.37*logN2Ha**3)-logq_up *(-2.44-2.01*logN2Ha-0.325*logN2Ha**2+0.128*logN2Ha**3)+10**(logN2Ha-0.2)*logq_up *(-3.16+4.65*logN2Ha)
-            '''
-            this is identical to  the paragraph above!!
-            if self.hasO35007 and self.hasO23727 :
-                Z_new_N2Ha_low=(7.04 + 5.28*logN2Ha+6.28*logN2Ha**2+2.37*logN2Ha**3)-logq_low*(-2.44-2.01*logN2Ha-0.325*logN2Ha**2+0.128*logN2Ha**3)+10**(logN2Ha-0.2)*logq_low*(-3.16+4.65*logN2Ha)
-                
-                Z_new_N2Ha_up=(7.04 + 5.28*logN2Ha+6.28*logN2Ha**2+2.37*logN2Ha**3)-logq_up*(-2.44-2.01*logN2Ha-0.325*logN2Ha**2+0.128*logN2Ha**3)+10**(logN2Ha-0.2)*logq_up*(-3.16+4.65*logN2Ha)
-            '''
+            logq_lims=[6.9,8.38]
+            #logN2Ha=np.log10(self.N26584/self.Ha) CHECK!! why remove dust correction??
+
+            Z_new_N2Ha_lims= np.atleast_2d([1.0,1.0]).T*nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-np.atleast_2d( logq_lims).T*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,0.128])+np.atleast_2d(logq_lims).T*(10**(self.logN2Ha-0.2)*(-3.16+4.65*self.logN2Ha))
+
+            # #### New ionization parameter and metallicity diagnostics #######
+            # NEW R23 diagnostics from Kobulnicky & Kewley 
+            # See NEW_fitfin.coefs
+
+            # trying out just using a single [NII]/Ha value
+        
+        Zmax=np.zeros(self.nm)
+
+        # ionization parameter
+        if not self.hasO3O2:
+            logq=np.zeros(self.nm)
+        else:
+            if self.Z_init_guess==None:
+                self.initialguess()
+            Znew=self.Z_init_guess.copy()
+            if self.logR23==None:
+                print "WARNING: Must first calculate R23"
+                self.calcR23()
+            if self.logR23==None:
+                print "WARNING: Cannot compute this without R23" 
+            else:
+                for ii in range(4):
+                    logq=(32.81 -1.153*self.logO3O2**2 + Znew.copy()*(-3.396 - 0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603 - 0.3119*self.logO3O2 - 0.163*self.logO3O2**2+Znew.copy()*(-0.48 + 0.0271*self.logO3O2 + 0.02037*self.logO3O2**2))
+                    Zmax[(logq >= 6.7) * (logq < 8.3)]=8.4
+                    
+                    # maximum of R23 curve:               
+                    Z_new=nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])
+                    Z_new_lims=[nppoly.polyval(self.logR23,[9.40, 4.65,-3.17])-logq*nppoly.polyval(self.logR23,[0.272,0.547,-0.513]),nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])]
+
+                    indx=self.Z_init_guess<=Zmax
+                    Z_new[indx]=nppoly.polyval(self.logR23[indx], [9.40 ,4.65,-3.17])-logq[indx]*nppoly.polyval(self.logR23[indx],[0.272,+0.547,-0.513])
+
+                if (self.hasHb):
+                    #2014 FED: changed moc value to None, not 0!
+                    Z_new[(Z_new_lims[0]>Z_new_lims[1])]=None
+                    self.mds['KD03new_R23']=Z_new
 
 
 
-    def calcKK04(self):
-        if self.mds['KD02_N2O2']=None:
+    def calcKDcombined(self):
+        if self.mds['KD02_N2O2']==None:
             # ### KD02 [NII]/[OII] estimate ###
             # (can be used for for log(O/H)+12 > 8.6 only)
             # uses equation (5) from paper, this should be identical 
             # to the estimate above for abundances log(O/H)+12 > 8.6
-            
             self.mds['KD02_N2O2']=np.log10(8.511e-4*(1.54020+1.26602*self.logN2O2+0.167977*self.logN2O2**2))+12.
 
-
-        # ionization parameter
-        
+        # ionization parameter        
         logq_final=np.zeros(self.nm)
-        if self.hasN2 and self.hasO23727 and self.hasHb and self.hasHa:
+        if self.hasN2 and self.hasO2 and self.hasHb and self.hasHa:
             logq_final=(32.81 + 0.0*self.logO3O2-1.153*self.logO3O2**2 +self.mds['KD02_N2O2']*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603  -0.3119*self.logO3O2 -0.163*self.logO3O2**2+self.mds['KD02_N2O2']*(-0.48 +0.0271*self.logO3O2+ 0.02037*self.logO3O2**2))
             logq_final[self.mds['KD02_N2O2']<=8.4]=self.logq[self.mds['KD02_N2O2']<=8.4]
 
-        if  not self.hasN2 and self.hasO23727 and self.hasO35007_raw and self.hasHb and self.hasHa:
+        if  not self.hasN2 and self.hasO2 and self.hasO3 and self.hasHb and self.hasHa:
             logq_final=logq
 
+        # if [NII]/[OII] after extinction correction is less than -1.5, then check the data.
+        # if it is only slightly less than 1.5, then this can be a result of either noisy
+        # data, inaccurate fluxes or extinction correction, or a higher ionization parameter
+        # than modelled.  For these cases, the average of the M91,Z94 and C01 should be used.
+        
+        # KD02 R23 estimate (not reliable for  8.4 < log(O/H)+12 < 8.8)
+        # uses [NII]/[OII] estimate as initial guess - this can be changed below
+        
+        # initializing:
+        Zi=np.array([0.05,0.1,0.2,0.5,1.0,1.5,2.0,3.0])      # model grid abundances in solar units
+        ZiOH=np.log10(Zi*8.511e-4)+12    # log(O/H)+12 units
+        Zstep=np.array([0.025,0.075,0.15,0.35,0.75,1.25,1.75,2.5,3.5]) #middle of model grid abundances
+        ZstepOH=np.log10(Zstep*8.511e-4)+12
+        qstep=np.log10([3.5e6,7.5e6,1.5e7,3e7,6e7,1.16e8,2.25e8,3.25e8]) # model grid ionization parameters
+        n_ite=3                          # number of iteations for abundance determination
+        tol=1.0e-2                       # tolerance for convergance 
+        R23_roots=np.zeros((4,self.nm),dtype=complex)   # all possible roots of R23 diagnostic
+        q_roots=np.zeros((3,self.nm),dtype=complex)     # possible roots of q diagnostic
+        q=np.zeros((self.nm,n_ite+1))        # actual q value
+        O3O2_coef=np.zeros((4,8))        # coefficients from model grid fits
+        R23_coef=np.zeros((5,7))         # coefficients from model grid fits
+        R23_Z=np.zeros((self.nm,n_ite+1))    # Z value for each iteation
+        R23_Z[:,0]=self.mds['KD02_N2O2'].copy()  # use NIIOII abundance as initial estimate
+
+        # occasionally, for noisy data or badly fluxed [OII].[OIII] or Hb, 
+        # or for high ionization parameter galaxies, R23 is slightly higher
+        # than the curves in our models - this will result in all complex roots of
+        # the R23 curve unless a slightly lower R23 is used.  These should
+        # be checked individually to make sure that it is just noise etc in the
+        # data that is causing the problem, rather than wrong fluxes input.
+        # the R23 ratio should be close to 0.95, not much more than 1.0 for the
+        # data to be physical.
+
+        if not self.hasO3 or not self.hasO2 or  self.logR23 == None:
+            print "Must first calculate R23 and O350072" 
+        else:
+            R23c0=[-3267,-3727.42,-4282.30,-4745.18,-4516.46,-3509.63,-1550.53]
+            R23_coef[:,0]=[-3267.93,1611.04,-298.187,24.5508,-0.758310] # q=5e6
+            R23_coef[:,1]=[-3727.42,1827.45,-336.340,27.5367,-0.845876] # q=1e7
+            R23_coef[:,2]=[-4282.30,2090.55,-383.039,31.2159,-0.954473] # q=2e7
+            R23_coef[:,3]=[-4745.18,2309.42,-421.778,34.2598,-1.04411]  # q=4e7
+            R23_coef[:,4]=[-4516.46,2199.09,-401.868,32.6686,-0.996645] # q=8e7
+            R23_coef[:,5]=[-3509.63,1718.64,-316.057,25.8717,-0.795242] # q=1.5e8
+            R23_coef[:,6]=[-1550.53,784.262,-149.245,12.6618,-0.403774] # q=3e8
+
+            O3O2c0=[-36.9772,-74.2814,-36.7948,-81.1880,-52.6367,-86.8674,-24.4044,49.4728]
+            O3O2_coef[:,0]=[-36.9772,10.2838,-0.957421,0.0328614] #z=0.05 
+            O3O2_coef[:,1]=[-74.2814,24.6206,-2.79194,0.110773]    # z=0.1
+            O3O2_coef[:,2]=[-36.7948,10.0581,-0.914212,0.0300472]  # z=0.2
+            O3O2_coef[:,3]=[-81.1880,27.5082,-3.19126,0.128252]    # z=0.5
+            O3O2_coef[:,4]=[-52.6367,16.0880,-1.67443,0.0608004]   # z=1.0
+            O3O2_coef[:,5]=[-86.8674,28.0455,-3.01747,0.108311]    # z=1.5
+            O3O2_coef[:,6]=[-24.4044,2.51913,0.452486,-0.0491711]  # z=2.0
+            O3O2_coef[:,7]=[49.4728,-27.4711,4.50304,-0.232228]    # z=3.0
+            
+
+            for i in range(self.nm) :
+                R23_coef[0,:]=R23c0-self.logR23[i]
+                O3O2_coef[0,:]=O3O2c0-self.logO35007O2[i]
+                # coefficients from KD02 paper:
+            
+                for ite in range(1,n_ite+1) : 
+                    # iteate if tolerance level not met
+                    if abs(R23_Z[i,ite]-R23_Z[i,ite-1]) > tol :
+                        #   calculate ionization parameter using [OIII]/[OII] with
+                        #   [NII]/[OII] abundance for the first iteation, and the R23
+                        #   abundance in consecutive iteations
+                        for j in range(8):   
+                            if R23_Z[i,ite-1] > ZstepOH[j] :
+                                if R23_Z[i,ite-1] <= ZstepOH[j+1] :
+                                    q_roots[:,i]=self.fz_roots(O3O2_coef[:,j])      
+                                    #q must be between 3.5e6 and 3.5e8 cm/s 
+                                    #because that is the range it
+                                    #is defined over by the model grids, and it must be real.
+
+                        for k in range(3) :
+                            if (q_roots[k,i].imag) == 0.0 :
+                                if (q_roots[k,i].real) >= 6.54407 :   #log units (q >= 1e6 cm/s) 
+                                    if (q_roots[k,i].real) <= 8.30103 :   #log units (q <= 2e8 cm/s)
+                                        q[i,ite]=(q_roots[k,i].real)
+       
+                        #   calculate abundance using ionization parameter:
+                        R23_qstepno=0
+                        
+                        for j in range(7) :   
+                            if q[i,ite] > qstep[j] :
+                                if q[i,ite] <= qstep[j+1] :
+                                    R23_roots[:,i]=self.fz_roots(R23_coef[:,j])
+                                    R23_qstepno=j
+     
+                                    #   There will be four roots, two complex ones, 
+                                    #   and two real ones.
+                                    #   use previous R23 value (or [NII]/[OII] if first iteation) 
+                                    #   and q to find which real root to use 
+                                    #   (ie. which side of R23 curve to use).  
+                                    
+                        #    Rmax=[1.04967,1.06497,1.06684,1.06329,1.03844,0.991261,0.91655]
+                        Smax=np.array([8.69020,8.65819,8.61317,8.58916,8.49012,8.44109,8.35907])
+                            
+                        for k in range(4) :
+                            if (R23_roots[k,i].imag) == 0.0 :
+                                if (R23_Z[i,ite-1] >= Smax[R23_qstepno] and R23_roots[k,i].real >= Smax[R23_qstepno]) or (R23_Z[i,ite-1] <= Smax[R23_qstepno] and R23_roots[k,i].real <= Smax[R23_qstepno]):
+                                    R23_Z[i,ite]=R23_roots[k,i].real
+                                   
+                                    # around maximum of R23 sometimes the R23 ratio 
+                                    # will be slightly higher than
+                                    # that available for the closest q value.  
+                                    # This will depend on noise addded to data.  
+                                    # If this happens, step up in ionization parameter 
+                                    # to find abundance using that one instead. 
+                                    # Around local maximum, the actual ionization parameter
+                                    # used is not significant compared to the errors 
+                                    # associated with the lack of
+                                    # abundance sensitivity of the R23 ratio in this region.
+
+                        while R23_Z[i,ite] == 0.0 and R23_qstepno <= 5 :
+                            R23_roots[:,i]=self.fz_roots(R23_coef[:,R23_qstepno+1])
+                            for k in range(4):
+                                if (R23_roots[k,i].imag) == 0.0 :
+                                    if (R23_Z[i,ite-1] >= Smax[R23_qstepno] and R23_roots[k,i].real >= Smax[R23_qstepno]) or (R23_Z[i,ite-1] <= Smax[R23_qstepno] and R23_roots[k,i].real <= Smax[R23_qstepno]):
+                                        R23_Z[i,ite]=R23_roots[k,i].real
+                            R23_qstepno+=1
+                            
+                    else:
+                        R23_Z[i,ite]=R23_Z[i,ite-1]  
+                        q[i,ite]=q[i,ite-1]
+
+        KD02_R23_Z=R23_Z[:,n_ite]
+
+        #  ### Combined \R23\ method outlined in KD02 paper Section 7. ###
+        #  ie for objects with only [OII], [OIII], Hb available
+        if not self.hasHa and not self.hasHb:
+            print "WARNING: need Halpha and Hbeta for this. did you run setHab()?"
+          # KD01 combined method (uses [NII], [OII], [OIII], [SII]):
+        # uses KD02 [NII]/[OII] method if [NII]/[OII] gives 8.6 < log(O/H)+12
+        # uses average of M91 and Z94 if 8.5 < log(O/H)+12 < 8.6
+        # uses average of C01 and KD02 if  log(O/H)+12 < 8.5
+        # Also calculates comparison average
+
+        KD02_comb_Z=np.zeros(self.nm)
+        KD02C01_ave=np.zeros(self.nm)
+        M91Z94C01_ave=np.zeros(self.nm)
+        M91Z94_ave=np.zeros(self.nm)
+        
+        if self.mds['M91'] == None:
+            print "Must first calculate M91"
+            self.calcM91()
+        if self.mds['Z94'] == None:
+            print "Must first calculate Z94"
+            self.calcZ94()
+
+        if KD02_R23_Z == None or self.mds['Z94']==None or self.mds['M91']==None:
+            print "cannot calculate KD02_R23comb because  KD02_R23, M91, or Z94 failed"
+        else:
+            KD02_R23comb_Z=np.zeros(self.nm)
+
+            # LK02 averaged with M91 and Z94            
+            indx=self.mds['Z94']>=9.0
+            KD02_R23comb_Z[indx]=(KD02_R23_Z[indx]+self.mds['M91'][indx]+self.mds['Z94'][indx])/3.  
+            
+            # average of M91 and Z94
+            indx= (KD02_R23comb_Z <= 9.0) * (KD02_R23comb_Z >= 8.5)
+            KD02_R23comb_Z[indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])                  
+        
+            # average of M91 and Z94
+            indx=(self.mds['Z94'] <= 9.0) * (self.mds['Z94'] >= 8.5)
+            KD02_R23comb_Z[indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])                 
+            
+            indx= KD02_R23comb_Z <= 8.5 
+            KD02_R23comb_Z[indx]=KD02_R23_Z[indx]                        
+            
+            indx= self.mds['Z94'] <= 8.5 
+            KD02_R23comb_Z[indx]=KD02_R23_Z[indx]                        
+
+            #KD01 combined
+            indx=(np.abs(self.mds['M91'])>0) * (np.abs(self.mds['Z94'])>0)
+            M91Z94_ave[indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])
+            
+            #indx =(np.abs(self.mds['C01'])>0) *( np.abs(self.mds['M91'])>0) * (np.abs(self.mds['Z94'])>0)
+            #M91Z94C01_ave[indx]=(self.mds['M91'][indx]+self.mds['Z94'][indx]+self.mds['C01'][indx])/3.
+            
+            indx=(np.abs(KD02_R23_Z)> 0.0) * (np.abs(self.mds['C01'])>0)
+            KD02C01_ave[indx]=0.5*(KD02_R23_Z[indx]+self.mds['C01'][indx])
+        
+
+        # ### [NII]/[SII] method outlined in KD02 paper ###
+        # this method produces a systematic shift of 0.2 dex in log(O/H)+12
+        # compared with the average of M91, Z94, and C01.  We believe this
+        # is a result of inaccurate abundances or depletion factors, which are known 
+        # problems in sulfur modelling.  Initial guess of [NII]/[OII] used
+        # can be changed.  Initial guess is not critical except for high
+        # ionization parameters.  ionization parameter diagnostic is [OIII]/[OII]
+        
+        KD02_N2S2_Z=np.zeros(self.nm)
+        
+        
+        N2S2_roots=np.zeros((4,self.nm),dtype=complex)   # all possible roots of NIISII diagnostic
+        q_roots=np.zeros((3,self.nm),dtype=complex)     # possible roots of q diagnostic
+        q=np.zeros((self.nm,n_ite+1))        # actual q value
+        N2S2_coef=np.zeros((5,7))          # coefficients from model grid fits
+        N2S2_Z=np.zeros((self.nm,n_ite+1))    # Z value for each iteation
+        
+        # initializing:
+        
+        N2S2_Z[:,0]=self.mds['KD02_N2O2']  # use [NII]/[OII] abundance as initial estimate
+                    
+        if self.hasO3 and self.hasO2 and self.hasN2S2:
+            # coefficients from KD02 paper:
+            N2S2c0=[-1042.47,-1879.46,-2027.82,-2080.31,-2162.93,-2368.56,-2910.63]
+            N2S2_coef[:,0]=[-1042.47,521.076,-97.1578,8.00058,-0.245356]
+            N2S2_coef[:,1]=[-1879.46,918.362,-167.764,13.5700,-0.409872]
+            N2S2_coef[:,2]=[-2027.82,988.218,-180.097,14.5377,-0.438345]
+            N2S2_coef[:,3]=[-2080.31,1012.26,-184.215,14.8502,-0.447182]
+            N2S2_coef[:,4]=[-2162.93,1048.97,-190.260,15.2859,-0.458717]
+            N2S2_coef[:,5]=[-2368.56,1141.97,-205.908,16.4451,-0.490553]
+            N2S2_coef[:,6]=[-2910.63,1392.18,-249.012,19.7280,-0.583763]
+
+
+            for i in range(self.nm) :
+                N2S2_coef[0,:]=N2S2c0-self.logN2S2[i]
+                O3O2_coef[0,:]=O3O2c0-self.logO35007O2[i]
+
+                for ite in range(1, n_ite+1):                 # iteate if tolerance level not met
+                    if abs(N2S2_Z[i,ite]-N2S2_Z[i,ite-1]) >= tol :
+                        #   calculate ionization parameter using [OIII]/[OII] with
+                        #   [NII]/[OII] abundance for the first iteation, and the [NII]/[SII]
+                        #   abundance in consecutive iteations
+                        for j in range(8) :   
+                            if N2S2_Z[i,ite-1] > ZstepOH[j] :
+                                if N2S2_Z[i,ite-1] <= ZstepOH[j+1] :
+                                    q_roots[:,i]=self.fz_roots(O3O2_coef[:,j])
+                                    #   q must be between 3.5e6 and 3.5e8 cm/s because that is 
+                                    #   the range it
+                                    #   is defined over by the model grids, and it must be real.
+
+                        for k in range(3) :
+                            if (q_roots[k,i].imag) == 0.0 :
+                                if (q_roots[k,i].real) >= 6.54407 :   #log units (q >= 1e6 cm/s) 
+                                    if (q_roots[k,i].real) <= 8.30103 :   #log units (q <= 2e8 cm/s)
+                                        q[i,ite]=(q_roots[k,i].real)
+
+                        #   calculate abundance using ionization parameter:
+                        N2S2_qstepno=0
+                        for j in range(7) :   
+                            if q[i,ite] > qstep[j] :
+                                if q[i,ite] <= qstep[j+1] :
+                                    N2S2_roots[:,i]=self.fz_roots(N2S2_coef[:,j])
+                                    N2S2_qstepno=j
+                   
+                                    #   There will be four roots, two complex ones, 
+                                    #   and two real ones.
+                                    #   use previous NIISII value 
+                                    #   (or [NII]/[OII] if first iteation) 
+                                    #   and q to find which real root to use 
+                                    #   (ie. which side of R23 curve 
+                                    #   to use).  
+
+                        for k in range(4) :
+                            if (N2S2_roots[k,i].imag) == 0.0 :
+                                if (N2S2_roots[k,i].real) >= 8.0 and (N2S2_roots[k,i].real) <= 9.35 :
+                                    N2S2_Z[i,ite]=(N2S2_roots[k,i].real)
+
+
+                        if N2S2_Z[i,ite] == 0.0 :
+                            N2S2_roots[:,i]=self.fz_roots(N2S2_coef[:, N2S2_qstepno+1])
+                            for k in range(4) :
+                                if (N2S2_roots[k,i].imag) == 0.0 :
+                                    if ((N2S2_roots[k,i].real) >= 8.0) and ((N2S2_roots[k,i].real) <= 9.35) :
+                                        N2S2_Z[i,ite]=(N2S2_roots[k,i].real)
+
+                    else:
+                        N2S2_Z[i,ite]=N2S2_Z[i,ite-1]  
+                        q[i,ite]=q[i,ite-1]
+
+        KD02_N2S2_Z=N2S2_Z[:,n_ite]
+        KD02_comb_Z=self.mds['KD02_N2O2']
+      
+        if KD02_R23_Z == None or self.mds['Z94']==None or self.mds['M91']==None:
+            print "cannot calculate KD02_R23comb because  KD02_R23, M91, or Z94 failed"
+        else:
+            indx= (self.mds['KD02_N2O2'] <= 8.6 ) * (M91Z94_ave >= 8.5 )
+            KD02_comb_Z[indx]=M91Z94_ave[indx]   # average of M91 and Z94
+            indx= (self.mds['KD02_N2O2'] <= 8.6 ) * (M91Z94_ave < 8.5 )
+            KD02_comb_Z[indx]=KD02C01_ave[indx]
+        
+            #-----------------------------------------
+            # ### combined method ###
+            #-----------------------------------------
+            
+            # if [NII]/[OII] abundance available and [NII]/Ha abundance < 8.4, then 
+            # use R23. 
+            
+            self.mds['KD02comb_updated']=np.zeros(self.nm)
+            indx=self.Z_init_guess > 8.4
+            self.mds['KD02comb_updated'][indx]=self.mds['KD02_N2O2'][indx]
+
+            indx=(self.mds['KD03new_R23'] > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
+            self.mds['KD02comb_updated'][indx]=0.5*(self.mds['KD03new_R23'][indx]+self.mds['M91'][indx])
+            indx=(self.mds['KD03new_R23'] <= 0.0) * (self.mds['M91'] <= 0.0 ) * (self.Z_init_guess <= 8.4)
+            self.mds['KD02comb_updated'][indx]=self.mds['KD03_N2Ha'][indx]
+            
+
+
+
+
+    
+
+
+
+
+
+ 
