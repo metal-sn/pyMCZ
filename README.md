@@ -11,9 +11,9 @@ Place the  _meas and _err  files in the "input" directory (example files are pro
 
 From the commandline simply use as:
 ```
-fedMCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
+python fedMCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
 ```
--\<name\>: the SN name which should be the common name of the _min and _max files (e.g. testdata13 for testdata13_meas.txt and testdata13_err.txt)
+-\<filename\>: the SN name which should be the common name of the _min and _max files (e.g. testdata13 for testdata13_meas.txt and testdata13_err.txt)
 
 -nsample: the number of MC samples desired 
 
