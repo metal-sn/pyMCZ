@@ -866,7 +866,8 @@ class diagnostics:
             indx=(self.mds['KD03new_R23'] > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
             self.mds['KD02comb_updated'][indx]=0.5*(self.mds['KD03new_R23'][indx]+self.mds['M91'][indx])
             indx=(self.mds['KD03new_R23'] <= 0.0) * (self.mds['M91'] <= 0.0 ) * (self.Z_init_guess <= 8.4)
-            self.mds['KD02comb_updated'][indx]=self.mds['KD03_N2Ha'][indx]
+            if not self.mds['KD03_N2Ha']==None:
+                self.mds['KD02comb_updated'][indx]=self.mds['KD03_N2Ha'][indx]
             
 
 
