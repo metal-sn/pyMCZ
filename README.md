@@ -13,9 +13,9 @@ From the commandline simply use as:
 ```
 python fedMCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
 ```
--\<filename\>: the SN name which should be the common name of the _min and _max files (e.g. testdata13 for testdata13_meas.txt and testdata13_err.txt)
+\<filename\>: the SN name which should be the common name of the _min and _max files (e.g. testdata13 for testdata13_meas.txt and testdata13_err.txt)
 
--nsample: the number of MC samples desired 
+nsample: the number of MC samples desired 
 
 --path: the directory in which subdirectory "input" is located. If not provided, will default to environmental variable MCMetdata that should be set to point to that directory. _err.txt _meas.txt must live in <path>/input
 
