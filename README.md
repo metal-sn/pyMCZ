@@ -6,22 +6,22 @@ Monte Carlo method to calculate metalicity uncertainty from flux data.
 ====================
 Usage:
 ====================
-Place the _min, _max, and _mes(optional) files in the "sn_data" folder.
+Place the  _meas and _err  files in the "input" directory (example files are provded in the directory).
 
 
 From the commandline simply use as:
 ```
-MCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
+fedMCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
 ```
--\<name\>: the Sn name which should be the common name of the _min and _max files
+-\<name\>: the SN name which should be the common name of the _min and _max files (e.g. testdata13 for testdata13_meas.txt and testdata13_err.txt)
 
--nsample: the number of MC samples desired
+-nsample: the number of MC samples desired 
 
---path: the directory in which subdirectory "sn_data" is located. If not provided, will default to environmental variable MCMetdata that should be set to point to that directory. _min _max (and _med) mst live in sn_data
+--path: the directory in which subdirectory "input" is located. If not provided, will default to environmental variable MCMetdata that should be set to point to that directory. _err.txt _meas.txt must live in <path>/input
 
 --unpickle: if it exists, a pickle output files for this SN and this number of samples is read, instead of recalculating the metalicity
 
---binmode: how to choose the number of bins for plotting the histogram:'d' is based on Doane's formula (wilipedia's version), 's' is the sqrt of number of data, 't' is on 2*n**1/3 (default), 'bb' uses bayesian blocks (must have astroML installed or it defaults to 't')
+--binmode: how to choose the number of bins for plotting the histogram:'d' is based on Doane's formula (wilipedia's version), 's' is the sqrt of number of data, 't' is on 2*n**1/3 (default), 'kb' uses Knuth's block rule, 'bb' uses bayesian blocks (must have astroML installed or it defaults to 't')
 
 --clobber: If set to true, will overwrite existing output files. Default False.
 
@@ -37,11 +37,9 @@ each flux data should be stored in the directory sn_data that exists in the dire
 
 with common filename \<fi\>:
 
-\<fi\>_max.txt
+\<fi\>_err.txt
 
-\<fi\>_min.txt
-
-\<fi\>_mes.txt 
+\<fi\>_meas.txt 
 
 
 where max = mesured+err, min=mesured-err. The _mes file is optional.
