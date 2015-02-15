@@ -745,9 +745,11 @@ class diagnostics:
             
             #indx =(np.abs(self.mds['C01'])>0) *( np.abs(self.mds['M91'])>0) * (np.abs(self.mds['Z94'])>0)
             #M91Z94C01_ave[indx]=(self.mds['M91'][indx]+self.mds['Z94'][indx]+self.mds['C01'][indx])/3.
-            
-            indx=(np.abs(KD02_R23_Z)> 0.0) * (np.abs(self.mds['C01'])>0)
-            KD02C01_ave[indx]=0.5*(KD02_R23_Z[indx]+self.mds['C01'][indx])
+            if not  self.mds['C01']==None:            
+                indx=(np.abs(KD02_R23_Z)> 0.0) * (np.abs(self.mds['C01'])>0)
+                KD02C01_ave[indx]=0.5*(KD02_R23_Z[indx]+self.mds['C01'][indx])
+
+                
         
 
         # ### [NII]/[SII] method outlined in KD02 paper ###
