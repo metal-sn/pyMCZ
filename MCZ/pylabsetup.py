@@ -2,6 +2,7 @@ import matplotlib as mpl
 import pylab as plt
 from pylab import rc
 rc('axes', linewidth=1.2)
+mpl.rcParams.update(mpl.rcParamsDefault)
 mpl.rcParams['font.size'] = 18.
 mpl.rcParams['font.family'] = 'serif'
 mpl.rcParams['font.serif'] = ['Times']
