@@ -64,30 +64,23 @@ def calculation(data,num,(bsmeas,bserr),outfilename='blah.txt',red_corr=True,dis
                 "Pi01_Z"=True,
                 "D02"=True,
                 "E(B-V)"=True,'''
-#    print bsmeas
-    for k in data.iterkeys():
-        
-        data[k][np.where(np.isfinite(data[k][:])==False)]=0.0 #kills all non-finite terms 
+   
+   
+    data[np.where(np.isfinite(data[1:,:])==False)]=0.0 #kills all non-finite terms      
 
-    OII3727_raw=data['[OII]3727']
-    Hb_raw=data['Hb']
-    Ha_raw=data['Ha']
-    OIII5007_raw=data['[OIII]5007']
+    OII3727_raw=data[1]
+    Hb_raw=data[2]
+    Ha_raw=data[6]
+    OIII5007_raw=data[4]
     OIII4959_raw=OIII5007_raw/3.
-    NII6584_raw=data['[NII]6584']
-    SII6717_raw=data['[SII]6717']
+    NII6584_raw=data[7]
+    SII6717_raw=data[8]
     SII6731_raw=np.zeros(num)
     SIII9069_raw=np.zeros(num)
     SIII9532_raw=np.zeros(num)
-    try:
-        SII67176731_raw=data['[SIII]9532']
-    except:
-        SII67176731_raw=np.zeros(num)
+    SII67176731_raw=data[11]
     SIII90699532_raw=np.zeros(num)
-    try:
-        OI6300_raw=data['[OI]6300']
-    except:
-        OI6300_raw=np.zeros(num)
+    OI6300_raw=data[5]
     OIII49595007_raw=OIII4959_raw + OIII5007_raw
 
 
@@ -272,7 +265,6 @@ def calculation(data,num,(bsmeas,bserr),outfilename='blah.txt',red_corr=True,dis
     #### Denicolo [NII]/Ha diagnostic Denicolo, Terlevich & Terlevich
     #2002,  MNRAS, 330, 69
 
-    
     N2=logNIIHa
     D02_Z=9.12+0.73*N2
 
