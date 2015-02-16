@@ -266,6 +266,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
             countsnorm=counts/np.max(counts)
 
             ###plot hist###
+        
         plt.bar(bins[:-1],countsnorm,widths,color=['gray'])
         plt.minorticks_on()
         plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
@@ -276,7 +277,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         plt.axvline(x=median,linewidth=2,color='white',ls='--')
         st='%s '%(snname)
         plt.annotate(st, xy=(0.13, 0.6), xycoords='axes fraction',fontsize=18,fontweight='bold')
-        st='%s '%(Zs)
+        st='%s '%(Zs.replace('_',' '))
         plt.annotate(st, xy=(0.62, 0.93), xycoords='axes fraction',fontsize=18,fontweight='bold')
         st='measurement %d of %d\n\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f'%(i+1,nmeas,round(median,3),round(left,3),round(right,3))
         plt.annotate(st, xy=(0.62, 0.65), xycoords='axes fraction',fontsize=18)
@@ -299,6 +300,8 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         if VERBOSE: print data
         print name, 'had infinities'
         return "-2, -2"
+
+
 ##############################################################################
 ## The main function. takes the flux and its error as input. 
 ##  filename - a string 'filename' common to the three flux files
