@@ -20,7 +20,7 @@ from pylab import hist,show
 ##if S_mass[i] > low_lim and S_mass[i] < 14.0 and all_lines[i] != 0.0:
 ##are ignored, replaced by (if not G) where G is set to False
 
-G=True#False
+IGNOREDUST=False
 
 ##list of metallicity methods, in order calculated
 Zs=["KD02comb_updated", #always
@@ -46,6 +46,8 @@ def get_keys():
 
 def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False): 
 
+    global IGNOREDUST
+
     raw_lines={}
     for k in measured.iterkeys():
         #kills all non-finite terms 
@@ -64,9 +66,10 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',d
         with np.errstate(invalid='ignore'):
             #print 'extinction correction ',i
             diags.calcEB_V()
-    elif dust_corr:
+    elif dust_corr and not IGNOREDUST:
         response=raw_input("WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!! Continuing without reddening correction? [Y/n]\n").lower()
         assert(not (response.startswith('n'))),"please fix the input file to include Halpha and Hbeta measurements"
+        IGNOREDUST=True
         dust_corr=False
         diags.mds['E(B-V)']=np.ones(len(raw_lines['Ha']))*1e-5
     else:
