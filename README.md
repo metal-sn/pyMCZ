@@ -13,7 +13,7 @@ From the commandline simply use as:
 ```
 python fedMCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
 ```
-\<filename\>: the SN name which should be the common name of the _min and _max files (e.g. testdata13 for testdata13_meas.txt and testdata13_err.txt)
+\<filename\>: the SN name which should be the common name of the _meas and _err files (e.g. testdata for testdata_meas.txt and testdata_err.txt)
 
 nsample: the number of MC samples desired 
 
@@ -40,9 +40,6 @@ with common filename \<fi\>:
 \<fi\>_err.txt
 
 \<fi\>_meas.txt 
-
-
-where max = mesured+err, min=mesured-err. The _mes file is optional.
 
 The format for each of the txt files should be as follows:
 
