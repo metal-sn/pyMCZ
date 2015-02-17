@@ -98,7 +98,8 @@ The figures below show an undersampled realization and a well- (possibly over-) 
 
 
 
-
+![alt tag](https://github.com/fedhere/MC_Metalicity/blob/master/output/testdata/testdata_n200_testcomplete.png)
+![alt tag](https://github.com/fedhere/MC_Metalicity/blob/master/output/testdata/testdata_n20000_testcomplete.png)
 
 
  
