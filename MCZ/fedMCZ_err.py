@@ -10,8 +10,8 @@ import pylabsetup
 #import metallicity_save2 as metallicity
 import fedmetallicity as metallicity
 
-allines=['[OII]3727','Hb','[OIII]4959','[OIII]5007','[OI]6300','Ha','[NII]6584','[SII]6717','[SII]6731','[SIII]9069','[SIII]9532']
-morelines=['flag','E(B-V)','dE(B-V)','scale_blue','d scale_blue']
+alllines=['[OII]3727','Hb','[OIII]4959','[OIII]5007','[OI]6300','Ha','[NII]6584','[SII]6717','[SII]6731','[SIII]9069','[SIII]9532']
+morelines=['E(B-V)','dE(B-V)','scale_blue','d scale_blue']
 
 
 
@@ -74,7 +74,7 @@ def readfile(filename):
     bstruct={}
     for i,k in enumerate(header):
         bstruct[k]=[i,0]
-
+    print header
     b = np.loadtxt(filename,skiprows=noheader, dtype={'names':header,'formats':formats})
     #usecols=cols, unpack=True)
     
