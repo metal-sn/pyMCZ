@@ -16,5 +16,10 @@ For a given \<fi\> and nSample, the following output files are generated:
 
 "hist" folder, containing all the histograms generated
 
-
+====================
+Interpret the Output Values
+====================
  
+'-1' means: the emissions lines don't satisfy some sort of minimum criteria to derive metallicity  
+
+0.000 (no distribution) means: no distribution for some reason, thus don't trust the output vaue 
