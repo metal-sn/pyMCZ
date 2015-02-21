@@ -47,7 +47,7 @@ def get_keys():
 def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False): 
 
     global IGNOREDUST
-
+    diags.setdustcorrect()
     raw_lines={}
     for k in measured.iterkeys():
         #kills all non-finite terms 

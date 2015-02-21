@@ -83,27 +83,45 @@ class diagnostics:
         self.O35007=None
         self.N2O2_coef0=1106.8660
 
-    def printme(self):
-        try: print "\nHa", np.mean(self.Ha),self.Ha
+    def printme(self, verbose=False):
+        try: 
+            print "\nHa", np.mean(self.Ha)
+            if verbose: print self.Ha
         except:pass
-        try:print "\nHb", np.mean(self.Hb),self.Hb
+        try:
+            print "\nHb", np.mean(self.Hb)
+            if verbose: print self.Hb
         except:pass
-        try:print  "\nE(B-V)",np.mean(self.mds['E(B-V)']),self.mds['E(B-V)']
+        try:
+            print  "\nE(B-V)",np.mean(self.mds['E(B-V)'])
+            if verbose: print self.mds['E(B-V)']
         except:pass 
-        try:       print  "\nZ94_Z",np.mean(self.mds['Z94']),self.mds['Z94']
+        try:       
+            print  "\nZ94_Z",np.mean(self.mds['Z94'])
+            if verbose: print self.mds['Z94']
         except:pass 
-        try:       print  "\nR23",np.mean(self.R23),self.R23
+        try:       
+            print  "\nR23",np.mean(self.R23)
+            if verbose: print self.R23
         except:pass 
-        try:       print "\nlog(R23)", np.mean(self.logR23),self.logR23
+        try:       
+            print "\nlog(R23)", np.mean(self.logR23)
+            if verbose: print self.logR23
         except:pass 
-        try:        print  "\nlog([NII][OII])",stat.nanmean(self.logN2O2),self.logN2O2
+        try:        
+            print  "\nlog([NII][OII])",stat.nanmean(self.logN2O2)
+            if verbose: print self.logN2O2
         except:pass
-        try:        print  "\nlog([OIII][OII])",stat.nanmean(self.logO3O2),self.logO3O2
+        try:        
+            print  "\nlog([OIII][OII])",stat.nanmean(self.logO3O2)
+            if verbose: 
+                print self.logO3O2
         except:pass
         for k in self.mds.iterkeys():
             print "\n",k,
             try: print stats.nanmean(self.mds[k]), np.stdev(self.mds[k])
-            except: print self.mds[k]
+            except: 
+                if verbose: print self.mds[k]
     
 
     def checkminimumreq(self,red_corr, Smass):
@@ -148,6 +166,9 @@ class diagnostics:
                 print 'fz_roots failed'
             return rts
 
+    def setdustcorrect(self):
+        global DUSTCORRECT
+        DUSTCORRECT=True
     def unsetdustcorrect(self):
         global DUSTCORRECT
         DUSTCORRECT=False
@@ -172,8 +193,7 @@ class diagnostics:
     def setOlines(self, O23727, O35007, O16300, O34959):
         self.O23727 = O23727
         self.O35007 = O35007
-
-
+        
         if sum(self.O35007>0) : self.hasO3=True
         if sum(self.O23727>0) : self.hasO2=True
         if self.hasO2 and self.hasO3:
@@ -184,7 +204,6 @@ class diagnostics:
             # ratios for other diagnostics - slightly different ratios needed
             self.O35007O2=10**(self.logO35007O2)
             self.O2O35007=10**(self.logO2O35007)
-
             if self.hasHb:
                 self.logO2O35007Hb=np.log10((self.O23727/self.Hb)* self.dustcorrect(k_O2,k_Hb,flux=True))+ (self.O35007/self.Hb)*self.dustcorrect(k_O35007,k_Hb,flux=True)
 
@@ -201,7 +220,6 @@ class diagnostics:
                     self.O34959p5007=O34959 + self.O35007
                     self.logO3O2=np.log10((self.O34959p5007)/self.O23727)+self.dustcorrect(k_O3,k_O2)
                     self.hasO3O2=True
-
         # never used
         #if self.hasHa:
             #logO1Ha=np.log10(O16300/self.Ha)+self.dustcorrect(k_O1,k_Ha)
