@@ -27,24 +27,30 @@ def fitdistrib(picklefile):
     assert( Ndata>0), "something is wrong with your distribution"
 
 
-    invalids=[sum(np.isnan(res['D02'].T[i]))+sum(np.isnan(res['KD02comb_updated'].T[i])) for i in range(nm)]
+    invalids=[sum(np.isnan(res['D02'].T[i]))+sum(np.isnan(res['KD02comb_updated'].T[i]))+sum(np.isnan(res['Z94'].T[i])) for i in range(nm)]
     myi, = np.where(invalids==min(invalids))
+    
     try: myi=myi[1] #in case there are more than one solutions
-    except: pass
-    print myi
+    except: 
+        try:myi=myip[0]
+        except:pass
+    print "myi",myi
     assert( Ndata-invalids[myi]>0),  "something is wrong with your distribution"
 
     xold=np.zeros(10)
     fig = pl.figure(figsize=(15, 15))
     for i,d in enumerate(testingdiags):
         ax = fig.add_subplot(2,2,i+1)
+        print d
 
         for f in [0.1,0.25,0.5,0.75,1]:
             n0=int(f*Ndata)
             x= np.random.choice(res[d].T[myi],n0,replace=False)
+            print res[d].T[myi]
             x=x[x>0]
             
             x.sort()
+            print x
             n=len(x)
             Px_cuml = np.linspace(0, 1, n)
             
@@ -64,7 +70,7 @@ def fitdistrib(picklefile):
             D, p = stats.ks_2samp(x, xold)
             print "KS test for %s n = %d D = %.2g; p = %.2g" % (d,n0,D, p)
             xold=x.copy()
-        ax.legend(scatterpoints=1,loc=2)
+        ax.legend(scatterpoints=1,loc=4)
     pl.savefig(picklefile.replace('.pkl','_testcomplete.png'))
     pl.show()
     
