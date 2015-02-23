@@ -572,6 +572,8 @@ class diagnostics:
             # (can be used for for log(O/H)+12 > 8.6 only)
             # uses equation (5) from paper, this should be identical 
             # to the estimate above for abundances log(O/H)+12 > 8.6
+            if not self.hasN2O2:
+                    self.calcNIIOII()
             self.mds['KD02_N2O2']=np.log10(8.511e-4*(1.54020+1.26602*self.logN2O2+0.167977*self.logN2O2**2))+12.
 
         # ionization parameter        
@@ -616,8 +618,12 @@ class diagnostics:
         # the R23 ratio should be close to 0.95, not much more than 1.0 for the
         # data to be physical.
 
-        if not self.hasO3 or not self.hasO2 or  self.logR23 == None:
+
+        if self.logR23 == None:
+            self.calcR23()
+        if not self.hasO3 or not self.hasO2 or self.logR23==None:            
             print "Must first calculate R23 and O350072" 
+            
         else:
             R23c0=[-3267,-3727.42,-4282.30,-4745.18,-4516.46,-3509.63,-1550.53]
             R23_coef[:,0]=[-3267.93,1611.04,-298.187,24.5508,-0.758310] # q=5e6
@@ -638,39 +644,45 @@ class diagnostics:
             O3O2_coef[:,6]=[-24.4044,2.51913,0.452486,-0.0491711]  # z=2.0
             O3O2_coef[:,7]=[49.4728,-27.4711,4.50304,-0.232228]    # z=3.0
             
+            R23_coefi =np.zeros((self.nm,5,7))+R23_coef
+            O3O2_coefi=np.zeros((self.nm,4,8))+O3O2_coef
 
-            for i in range(self.nm) :
-                R23_coef[0,:]=R23c0-self.logR23[i]
-                O3O2_coef[0,:]=O3O2c0-self.logO35007O2[i]
-                # coefficients from KD02 paper:
-            
-                for ite in range(1,n_ite+1) : 
-                    # iteate if tolerance level not met
-                    if abs(R23_Z[i,ite]-R23_Z[i,ite-1]) > tol :
+            # coefficients from KD02 paper:
+            R23_coefi[:,0,:]= (np.ones((self.nm,1))*R23c0)- (np.ones((7,1))*self.logR23).T
+            O3O2_coefi[:,0,:]=(np.ones((self.nm,1))*O3O2c0)-(np.ones((8,1))*self.logO35007O2).T
+            # coefficients from KD02 paper:            
+            for ite in range(1,n_ite+1) : 
+                # iteate if tolerance level not met
+                indx=( abs(R23_Z[:,ite]-R23_Z[:,ite-1]) > tol)
                         #   calculate ionization parameter using [OIII]/[OII] with
                         #   [NII]/[OII] abundance for the first iteation, and the R23
                         #   abundance in consecutive iteations
-                        for j in range(8):   
-                            if R23_Z[i,ite-1] > ZstepOH[j] :
-                                if R23_Z[i,ite-1] <= ZstepOH[j+1] :
-                                    q_roots[:,i]=self.fz_roots(O3O2_coef[:,j])      
-                                    #q must be between 3.5e6 and 3.5e8 cm/s 
-                                    #because that is the range it
-                                    #is defined over by the model grids, and it must be real.
+                for j in range(8):  
+                    indx1=( R23_Z[:,ite-1] > ZstepOH[j] )*(R23_Z[:,ite-1] <= ZstepOH[j+1] )*indx
+                    #                                indx2= R23_Z[i,ite-1] <= ZstepOH[j+1] :
+                    if not sum(indx1): continue
+                    q_roots[:,indx1]=self.fz_roots(O3O2_coefi[indx1,:,j]).T  
+
+                    for i,ii in enumerate(indx1) :
+                        if not ii:
+                            continue
+                        #q must be between 3.5e6 and 3.5e8 cm/s 
+                        #because that is the range it
+                        #is defined over by the model grids, and it must be real.
 
                         for k in range(3) :
                             if (q_roots[k,i].imag) == 0.0 :
                                 if (q_roots[k,i].real) >= 6.54407 :   #log units (q >= 1e6 cm/s) 
                                     if (q_roots[k,i].real) <= 8.30103 :   #log units (q <= 2e8 cm/s)
                                         q[i,ite]=(q_roots[k,i].real)
-       
+                                        
                         #   calculate abundance using ionization parameter:
                         R23_qstepno=0
                         
                         for j in range(7) :   
                             if q[i,ite] > qstep[j] :
                                 if q[i,ite] <= qstep[j+1] :
-                                    R23_roots[:,i]=self.fz_roots(R23_coef[:,j])
+                                    R23_roots[:,i]=self.fz_roots(R23_coefi[i,:,j])
                                     R23_qstepno=j
      
                                     #   There will be four roots, two complex ones, 
@@ -706,9 +718,10 @@ class diagnostics:
                                         R23_Z[i,ite]=R23_roots[k,i].real
                             R23_qstepno+=1
                             
-                    else:
-                        R23_Z[i,ite]=R23_Z[i,ite-1]  
-                        q[i,ite]=q[i,ite-1]
+                            
+                R23_Z[indx*(-1),ite]=R23_Z[indx*(-1),ite-1]  
+                q[indx*(-1),ite]=q[indx*(-1),ite-1]
+
 
         KD02_R23_Z=R23_Z[:,n_ite]
 
@@ -716,7 +729,7 @@ class diagnostics:
         #  ie for objects with only [OII], [OIII], Hb available
         if not self.hasHa and not self.hasHb:
             print "WARNING: need Halpha and Hbeta for this. did you run setHab()?"
-          # KD01 combined method (uses [NII], [OII], [OIII], [SII]):
+        # KD01 combined method (uses [NII], [OII], [OIII], [SII]):
         # uses KD02 [NII]/[OII] method if [NII]/[OII] gives 8.6 < log(O/H)+12
         # uses average of M91 and Z94 if 8.5 < log(O/H)+12 < 8.6
         # uses average of C01 and KD02 if  log(O/H)+12 < 8.5
@@ -790,7 +803,7 @@ class diagnostics:
         # initializing:
         
         N2S2_Z[:,0]=self.mds['KD02_N2O2']  # use [NII]/[OII] abundance as initial estimate
-                    
+
         if self.hasO3 and self.hasO2 and self.hasN2S2:
             # coefficients from KD02 paper:
             N2S2c0=[-1042.47,-1879.46,-2027.82,-2080.31,-2162.93,-2368.56,-2910.63]
@@ -803,23 +816,26 @@ class diagnostics:
             N2S2_coef[:,6]=[-2910.63,1392.18,-249.012,19.7280,-0.583763]
 
 
-            for i in range(self.nm) :
-                N2S2_coef[0,:]=N2S2c0-self.logN2S2[i]
-                O3O2_coef[0,:]=O3O2c0-self.logO35007O2[i]
+            N2S2_coefi =np.zeros((self.nm,5,7))+R23_coef
+            N2S2_coefi[:,0,:]=(np.ones((self.nm,1))*N2S2c0)-(np.ones((7,1))*self.logN2S2).T
 
-                for ite in range(1, n_ite+1):                 # iteate if tolerance level not met
-                    if abs(N2S2_Z[i,ite]-N2S2_Z[i,ite-1]) >= tol :
+            for ite in range(1, n_ite+1):                 # iteate if tolerance level not met
+                indx = (abs(N2S2_Z[:,ite]-N2S2_Z[:,ite-1]) >= tol )
                         #   calculate ionization parameter using [OIII]/[OII] with
                         #   [NII]/[OII] abundance for the first iteation, and the [NII]/[SII]
                         #   abundance in consecutive iteations
-                        for j in range(8) :   
-                            if N2S2_Z[i,ite-1] > ZstepOH[j] :
-                                if N2S2_Z[i,ite-1] <= ZstepOH[j+1] :
-                                    q_roots[:,i]=self.fz_roots(O3O2_coef[:,j])
-                                    #   q must be between 3.5e6 and 3.5e8 cm/s because that is 
-                                    #   the range it
-                                    #   is defined over by the model grids, and it must be real.
-
+                for j in range(8) :   
+                    indx1=(N2S2_Z[:,ite-1]>ZstepOH[j] )*(N2S2_Z[:,ite-1]<=ZstepOH[j+1] )*indx
+                        #   q must be between 3.5e6 and 3.5e8 cm/s because that is 
+                        #   the range it
+                        #   is defined over by the model grids, and it must be real.
+                    if not sum(indx1): continue
+                    q_roots[:,indx1]=self.fz_roots(O3O2_coefi[indx1,:,j]).T  
+#                    print j,q_roots
+                    for i,ii in enumerate(indx1) :
+                        if not ii:
+                            continue
+ 
                         for k in range(3) :
                             if (q_roots[k,i].imag) == 0.0 :
                                 if (q_roots[k,i].real) >= 6.54407 :   #log units (q >= 1e6 cm/s) 
@@ -829,9 +845,8 @@ class diagnostics:
                         #   calculate abundance using ionization parameter:
                         N2S2_qstepno=0
                         for j in range(7) :   
-                            if q[i,ite] > qstep[j] :
-                                if q[i,ite] <= qstep[j+1] :
-                                    N2S2_roots[:,i]=self.fz_roots(N2S2_coef[:,j])
+                            if q[i,ite] > qstep[j] and q[i,ite] <= qstep[j+1] :
+                                    N2S2_roots[:,i]=self.fz_roots(N2S2_coefi[i,:,j])
                                     N2S2_qstepno=j
                    
                                     #   There will be four roots, two complex ones, 
@@ -843,25 +858,24 @@ class diagnostics:
                                     #   to use).  
 
                         for k in range(4) :
-                            if (N2S2_roots[k,i].imag) == 0.0 :
-                                if (N2S2_roots[k,i].real) >= 8.0 and (N2S2_roots[k,i].real) <= 9.35 :
+                            if (N2S2_roots[k,i].imag) == 0.0 and (N2S2_roots[k,i].real) >= 8.0 and (N2S2_roots[k,i].real) <= 9.35 :
                                     N2S2_Z[i,ite]=(N2S2_roots[k,i].real)
 
 
                         if N2S2_Z[i,ite] == 0.0 :
                             N2S2_roots[:,i]=self.fz_roots(N2S2_coef[:, N2S2_qstepno+1])
                             for k in range(4) :
-                                if (N2S2_roots[k,i].imag) == 0.0 :
-                                    if ((N2S2_roots[k,i].real) >= 8.0) and ((N2S2_roots[k,i].real) <= 9.35) :
+                                if (N2S2_roots[k,i].imag) == 0.0 and ((N2S2_roots[k,i].real) >= 8.0) and ((N2S2_roots[k,i].real) <= 9.35) :
                                         N2S2_Z[i,ite]=(N2S2_roots[k,i].real)
 
-                    else:
-                        N2S2_Z[i,ite]=N2S2_Z[i,ite-1]  
-                        q[i,ite]=q[i,ite-1]
+                    
+                N2S2_Z[indx*(-1),ite]=N2S2_Z[indx*(-1),ite-1]  
+                q[indx*(-1),ite]=q[indx*(-1),ite-1]
 
+        
         KD02_N2S2_Z=N2S2_Z[:,n_ite]
         KD02_comb_Z=self.mds['KD02_N2O2']
-      
+
         if KD02_R23_Z == None or self.mds['Z94']==None or self.mds['M91']==None:
             print "cannot calculate KD02_R23comb because  KD02_R23, M91, or Z94 failed"
         else:

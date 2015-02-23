@@ -10,6 +10,10 @@ import pylabsetup
 #import metallicity_save2 as metallicity
 import fedmetallicity as metallicity
 
+PROFILING = True
+PROFILING = False
+
+
 alllines=['[OII]3727','Hb','[OIII]4959','[OIII]5007','[OI]6300','Ha','[NII]6584','[SII]6717','[SII]6731','[SIII]9069','[SIII]9532']
 morelines=['E(B-V)','dE(B-V)','scale_blue','d scale_blue']
 
@@ -429,9 +433,10 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
         #pickle this realization
         if not NOPICKLE:
             pickle.dump(res,open(picklefile,'wb'))
-
+            
     ###Bin the results and save###
     print '{0:15} {1:20} {2:>13} - {3:>7} + {4:>7} {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
+    #return -1
     for i in range(nm):
         fi=open(os.path.join(binp,'%s_n%d_%d.txt'%(name,nsample,i+1)),'w')
         fi.write("%s\t Median Oxygen abundance (12+log(O/H))\t 16th percentile\t 84th percentile\n"%name)
@@ -489,7 +494,11 @@ def main():
     
 
 if __name__ == "__main__":
-    main()
+    if PROFILING:
+        import cProfile
+        cProfile.run("main()")
+    else:
+        main()
     #files=['sn2006ss','ptf10eqi-z']
     #filename=files[1]
     #nsample=10000
