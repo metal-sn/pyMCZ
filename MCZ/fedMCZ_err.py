@@ -226,7 +226,6 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
     #    data,ignore,ignore=stats.sigmaclip(data,high=5.0,low=5.0)
     n=data.shape[0]
     if not n>0:
-        print "here"
         if verbose:print "data must be an actual distribution (n>0 elements!)"
         return "-1,-1"
     #if not max(data)-min(data)>0.1:

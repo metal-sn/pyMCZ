@@ -34,6 +34,8 @@ class diagnostics:
 
         self.hasN2O2=False
         self.hasN2S2=False
+
+        self.N2O2_roots=None
         #metallicity diagnostics to be returned
         self.mds={
             'E(B-V)':None,
@@ -278,7 +280,6 @@ class diagnostics:
             # finding roots for == (4)
             self.N2O2_roots=np.array([self.fz_roots(N2O2_coef)])[0]          
 
-
     def calcR23(self):
         #R23 NEW Comb, [NII]/Ha: KK04 = Kobulnicky & Kewley, 2004, submitted'
         if  self.hasO3   and self.hasO2 and self.hasHb:
@@ -329,7 +330,6 @@ class diagnostics:
         # [NII]/Ha Pettini & Pagel (2004), MNRAS, 348, L59
         if self.hasN2 and self.hasHa:
             self.mds['PP04_N2']= nppoly.polyval(self.logN2Ha,[9.37, 2.03, 1.26, 0.32])
-#9.37 + 2.03*self.logN2Ha + 1.26*self.logN2Ha**2 + 0.32*self.logN2Ha**3
             if self.hasO3Hb :
                 self.mds['PP04_O3N2']=8.73 - 0.32*(self.logO3Hb-self.logN2Ha)
             else:
@@ -358,8 +358,10 @@ class diagnostics:
             P = R3/(R2+R3)
             P_R23=R2+R3
         
-            P_abund_up =(P_R23+726.1+842.2*P+337.5*P**2)/(85.96+82.76*P+43.98*P**2+1.793*P_R23)
-            P_abund_low=(P_R23+106.4+106.8*P-3.40*P**2)/(17.72+6.60*P+6.95*P**2-0.302*P_R23)
+
+            P_abund_up =(P_R23+726.1+842.2*P+337.5*P**2)/(85.96+82.76*P+43.98*P**2 +1.793*P_R23)
+            P_abund_low=(P_R23+106.4+106.8*P- 3.40*P**2)/(17.72+ 6.60*P+ 6.95*P**2 -0.302*P_R23)
+
             if self.Z_init_guess==None:
                 self.initialguess()
             self.mds['Pi01']=P_abund_up
@@ -470,7 +472,7 @@ class diagnostics:
             if not self.hasN2O2:
                 print "WARNING: must calculate logN2O2 first"
                 self.calcNIIOII()
-                if self.N2O2_root:
+                if  self.N2O2_root == None:
                     print "cannot calculate N2O2"
                     return -1
             roots=self.N2O2_roots.T
