@@ -34,6 +34,7 @@ Zs=["KD02comb_updated", #always
     "Pi01",  #Hbeta,  [OII]3727,  [OIII]5007
     "D02", #Halpha, [NII]
     "E(B-V)", #Halpha, Hbeta]
+    "logR23",
     "C01_R23","C01"]
 
 def get_keys():

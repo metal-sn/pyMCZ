@@ -37,6 +37,7 @@ class diagnostics:
         #metallicity diagnostics to be returned
         self.mds={
             'E(B-V)':None,
+            'logR23':None,
             #
             ###Kobulnicky parameterization of Zaritzky et al. (1994) 
             ###Z94 = Zaritsky, D., Kennicutt, R. C., & Huchra, J. P. 1994, 
@@ -284,9 +285,10 @@ class diagnostics:
             self.R23=((self.O23727/self.Hb)*self.dustcorrect(k_O2,k_Hb, flux=True) + (self.O34959p5007/self.Hb)*self.dustcorrect(k_O3,k_Hb, flux=True) )
             self.logR23=np.log10(self.R23)
             self.R23_5007=(1./self.O35007O2 + 1.)/(1./self.O35007O2 + 1.347)*self.R23  
+            self.mds['logR23']=self.logR23
         else:
             print "WARNING: need O3, O2, Hb"
-
+            
     def calcS23(self):
         #the original code here uses S267176731, which is however set to 6717 as default
         if  self.hasS2 :
@@ -490,25 +492,22 @@ class diagnostics:
                 return -1
 
         Z_new_N2Ha=self.mds['KD02_N2O2'].copy()  # was 8.6
-        self.logq=7.37177
 
         if self.hasN2 :
-            if self.hasHa:
-                if self.hasO3O2 :        
-                    for ii in range(4):
+            for ii in range(4):
+                if self.hasHa:
+                    if self.hasO3O2 :        
                         # calculating logq using the [N2]/[O2] 
                         #metallicities for comparison
                         self.logq=(32.81 -1.153*self.logO3O2**2 + Z_new_N2Ha*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2**2+ Z_new_N2Ha*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2**2)) 
 
-                        Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
-
-                else:
+                    else:
+                        self.logq=7.37177
+                else:        
                     self.logq=7.37177
-            else:        
-                self.logq=7.37177
-                self.logN2Ha=np.log10(self.N26584/self.Ha)
+                    self.logN2Ha=np.log10(self.N26584/self.Ha)
 
-            Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
+                Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
 
             self.mds['KD03_N2Ha']=Z_new_N2Ha
         else:
