@@ -214,7 +214,7 @@ class diagnostics:
             if self.hasO2:
                 self.logO2Hb=np.log10(self.O23727/self.Hb)+self.dustcorrect(k_O2,k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
             if self.hasO3:
-                self.logO3Hb=np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O3,k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
+                self.logO3Hb=np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
                 self.hasO3Hb=True
                 if not O34959 == None and sum(O34959>0):
                     self.logO349595007Hb=np.log10(10**(np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb))+10**(np.log10(O34959/self.Hb)+self.dustcorrect(k_O34959,k_Hb)))
@@ -333,7 +333,7 @@ class diagnostics:
             if self.hasO3Hb :
                 self.mds['PP04_O3N2']=8.73 - 0.32*(self.logO3Hb-self.logN2Ha)
             else:
-                print "WARNING: need O3Hb PP04_O3N2"
+                print "######WARNING: need O3Hb for PP04_O3N2"
         else:
             print "WARNING: need N2Ha to do this. did you run setHab and setNII"
 
@@ -500,15 +500,13 @@ class diagnostics:
                         # calculating logq using the [N2]/[O2] 
                         #metallicities for comparison
                         self.logq=(32.81 -1.153*self.logO3O2**2 + Z_new_N2Ha*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2**2+ Z_new_N2Ha*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2**2)) 
-
+                        
                     else:
                         self.logq=7.37177
                 else:        
                     self.logq=7.37177
                     self.logN2Ha=np.log10(self.N26584/self.Ha)
-
                 Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
-
             self.mds['KD03_N2Ha']=Z_new_N2Ha
         else:
             print "WARNING: need NII6584  and Ha to calculate this. did you run  setHab() and setNII()?"
@@ -540,7 +538,7 @@ class diagnostics:
         else:
             if self.Z_init_guess==None:
                 self.initialguess()
-            Znew=self.Z_init_guess.copy()
+            Z_new=self.Z_init_guess.copy()
             if self.logR23==None:
                 print "WARNING: Must first calculate R23"
                 self.calcR23()
@@ -548,12 +546,12 @@ class diagnostics:
                 print "WARNING: Cannot compute this without R23" 
             else:
                 for ii in range(4):
-                    logq=(32.81 -1.153*self.logO3O2**2 + Znew.copy()*(-3.396 - 0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603 - 0.3119*self.logO3O2 - 0.163*self.logO3O2**2+Znew.copy()*(-0.48 + 0.0271*self.logO3O2 + 0.02037*self.logO3O2**2))
+                    logq=(32.81 -1.153*self.logO3O2**2 + Z_new.copy()*(-3.396 - 0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603 - 0.3119*self.logO3O2 - 0.163*self.logO3O2**2+Z_new.copy()*(-0.48 + 0.0271*self.logO3O2 + 0.02037*self.logO3O2**2))
                     Zmax[(logq >= 6.7) * (logq < 8.3)]=8.4
-                    
                     # maximum of R23 curve:               
                     Z_new=nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])
-                    Z_new_lims=[nppoly.polyval(self.logR23,[9.40, 4.65,-3.17])-logq*nppoly.polyval(self.logR23,[0.272,0.547,-0.513]),nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])]
+                    Z_new_lims=[nppoly.polyval(self.logR23,[9.40, 4.65,-3.17])-logq*nppoly.polyval(self.logR23,[0.272,0.547,-0.513]),
+                                nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])]
 
                     indx=self.Z_init_guess<=Zmax
                     Z_new[indx]=nppoly.polyval(self.logR23[indx], [9.40 ,4.65,-3.17])-logq[indx]*nppoly.polyval(self.logR23[indx],[0.272,+0.547,-0.513])

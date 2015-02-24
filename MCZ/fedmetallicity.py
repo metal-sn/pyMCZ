@@ -54,7 +54,6 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',d
         #kills all non-finite terms 
         measured[k][np.where(np.isfinite(measured[k][:])==False)]=0.0 
         raw_lines[k]=measured[k]
-        #print k, raw_lines[k][0]
 
     raw_lines['[OIII]4959']=raw_lines['[OIII]5007']/3.
     raw_lines['[OIII]49595007']=raw_lines['[OIII]4959']+raw_lines['[OIII]5007']

@@ -222,9 +222,11 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
         
     ####kill outliers###
     data=data[np.isfinite(data)]
-    data,ignore,ignore=stats.sigmaclip(data,high=5.0,low=5.0)
+    #if max(data)-min(data)>0.0001:
+    #    data,ignore,ignore=stats.sigmaclip(data,high=5.0,low=5.0)
     n=data.shape[0]
     if not n>0:
+        print "here"
         if verbose:print "data must be an actual distribution (n>0 elements!)"
         return "-1,-1"
     #if not max(data)-min(data)>0.1:
@@ -431,7 +433,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
             success=metallicity.calculation(diags,fluxi,nm,bss,smass,disp=VERBOSE, dust_corr=dust_corr)
             if success==-1:
                 print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717','Ha','Hb' and 6.0<Smass<14 MSun"
-            print "measurement %d-------------------------------------------------------------"%(i+1)
+
 #            diags.printme()
 #            s=key+"\t "+savehist(t,'test','EB_V',100,i,binp,nm,delog=delog)+'\n'
 #            plt.hist(t)
@@ -444,16 +446,12 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
 #                print ""
             
             for key in diags.mds.iterkeys():
-                #print "here",key,res[key],diags.mds[key]
                 res[key][i]=diags.mds[key]
-                #print res[key]
 #            for key in diags.mds.iterkeys():
                 if res[key][i]==None:
                     res[key][i]=[float('NaN')]*len(sample)
         for key in diags.mds.iterkeys():
             res[key]=np.array(res[key]).T
-            #print res[key]
-            #raw_input()
         #recast the result into np.array
         ##        for key in Zs:
         ##           res[key]=np.array(res[key])
@@ -474,6 +472,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
         
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
+            #print key, res[key].shape,res[key][:,i]
             if len(res[key].shape)>1:
                 s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog, verbose=verbose)+'\n'
                 fi.write(s)
