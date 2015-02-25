@@ -97,14 +97,13 @@ def readfile(filename):
     bstruct={}
     for i,k in enumerate(header):
         bstruct[k]=[i,0]
-    print header
+    print "file header",header
     b = np.loadtxt(filename,skiprows=noheader, dtype={'names':header,'formats':formats})
     #usecols=cols, unpack=True)
     
     for i,k in enumerate(header):
         if not k=='flag' and is_number(b[k][0]):
             bstruct[k][1]=np.count_nonzero(b[k])+sum(np.isnan(b[k]))
-#            print k,bstruct[k]
     j=len(b['galnum'])
     return b,j,bstruct
 
@@ -128,7 +127,6 @@ def ingest_data(filename,path):
     ###read the max, meas, min flux files###    
     meas,nm, bsmeas=readfile(measfile)
     err, nn, bserr =readfile(errfile)
-    print bsmeas.keys()
     return (filename, meas, err, nm, path, (bsmeas,bserr))
 
 ##############################################################################
@@ -418,7 +416,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
         import diagnostics as dd
         for i in range(nm):
             diags=dd.diagnostics(newnsample)
-            print "\n\nmeasurement ",i+1
+            print "\n\nreading in measurements ",i+1
             #for i in range(newnsample):
             fluxi={}#np.zeros((len(bss[0]),nm),float)
             for j,k in enumerate(bss[0].iterkeys()):
@@ -428,7 +426,6 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
                 print '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
                 fluxi[k]=flux[k][i]*np.ones(len(sample))+err[k][i]*sample
                 warnings.filterwarnings("ignore")
-
             success=metallicity.calculation(diags,fluxi,nm,bss,smass,disp=VERBOSE, dust_corr=dust_corr)
             if success==-1:
                 print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717','Ha','Hb' and 6.0<Smass<14 MSun"
@@ -471,7 +468,8 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
         
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
-            #print key, res[key].shape,res[key][:,i]
+#            if key in 'PP04_N2':
+#                print key, res[key].shape,res[key][:,i]
             if len(res[key].shape)>1:
                 s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog, verbose=verbose)+'\n'
                 fi.write(s)
