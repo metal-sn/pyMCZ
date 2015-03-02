@@ -2,6 +2,8 @@ import os,sys,argparse,warnings
 
 import numpy as np
 import scipy.stats as stats
+from scipy.special import gammaln
+from scipy import optimize
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
@@ -9,6 +11,10 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import pylabsetup
 #import metallicity_save2 as metallicity
 import fedmetallicity as metallicity
+
+PROFILING = True
+PROFILING = False
+
 
 alllines=['[OII]3727','Hb','[OIII]4959','[OIII]5007','[OI]6300','Ha','[NII]6584','[SII]6717','[SII]6731','[SIII]9069','[SIII]9532']
 morelines=['E(B-V)','dE(B-V)','scale_blue','d scale_blue']
@@ -29,7 +35,7 @@ CLOBBER=False
 VERBOSE=False
 UNPICKLE=False
 RUNSIM=True
-BINMODE='t'
+BINMODE='k'
 binning={'bb':'Bayesian blocks','k':"Knuth's rule",'d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2 N^{1/3}$', 'kd':'Kernel Density'}
 
 def is_number(s):
@@ -41,6 +47,23 @@ def is_number(s):
             return False
     return False
         
+
+def getknuth(m,data,N):
+    m=int(m)
+    bins=np.linspace(min(data),max(data), int(m) + 1)
+    nk,bins=np.histogram(data,bins)
+    return -(N*np.log(m) + gammaln(0.5*m) - m*gammaln(0.5) -
+             gammaln(N+0.5*m)+np.sum(gammaln(nk+0.5)))
+
+def knuthn(data, maxM=100):
+    assert data.ndim==1, "data must be 1D array to calculate Knuth's number of bins"
+    N=data.size
+    ns=np.arange( 1,maxM)
+    logp = np.zeros(maxM-1)
+    m0=2.0*(N**(1.0/3.0))
+    mk= optimize.fmin(getknuth,m0, args=(data,N), disp=False)[0]
+    return mk 
+
 
 ##############################################################################
 ##Reads the flux file and returns it as an array.
@@ -74,14 +97,13 @@ def readfile(filename):
     bstruct={}
     for i,k in enumerate(header):
         bstruct[k]=[i,0]
-    print header
+    print "file header",header
     b = np.loadtxt(filename,skiprows=noheader, dtype={'names':header,'formats':formats})
     #usecols=cols, unpack=True)
     
     for i,k in enumerate(header):
         if not k=='flag' and is_number(b[k][0]):
             bstruct[k][1]=np.count_nonzero(b[k])+sum(np.isnan(b[k]))
-#            print k,bstruct[k]
     j=len(b['galnum'])
     return b,j,bstruct
 
@@ -105,7 +127,6 @@ def ingest_data(filename,path):
     ###read the max, meas, min flux files###    
     meas,nm, bsmeas=readfile(measfile)
     err, nn, bserr =readfile(errfile)
-    print bsmeas.keys()
     return (filename, meas, err, nm, path, (bsmeas,bserr))
 
 ##############################################################################
@@ -122,6 +143,7 @@ def setscales(bss):
 
 ##############################################################################
 ##returns appropriate bin size for the number of data
+##mode 'k' calculates this based on Knuth's rule
 ##mode 'd' calculates this based on Doane's formula 
 ##mode 's' calculates this based on sqrt of number of data
 ##mode 't' calculates this based on 2*n**1/3 (default)
@@ -134,8 +156,14 @@ def getbinsize(n,data,):
         k=1+np.log(n)+np.log(1+(g1*s1))
     elif BINMODE=='s':
         k=np.sqrt(n)
-    else:
+    elif BINMODE=='t':
         k=2.*n**(1./3.)
+    else:
+        #or BINMODE=='k':
+        #from astroML.plotting import hist as amlhist
+        #distrib=amlhist(data, bins='knuth', normed=True)
+        k= knuthn(data)
+        #distrib=amlhist(data, bins='knuth', normed=True)
     return k
 
 ##############################################################################        
@@ -178,7 +206,7 @@ def checkhist(snname,Zs,nsample,i,path):
 ##Save the result as histogram as name
 ## delog - if true de-logs the data. False by default
 ##############################################################################
-def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
+def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
     global BINMODE
     
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
@@ -192,9 +220,16 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         
     ####kill outliers###
     data=data[np.isfinite(data)]
-    data,ignore,ignore=stats.sigmaclip(data,high=5.0,low=5.0)
+    #if max(data)-min(data)>0.0001:
+    #    data,ignore,ignore=stats.sigmaclip(data,high=5.0,low=5.0)
     n=data.shape[0]
-    
+    if not n>0:
+        if verbose:print "data must be an actual distribution (n>0 elements!)"
+        return "-1,-1"
+    #if not max(data)-min(data)>0.1:
+    #    if verbose:print "the data must be in a distribution, not all the same!"
+    #    return "-1,-1"
+
     if data.shape[0]<=0 or np.sum(data)<=0:
         print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(name.split('_')[0],Zs,-1,-1,-1)
         return "-1, -1, -1"    
@@ -233,7 +268,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
                 #print dens
                 plt.fill(bins[:,0], dens/dens.max(), fc='#AAAAFF')
             numbin=getbinsize(data.shape[0],data)        
-            distrib=np.histogram(data, numbin, density=True)            
+            distrib=np.histogram(data, bins=numbin, density=True)            
             ###make hist###
             counts, bins=distrib[0],distrib[1]
             widths=np.diff(bins)
@@ -243,17 +278,15 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
         ###find appropriate bin size###
         ##if astroML is available use it to get Bayesian blocks
         else:
-            if BINMODE=='bb' or BINMODE=='k':
+            if BINMODE=='bb' :
                 try:
                     from astroML.plotting import hist as amlhist
                     if BINMODE=='bb':
                         distrib=amlhist(data, bins='blocks', normed=True)
-                    else:
-                        distrib=amlhist(data, bins='knuth', normed=True)
                     plt.clf()
                 except:
-                    print "bayesian blocks and knuth methods for histogram requires astroML to be installed"
-                    print "defaulting to 2*n**1/3 "
+                    print "bayesian blocks for histogram requires astroML to be installed"
+                    print "defaulting to Knuth's rule "
                     ##otherwise 
                     numbin=getbinsize(data.shape[0],data)        
                     distrib=np.histogram(data, numbin, density=True)
@@ -309,11 +342,12 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False):
 ##  err - the flux errors, must be the same dimension as flux
 ##  nsample - the number of samples the code will generate. Default is 100
 ##  errmode - determines which method to choose the bin size.
+##      mode 'k' calculates this based on Knuth's rule
 ##      mode 'd' calculates this based on Doane's formula
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=False, dust_corr=True):
+def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=False, dust_corr=True, verbose=False):
     global RUNSIM,BINMODE
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     print len(flux['galnum']),nm
@@ -382,7 +416,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
         import diagnostics as dd
         for i in range(nm):
             diags=dd.diagnostics(newnsample)
-            print "\n\nmeasurement ",i+1
+            print "\n\nreading in measurements ",i+1
             #for i in range(newnsample):
             fluxi={}#np.zeros((len(bss[0]),nm),float)
             for j,k in enumerate(bss[0].iterkeys()):
@@ -392,11 +426,10 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
                 print '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
                 fluxi[k]=flux[k][i]*np.ones(len(sample))+err[k][i]*sample
                 warnings.filterwarnings("ignore")
-
             success=metallicity.calculation(diags,fluxi,nm,bss,smass,disp=VERBOSE, dust_corr=dust_corr)
             if success==-1:
                 print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717','Ha','Hb' and 6.0<Smass<14 MSun"
-            print "measurement %d-------------------------------------------------------------"%(i+1)
+
 #            diags.printme()
 #            s=key+"\t "+savehist(t,'test','EB_V',100,i,binp,nm,delog=delog)+'\n'
 #            plt.hist(t)
@@ -409,16 +442,12 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
 #                print ""
             
             for key in diags.mds.iterkeys():
-                #print "here",key,res[key],diags.mds[key]
                 res[key][i]=diags.mds[key]
-                #print res[key]
 #            for key in diags.mds.iterkeys():
                 if res[key][i]==None:
                     res[key][i]=[float('NaN')]*len(sample)
         for key in diags.mds.iterkeys():
             res[key]=np.array(res[key]).T
-            #print res[key]
-            #raw_input()
         #recast the result into np.array
         ##        for key in Zs:
         ##           res[key]=np.array(res[key])
@@ -429,17 +458,20 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
         #pickle this realization
         if not NOPICKLE:
             pickle.dump(res,open(picklefile,'wb'))
-
+            
     ###Bin the results and save###
     print '{0:15} {1:20} {2:>13} - {3:>7} + {4:>7} {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
+    #return -1
     for i in range(nm):
         fi=open(os.path.join(binp,'%s_n%d_%d.txt'%(name,nsample,i+1)),'w')
         fi.write("%s\t Median Oxygen abundance (12+log(O/H))\t 16th percentile\t 84th percentile\n"%name)
         
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
+#            if key in 'PP04_N2':
+#                print key, res[key].shape,res[key][:,i]
             if len(res[key].shape)>1:
-                s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog)+'\n'
+                s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog, verbose=verbose)+'\n'
                 fi.write(s)
         
         fi.close()
@@ -452,7 +484,7 @@ def main():
     parser.add_argument('nsample', metavar='N', type=int, help="number of iterations, minimum 100")
     parser.add_argument('--clobber',default=False, action='store_true', help="replace existing output")
     parser.add_argument('--delog',default=False, action='store_true', help="result in natural, not log space. default is log space")
-    parser.add_argument('--binmode', default='t', type=str, choices=['d','s','t','bb','kd'], help="method to determine bin size {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), k: Knuth's rule, bb: Bayesian blocks, kd: Kernel Density}")
+    parser.add_argument('--binmode', default='k', type=str, choices=['d','s','k','t','bb','kd'], help="method to determine bin size {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), k: Knuth's rule, bb: Bayesian blocks, kd: Kernel Density}")
     parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _max.txt and _min.txt files in a subdirectory sn_data)")
     parser.add_argument('--unpickle',   default=False, action='store_true', help="read the pickled realization instead of making a new one")
 
@@ -483,13 +515,17 @@ def main():
     if args.nsample>=100:
         fi=input_format(args.name, path=path)
         if fi!=-1:
-            run(fi,args.nsample,args.mass,delog=args.delog, unpickle=args.unpickle, dust_corr=(not args.nodust))
+            run(fi,args.nsample,args.mass,delog=args.delog, unpickle=args.unpickle, dust_corr=(not args.nodust), verbose=VERBOSE)
     else:
         print "nsample must be at least 100"
     
 
 if __name__ == "__main__":
-    main()
+    if PROFILING:
+        import cProfile
+        cProfile.run("main()")
+    else:
+        main()
     #files=['sn2006ss','ptf10eqi-z']
     #filename=files[1]
     #nsample=10000

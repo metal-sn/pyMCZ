@@ -23,22 +23,29 @@ from pylab import hist,show
 IGNOREDUST=False
 
 ##list of metallicity methods, in order calculated
-Zs=["KD02comb_updated", #always
-    "KD02_N2O2", #Halpha, Hbeta,  [OII]3727, [NII]6584
-    "KD03_N2Ha",#Halpha, Hbeta,  [OII]3727, [NII]6584
-    "KD03new_R23", #Hbeta,  [OII]3727, [OIII]5007, [OIII]4959 
-    "M91", #Hbeta,  [OII]3727,  [OIII]5007, [OIII]4959 
-    "Z94", #Hbeta,  [OII]3727, [OIII]5007, [OIII]4959 
-    "PP04_N2",   #Halpha, [NII]6584
-    "PP04_O3N2", #Halpha, Hbeta,  [OIII]5007, [NII]6584
-    "Pi01",  #Hbeta,  [OII]3727,  [OIII]5007
-    "D02", #Halpha, [NII]
-    "E(B-V)", #Halpha, Hbeta]
-    "C01_R23","C01"]
+Zs=["E(B-V)", #Halpha, Hbeta
+    "logR23", #Hbeta,  [OII]3727, [OIII]5007, [OIII]4959
 
+    "D02",    #Halpha, [NII]6584
+    "Z94",    #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+    "M91",    #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+    "C01",    #[OII]3727, [OIII]5007, [NII]6584, [SII]6717
+    "C01_R23",#Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+
+    "Pi01",   #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+    "PP04_N2",#Halpha, [NII]6584
+    "PP04_O3N2",   #Halpha, Hbeta,[OIII]5007, [NII]6584
+
+    "KD02_N2O2",   #Halpha, Hbeta,  [OII]3727, [NII]6584
+    "KD03_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
+    "KD03_R23_updated", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+
+    "KD02comb","KD02comb_R23","KD02comb_updated"] #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
+
+    
 def get_keys():
     return Zs
-
+ 
 
 ##############################################################################
 ##fz_roots function as used in the IDL code  FED:reference the code here!
@@ -49,12 +56,16 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',d
     global IGNOREDUST
     diags.setdustcorrect()
     raw_lines={}
+    raw_lines['[OIII]5007']=np.array([float('NaN')])
+    raw_lines['Hb']=np.array([float('NaN')])
     for k in measured.iterkeys():
         #kills all non-finite terms 
-        measured[k][np.where(np.isfinite(measured[k][:])==False)]=0.0 
+        measured[k][~(np.isfinite(measured[k][:]))]=0.0 
         raw_lines[k]=measured[k]
-        #print k, raw_lines[k][0]
 
+
+
+    ######FED why this????????????
     raw_lines['[OIII]4959']=raw_lines['[OIII]5007']/3.
     raw_lines['[OIII]49595007']=raw_lines['[OIII]4959']+raw_lines['[OIII]5007']
     
@@ -76,9 +87,6 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',d
         diags.unsetdustcorrect()
         diags.mds['E(B-V)']=np.ones(len(raw_lines['Ha']))*1e-5
 
-
-    #####setting up lines first
-
     for k in ['[OII]3727','[OIII]5007','[OI]6300','[OIII]4959',
               '[SII]6717','[SII]6731','[SIII]9069','[SIII]9532'
               '[OII]3727','[OIII]5007','[OI]6300','[OIII]4959',
@@ -86,11 +94,12 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',d
         if k not in raw_lines or len(raw_lines[k])==1:
             raw_lines[k]=np.array([0.]*num)
 
-
     diags.setOlines(raw_lines['[OII]3727'], raw_lines['[OIII]5007'], raw_lines['[OI]6300'], raw_lines['[OIII]4959'])
+
     diags.setNII(raw_lines['[NII]6584'])
     diags.setSII(raw_lines['[SII]6717'],raw_lines['[SII]6731'],raw_lines['[SIII]9069'],raw_lines['[SIII]9532'])
-    if diags.checkminimumreq(dust_corr,Smass) == -1:
+
+    if diags.checkminimumreq(dust_corr,IGNOREDUST,Smass) == -1:
         return -1
         
     diags.calcNIIOII()
@@ -102,17 +111,19 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',d
 
     diags.initialguess()
 
-    diags.calcD02_Z()
+    #needs N2 and Ha
+    diags.calcD02()
     diags.calcPP04()
     diags.calcZ94()
-    diags.Pmethod()
     diags.calcM91()
+    #all these above were checked
 
+    diags.Pmethod()
 
     diags.calcKD02_N2O2()
     diags.calcKD03_N2Ha()
     diags.calcC01_ZR23()
 
-
     diags.calcKD03R23()
+
     diags.calcKDcombined()
