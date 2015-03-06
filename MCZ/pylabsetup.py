@@ -8,8 +8,8 @@ mpl.rcParams.update(mpl.rcParamsDefault)
 mpl.rcParams['font.size'] = 18.
 mpl.rcParams['font.family'] = 'serif'
 #mpl.rcParams['font.family'] = 'serif'
-mpl.rcParams['font.serif'] = [  'Times New Roman', 'Times', 'Bitstream Vera Serif','Palatino', 'Charter', 'serif']
-#mpl.rcParams['font.sans-serif'] = ['Verdana']
+mpl.rcParams['font.serif'] = [  'Times New Roman', 'Times','Palatino', 'Charter', 'serif']
+mpl.rcParams['font.sans-serif'] = ['Helvetica']
 mpl.rcParams['axes.labelsize'] = 18
 mpl.rcParams['xtick.labelsize'] = 18.
 mpl.rcParams['ytick.labelsize'] = 18.
@@ -26,7 +26,14 @@ fontsize=20
 #mpl.rc('font', size=fontsize, family='serif', serif='Utopia',
 #              style='normal', variant='normal',
 #              stretch='normal', weight='normal')
-
+mpl.rc('font',**{'family':'sans-serif', 'serif':['Bitstream Vera Serif'], 
+                 'sans-serif':['Helvetica'], 'size':20, 
+                 'weight':'normal'})
+mpl.rc('axes',**{'labelweight':'bold', 'linewidth':1})
+mpl.rc('ytick',**{'major.pad':8, 'color':'k'})
+mpl.rc('xtick',**{'major.pad':8, 'color':'k'})
+mpl.rc('mathtext',**{'default':'regular','fontset':'cm', 
+                     'bf':'monospace:bold'})
 params = {'legend.fontsize': 20,
           'legend.linewidth': 1,
           'legend.numpoints':1,
@@ -36,6 +43,5 @@ params = {'legend.fontsize': 20,
 plt.rcParams.update(params)   
 plt.minorticks_on()
 
-from matplotlib.font_manager import findfont, FontProperties
 
-print findfont(FontProperties())
+

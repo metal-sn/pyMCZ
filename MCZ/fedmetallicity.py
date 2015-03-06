@@ -53,7 +53,7 @@ def get_keys():
 ##fz_roots function as used in the IDL code  FED:reference the code here!
 ##############################################################################
 
-def calculation(diags,measured,num,(bsmeas,bserr),Smass,mds,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False): 
+def calculation(diags,measured,num,(bsmeas,bserr),Smass,mds,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False, verbose=False): 
 
     global IGNOREDUST
     diags.setdustcorrect()
@@ -114,9 +114,10 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,mds,outfilename='blah.tx
     diags.initialguess()
     mds=mds.split(',')
     #needs N2 and Ha
-    if mds=='all':
+    if verbose: "calculating diagnostics: ",mds
+    if 'all' in mds:
          diags.calcD02()
-
+         print "here"
          if   os.getenv("PYQZ_DIR"):
               cmd_folder = os.getenv("PYQZ_DIR")
               if cmd_folder not in sys.path:
