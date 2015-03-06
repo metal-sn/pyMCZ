@@ -320,7 +320,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         plt.axvspan(left,right,color='DarkOrange',alpha=0.4)
         plt.axvline(x=median,linewidth=2,color='white',ls='--')
         st='%s '%(snname)
-        plt.annotate(st, xy=(0.13, 0.6), xycoords='axes fraction',fontsize=fs,fontweight='bold')
+        plt.annotate(st, xy=(0.13, 0.6), xycoords='axes fraction',size=fs,fontweight='bold')
         st='%s '%(Zs.replace('_',' '))
         plt.annotate(st, xy=(0.62, 0.93), xycoords='axes fraction',fontsize=fs,fontweight='bold')
         st='measurement %d of %d\n\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f'%(i+1,nmeas,round(median,3),round(left,3),round(right,3))
@@ -331,8 +331,10 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         plt.annotate(st, xy=(0.62, 0.55), xycoords='axes fraction',fontsize=fs-5)
         if delog:
             plt.xlabel('O/H')
-        elif Zs == "E(B-V)":
+        elif "E(B-V)" in Zs:
             plt.xlabel('E(B-V) [mag]')
+        elif "logR23" in Zs:
+            plt.xlabel('logR23')
         else:
             plt.xlabel('12+log(O/H)')
         plt.ylabel('relative counts')
@@ -473,9 +475,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
     
     print findfont(FontProperties())
     if 'Time' not in  findfont(FontProperties()):
-        fs=25
-        print fs
-    raw_input()
+        fs=15
     ###Bin the results and save###
     print '{0:15} {1:20} {2:>13} - {3:>7} + {4:>7} {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
     #return -1

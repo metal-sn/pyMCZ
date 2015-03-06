@@ -114,10 +114,9 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,mds,outfilename='blah.tx
     diags.initialguess()
     mds=mds.split(',')
     #needs N2 and Ha
-    if verbose: "calculating diagnostics: ",mds
+    if verbose: print "calculating diagnostics: ",mds
     if 'all' in mds:
          diags.calcD02()
-         print "here"
          if   os.getenv("PYQZ_DIR"):
               cmd_folder = os.getenv("PYQZ_DIR")
               if cmd_folder not in sys.path:
@@ -125,8 +124,8 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,mds,outfilename='blah.tx
               import pyqz
               diags.calcpyqz()
          else:
-              print '''set path to pyqz as environmental variable 
-PYQZ_DIR if you want this diagnostic. '''
+              print '''set path to pyqz as environmental variable :
+export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want this diagnostic. '''
 
 
          diags.calcPP04()
