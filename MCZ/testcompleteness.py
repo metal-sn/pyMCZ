@@ -32,7 +32,7 @@ def fitdistrib(picklefile):
     
     try: myi=myi[1] #in case there are more than one solutions
     except: 
-        try:myi=myip[0]
+        try:myi=myi[0]
         except:pass
     print "myi",myi
     assert( Ndata-invalids[myi]>0),  "something is wrong with your distribution"
