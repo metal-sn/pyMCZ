@@ -9,8 +9,8 @@ niter=5  # number of iteations+1 for KD02 methods
 k_Ha=2.535  # CCM Rv=3.1
 k_Hb=3.609  # CCM Rv=3.1
 
-k_O1=2.66146  # CCM Rv=3.1
-k_O2=4.771 # CCM Rv=3.1
+#k_O1=2.66146   # CCM Rv=3.1
+k_O2=4.771     # CCM Rv=3.1
 k_O35007=3.341 # CCM Rv=3.1
 k_O34959=3.384 # CCM Rv=3.1
 k_O3=(k_O35007+k_O34959)/2.
@@ -37,6 +37,7 @@ class diagnostics:
         self.hasN2O2=False
         self.hasN2S2=False
 
+        self.hasS26731=False
         self.hasS39532=False
         self.hasS39069=False
 
@@ -76,6 +77,16 @@ class diagnostics:
         self.logq=None
         self.Z_init_guess=None
         self.N2O2_coef0=1106.8660
+
+        self.OIII_OII=None
+        self.OIII_Hb=None
+        self.OIII_SII=None
+
+        self.NII_OII=None
+        self.NII_Ha=None
+        self.NII_SII=None
+
+
 
         #metallicity diagnostics to be returned
         
@@ -245,34 +256,53 @@ class diagnostics:
         # never used
         #if self.hasHa:
             #logO1Ha=np.log10(O16300/self.Ha)+self.dustcorrect(k_O1,k_Ha)
-
+        if self.hasO2 and self.hasO3:
+            self.OIII_OII=np.log10(self.O35007/self.O23727+self.dustcorrect(k_O35007,k_O2,flux=True))
+        if self.hasHb:
+            self.OIII_Hb=np.log10(self.O35007/self.Hb+self.dustcorrect(k_O35007,k_Hb, flux=True))
 
     def setNII(self,N26584):
         if not N26584==None and sum(N26584>0):
             self.N26584=N26584
             self.hasN2=True
             if self.hasHa :
-                self.logN2Ha = np.log10(self.N26584/self.Ha)+self.dustcorrect(k_N2,k_Ha)#0.4*self.mds['E(B-V)']*(k_N2-k_Ha) 
+                self.NII_Ha=np.log10(self.N26584/self.Ha)#+self.dustcorrect(k_N2,k_Ha,flux=True) 
+                #lines are very close: no dust correction
+                self.logN2Ha = self.NII_Ha
+                #Note: no dust correction cause the lies are really close!
             else: 
                 print "WARNING: needs NII6584 and Ha to calculate NIIHa: did you run setHab()?"
+            if self.hasS2 and self.hasS26731 and self.hasN2:
+                self.NII_SII=np.log10(self.N26584/(self.S26717+self.S26731))#+self.dustcorrect(k_N2,k_S2,flux=True) 
+                #lines are very close: no dust correction
+            if self.hasO2 and self.hasN2:
+                self.NII_OII=np.log10(self.N26584/self.O23727+self.dustcorrect(k_N2,k_O2,flux=True) )
 
     def setSII(self,S26717,S26731,S39069,S39532):
         if not S26717==None and sum(S26717>0)>0:
             self.S26717=S26717
             self.hasS2=True
+
             if self.hasHa:
                 self.logS2Ha=np.log10(self.S26717/self.Ha)+self.dustcorrect(k_S2,k_Ha)               
             else: 
                 print "WARNING: needs SII6717 and Ha to calculate SIIHa: did you run setHab() and setS()?"
-        if not S26731==None and sum(S26731>0)>0:
+        if not S26731==None and sum(S26731>1e-9)>0:
             self.S26731=S26731
-            self.hasS2=True
-        if not S39069==None and sum(S39069>0)>0:
+            self.hasS26731=True
+        if not S39069==None and sum(S39069>1e-9)>0:
             self.S39069=S39069
             self.hasS39069=True
-        if not S39532==None and sum(S39532>0)>0:
+        if not S39532==None and sum(S39532>1e-9)>0:
             self.S39532=S39532
             self.hasS39532=True
+        if self.hasS2 :
+            
+            if self.hasN2 and self.NII_SII==None and self.hasS26731:
+                self.NII_SII=np.log10(self.N26584/(self.S26717+self.S26731))#+self.dustcorrect(k_N2,k_O2,flux=True) 
+                    #lines are very close: no dust correction            
+            if self.hasO3  and self.OIII_SII==None and self.hasS26731:
+                self.OIII_SII=np.log10(self.O35007/(self.S26717+self.S26731)+self.dustcorrect(k_O3,k_S2,flux=True) )
 
 
     def calcEB_V(self):
@@ -281,6 +311,7 @@ class diagnostics:
         #print self.mds['E(B-V)']
         self.mds['E(B-V)'][self.mds['E(B-V)']<=0]=0.00001
         
+
     def calcNIISII(self):
         if self.hasS2 and self.hasN2:
             self.N2S2=self.N26584/self.S26717+self.dustcorrect(k_N2,k_S2,flux=True)#0.4*self.mds['E(B-V)']*(k_N2-k_S2) 
@@ -339,7 +370,33 @@ class diagnostics:
             self.Z_init_guess[(self.logN2O2 >=-1.2)&(N2O2 != 0.0)]=8.7  # 1.1 using HII regions
 
 #######################these are the metallicity diagnostics##################
+    def calcpyqz(self, plot=False):
+        import pyqz
 
+        if not self.NII_SII==None :
+            if not self.OIII_SII ==None:
+                self.mds['pyqzN2S2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),np.atleast_1d([self.OIII_SII]),'NII/SII','OIII/SII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+            if  not self.OIII_Hb ==None:
+                self.mds['pyqzN2S2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),np.atleast_1d([self.OIII_Hb]),'NII/SII','OIII/Hb', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+            if  not self.OIII_OII ==None:
+                self.mds['pyqzN2S2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),np.atleast_1d([self.OIII_OII]),'NII/SII','OIII/OII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+
+        if not self.NII_OII==None :
+            if not self.OIII_SII ==None:
+                self.mds['pyqzN2O2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),np.atleast_1d([self.OIII_SII]),'NII/OII','OIII/SII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+            if  not self.OIII_Hb ==None:
+                self.mds['pyqzN2O2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),np.atleast_1d([self.OIII_Hb]),'NII/OII','OIII/Hb', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+            if  not self.OIII_OII ==None:
+                self.mds['pyqzN2O2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),np.atleast_1d([self.OIII_OII]),'NII/OII','OIII/OII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+
+        if not self.NII_Ha==None :
+            if  not self.OIII_Hb ==None:
+                self.mds['pyqzN2Ha_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_Ha]),np.atleast_1d([self.OIII_Hb]),'NII/Ha','OIII/Hb', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+            if  not self.OIII_OII ==None:
+                self.mds['pyqzN2Ha_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_Ha]),np.atleast_1d([self.OIII_OII]),'NII/Ha','OIII/OII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+
+
+        
     def calcD02(self):
         # [NII]/Ha Denicolo, Terlevich & Terlevich (2002), MNRAS, 330, 69
         #FED:added uncertainties
@@ -349,7 +406,7 @@ class diagnostics:
             self.mds['D02'] = 9.12+e1+(0.73+e2)*self.logN2Ha
         else:
             print "WARNING: need N2Ha to do this. did you run setHab and setNII"
-
+        
     def calcPP04(self):
         ### PP04_N2_Z, PP04_O3N2_Z Pettini & Pagel diagnostics - Pettini & Pagel (2004), MNRAS, 348, L59
         # [NII]/Ha Pettini & Pagel (2004), MNRAS, 348, L59
@@ -437,9 +494,9 @@ class diagnostics:
         # available but deprecated
         if self.hasO3 and self.hasO2 and self.hasO3Hb:
             x2=self.O2O35007/1.5
-            x3=(10**self.logO3Hb)/2.
+            x3=(10**self.logO3Hb)*0.5
             self.mds['C01_R23']=np.zeros(self.nm)        
-            self.mds['C01_R23'][self.O2O35007<0.8]=np.log10(3.78e-4 * (self.O2O35007[self.O2O35007<0.8]/1.5)**0.17 * x3[self.O2O35007<0.8]**(-0.44))+12.0    
+            self.mds['C01_R23'][self.O2O35007<0.8]=np.log10(3.78e-4 * (x2[self.O2O35007<0.8])**0.17 * x3[self.O2O35007<0.8]**(-0.44))+12.0    
          
             self.mds['C01_R23'][ self.O2O35007 >= 0.8]=np.log10(3.96e-4 * x3[self.O2O35007 >= 0.8]**(-0.46))+12.0   
         else:
@@ -448,12 +505,12 @@ class diagnostics:
         # Charlot 01 calibration: (case A) based on [N2]/[SII]##
         # available but deprecated
         if not self.hasN2S2:
-            self.calcNIISII()
             print "WARNING: trying to calculate logNIISII"
+            self.calcNIISII()
         if self.hasN2S2 and self.hasO3 and self.hasO2 and self.hasO3Hb:
-            self.mds['C01']=np.log10(5.09e-4*((self.O2O35007/1.5)**0.17)*(((10**self.logN2S2)/0.85)**1.17))+12
+            self.mds['C01']=np.log10(5.09e-4*(x2**0.17)*((self.N2S2/0.85)**1.17))+12
         else:
-            print "WARNING: need [OIII]5700, [OII]3727, and Ha to calculate calcC01_ZR23, did you set them up with  setOlines() and ?"        
+            print "WARNING: needs [NII]6584, [SII]6717, [OIII]5700, [OII]3727, and Ha to calculate calcC01_ZR23, did you set them up with  setOlines() and ?"        
 
 
     def calcM91(self):

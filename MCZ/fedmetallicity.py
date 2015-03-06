@@ -12,10 +12,9 @@
 ## disp - if True prints the results, default False
 ## saveres - if True appends the results onto outfilename, True by default
 ##############################################################################
-import sys
+import sys,os
 import numpy as np
 from pylab import hist,show
-
 ##all the lines that go like
 ##if S_mass[i] > low_lim and S_mass[i] < 14.0 and all_lines[i] != 0.0:
 ##are ignored, replaced by (if not G) where G is set to False
@@ -35,6 +34,9 @@ Zs=["E(B-V)", #Halpha, Hbeta
     "Pi01",   #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
     "PP04_N2",#Halpha, [NII]6584
     "PP04_O3N2",   #Halpha, Hbeta,[OIII]5007, [NII]6584
+    
+    "pyqzN2S2_O3S2",    "pyqzN2S2_O3Hb",    "pyqzN2S2_O3O2",    "pyqzN2O2_O3S2",    "pyqzN2O2_O3Hb",    "pyqzN2O2_O3O2",    "pyqzN2Ha_O3Hb",    "pyqzN2Ha_O3O2",
+
 
     "KD02_N2O2",   #Halpha, Hbeta,  [OII]3727, [NII]6584
     "KD03_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
@@ -51,7 +53,7 @@ def get_keys():
 ##fz_roots function as used in the IDL code  FED:reference the code here!
 ##############################################################################
 
-def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False): 
+def calculation(diags,measured,num,(bsmeas,bserr),Smass,mds,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False): 
 
     global IGNOREDUST
     diags.setdustcorrect()
@@ -110,20 +112,64 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,outfilename='blah.txt',d
     #diags.calcS23()
 
     diags.initialguess()
-
+    mds=mds.split(',')
     #needs N2 and Ha
-    diags.calcD02()
-    diags.calcPP04()
-    diags.calcZ94()
-    diags.calcM91()
-    #all these above were checked
+    if mds=='all':
+         diags.calcD02()
 
-    diags.Pmethod()
+         if   os.getenv("PYQZ_DIR"):
+              cmd_folder = os.getenv("PYQZ_DIR")
+              if cmd_folder not in sys.path:
+                   sys.path.insert(0, cmd_folder)
+              import pyqz
+              diags.calcpyqz()
+         else:
+              print '''set path to pyqz as environmental variable 
+PYQZ_DIR if you want this diagnostic. '''
 
-    diags.calcKD02_N2O2()
-    diags.calcKD03_N2Ha()
-    diags.calcC01_ZR23()
 
-    diags.calcKD03R23()
+         diags.calcPP04()
+         diags.calcZ94()
+         diags.calcM91()
+         #all these above were checked
 
-    diags.calcKDcombined()
+         diags.Pmethod()
+
+         diags.calcKD02_N2O2()
+         diags.calcKD03_N2Ha()
+         diags.calcC01_ZR23()
+         
+         diags.calcKD03R23()
+
+         diags.calcKDcombined()
+    if 'D02' in mds:
+         diags.calcD02()
+    if 'pyqz' in mds:
+         if   os.getenv("PYQZ_DIR"):
+              cmd_folder = os.getenv("PYQZ_DIR")
+              if cmd_folder not in sys.path:
+                   sys.path.insert(0, cmd_folder)
+              import pyqz
+              diags.calcpyqz()
+         else:
+              print '''set path to pyqz as environmental variable 
+PYQZ_DIR if you want this diagnostic. '''
+
+    if 'PP04' in mds:
+       diags.calcPP04()
+    if 'Z94' in mds:
+       diags.calcZ94()
+    if 'M91' in mds:
+       diags.calcM91()
+       #all these above were checked
+    if 'Pi01' in mds:
+       diags.Pmethod()
+    if 'C01' in mds:
+       diags.calcC01_ZR23()
+    if 'KD02' in mds and not comb in mds:
+       diags.calcKD02_N2O2()
+       diags.calcKD03_N2Ha()
+       
+       diags.calcKD03R23()
+    if 'KD02comb' in mds:
+         diags.calcKDcombined()

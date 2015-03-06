@@ -34,6 +34,7 @@ except:
 CLOBBER=False
 VERBOSE=False
 UNPICKLE=False
+ASCIIOUTPUT=False
 RUNSIM=True
 BINMODE='k'
 binning={'bb':'Bayesian blocks','k':"Knuth's rule",'d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2 N^{1/3}$', 'kd':'Kernel Density'}
@@ -55,15 +56,27 @@ def getknuth(m,data,N):
     return -(N*np.log(m) + gammaln(0.5*m) - m*gammaln(0.5) -
              gammaln(N+0.5*m)+np.sum(gammaln(nk+0.5)))
 
-def knuthn(data, maxM=100):
+def knuthn(data, maxM=None):
     assert data.ndim==1, "data must be 1D array to calculate Knuth's number of bins"
     N=data.size
-    ns=np.arange( 1,maxM)
-    logp = np.zeros(maxM-1)
-    m0=2.0*(N**(1.0/3.0))
-    mk= optimize.fmin(getknuth,m0, args=(data,N), disp=False)[0]
-    return mk 
+    if not maxM:
+        maxM=5*np.sqrt(N)
+    m0=2.0*N**(1./3.)
+    mkall= optimize.fmin(getknuth,m0, args=(data,N), disp=True, maxiter=30)#[0]
+    mk=mkall[0]
+    if mk>maxM or mk<0.3*np.sqrt(N):
+        mk=m0
+        return mk, 't'
+    return mk, 0
+    '''
 
+    m0=2.0*(N**(1.0/3.0))
+    mkall= optimize.fmin(getknuth,m0, args=(data,N), disp=VERBOSE, maxiter=30)
+    mk=mkall[0]
+    if mk>maxM:
+        mk=m0
+    return mk 
+    '''
 
 ##############################################################################
 ##Reads the flux file and returns it as an array.
@@ -153,13 +166,12 @@ def getbinsize(n,data,):
         g1=stats.mstats.moment(data,moment=3)
         s1=np.sqrt(float(n)/6.0)
         #s1=1.0/np.sqrt(6.*(n-2.)/((n+1.)*(n+3.)))
-        k=1+np.log(n)+np.log(1+(g1*s1))
+        k=1+np.log(n)+np.log(1+(g1*s1)),0
     elif BINMODE=='s':
-        k=np.sqrt(n)
+        k=np.sqrt(n),0
     elif BINMODE=='t':
-        k=2.*n**(1./3.)
+        k=2.*n**(1./3.),0
     else:
-        #or BINMODE=='k':
         #from astroML.plotting import hist as amlhist
         #distrib=amlhist(data, bins='knuth', normed=True)
         k= knuthn(data)
@@ -208,7 +220,6 @@ def checkhist(snname,Zs,nsample,i,path):
 ##############################################################################
 def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
     global BINMODE
-    
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
     outfile=os.path.join(outdir,name+".pdf")
@@ -224,16 +235,16 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
     #    data,ignore,ignore=stats.sigmaclip(data,high=5.0,low=5.0)
     n=data.shape[0]
     if not n>0:
-        if verbose:print "data must be an actual distribution (n>0 elements!)"
+        if verbose:print "data must be an actual distribution (n>0 elements!, %s)"%Zs
         return "-1,-1"
     #if not max(data)-min(data)>0.1:
     #    if verbose:print "the data must be in a distribution, not all the same!"
     #    return "-1,-1"
-
     if data.shape[0]<=0 or np.sum(data)<=0:
         print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(name.split('_')[0],Zs,-1,-1,-1)
         return "-1, -1, -1"    
-    try:
+    if 1:
+#    try:
         ###find C.I.###
         median,pc16,pc84=np.percentile(data,[50,16,84])
         std=np.std(data)
@@ -267,14 +278,13 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
                 dens=np.exp(log_dens)
                 #print dens
                 plt.fill(bins[:,0], dens/dens.max(), fc='#AAAAFF')
-            numbin=getbinsize(data.shape[0],data)        
+            numbin,bm=getbinsize(data.shape[0],data)        
             distrib=np.histogram(data, bins=numbin, density=True)            
             ###make hist###
             counts, bins=distrib[0],distrib[1]
             widths=np.diff(bins)
             countsnorm=counts/np.max(counts)
-            plt.bar(bins[:-1],countsnorm,widths,color=['gray'], alpha=0.3)
-
+#            plt.bar(bins[:-1],countsnorm,widths,color=['gray'], alpha=0.3)
         ###find appropriate bin size###
         ##if astroML is available use it to get Bayesian blocks
         else:
@@ -288,17 +298,17 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
                     print "bayesian blocks for histogram requires astroML to be installed"
                     print "defaulting to Knuth's rule "
                     ##otherwise 
-                    numbin=getbinsize(data.shape[0],data)        
+                    numbin,bm=getbinsize(data.shape[0],data)        
                     distrib=np.histogram(data, numbin, density=True)
             else:
-                numbin=getbinsize(data.shape[0],data)        
+                numbin,bm=getbinsize(data.shape[0],data)        
                 distrib=np.histogram(data, numbin, density=True)            
             ###make hist###
             counts, bins=distrib[0],distrib[1]
             widths=np.diff(bins)
             countsnorm=counts/np.max(counts)
 
-            ###plot hist###
+        ###plot hist###
         
         plt.bar(bins[:-1],countsnorm,widths,color=['gray'])
         plt.minorticks_on()
@@ -314,7 +324,9 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
         plt.annotate(st, xy=(0.62, 0.93), xycoords='axes fraction',fontsize=18,fontweight='bold')
         st='measurement %d of %d\n\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f'%(i+1,nmeas,round(median,3),round(left,3),round(right,3))
         plt.annotate(st, xy=(0.62, 0.65), xycoords='axes fraction',fontsize=18)
-        st='MC sample size %d\nhistogram rule: %s'%(nsample,binning[BINMODE])
+        st='MC sample size %d\nhistogram rule: %s'%(nsample,binning[BINMODE])   
+        if bm:
+            st='MC sample size %d\nhistogram rule: %s'%(nsample,binning[bm])
         plt.annotate(st, xy=(0.62, 0.55), xycoords='axes fraction',fontsize=13)
         if delog:
             plt.xlabel('O/H')
@@ -324,15 +336,14 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
             plt.xlabel('12+log(O/H)')
         plt.ylabel('relative counts')
         plt.savefig(outfile,format='pdf')
-        
         ###print out the confidence interval###
         print '{0:15} {1:20} {2:>13.3f} - {3:>7.3f} + {4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
         return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3))
 
-    except (OverflowError,AttributeError,ValueError):
-        if VERBOSE: print data
-        print name, 'had infinities'
-        return "-2, -2"
+#    except (OverflowError,AttributeError,ValueError):
+#        if VERBOSE: print data
+#        print name, 'had infinities'
+#        return "-2, -2"
 
 
 ##############################################################################
@@ -347,10 +358,9 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=False, dust_corr=True, verbose=False):
+def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickle=False, dust_corr=True, verbose=False):
     global RUNSIM,BINMODE
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
-    print len(flux['galnum']),nm
     assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
     assert(len(err['galnum'])== nm), "flux and err must be same dimensions" 
     
@@ -426,7 +436,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
                 print '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
                 fluxi[k]=flux[k][i]*np.ones(len(sample))+err[k][i]*sample
                 warnings.filterwarnings("ignore")
-            success=metallicity.calculation(diags,fluxi,nm,bss,smass,disp=VERBOSE, dust_corr=dust_corr)
+            success=metallicity.calculation(diags,fluxi,nm,bss,smass,mds,disp=VERBOSE, dust_corr=dust_corr)
             if success==-1:
                 print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717','Ha','Hb' and 6.0<Smass<14 MSun"
 
@@ -440,10 +450,8 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
 #                if not diags.mds[k]==None:
 #                    print ' {0:4} {1:4}'.format( stats.nanmean(diags.mds[k]),stats.nanstd(diags.mds[k])),
 #                print ""
-            
             for key in diags.mds.iterkeys():
                 res[key][i]=diags.mds[key]
-#            for key in diags.mds.iterkeys():
                 if res[key][i]==None:
                     res[key][i]=[float('NaN')]*len(sample)
         for key in diags.mds.iterkeys():
@@ -463,18 +471,20 @@ def run((name, flux, err, nm, path, bss), nsample,smass,delog=False, unpickle=Fa
     print '{0:15} {1:20} {2:>13} - {3:>7} + {4:>7} {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
     #return -1
     for i in range(nm):
-        fi=open(os.path.join(binp,'%s_n%d_%d.txt'%(name,nsample,i+1)),'w')
-        fi.write("%s\t Median Oxygen abundance (12+log(O/H))\t 16th percentile\t 84th percentile\n"%name)
+        if ASCIIOUTPUT:
+            fi=open(os.path.join(binp,'%s_n%d_%d.txt'%(name,nsample,i+1)),'w')
+            fi.write("%s\t Median Oxygen abundance (12+log(O/H))\t 16th percentile\t 84th percentile\n"%name)
         
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
-#            if key in 'PP04_N2':
-#                print key, res[key].shape,res[key][:,i]
-            if len(res[key].shape)>1:
+            if len(res[key].shape)>1 and sum(sum(~np.isnan(res[key])))>0:
                 s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog, verbose=verbose)+'\n'
-                fi.write(s)
+                if ASCIIOUTPUT:
+                    fi.write(s)
+
+        if ASCIIOUTPUT:
+            fi.close()
         
-        fi.close()
     
         if VERBOSE: print "uncertainty calculation complete"
 
@@ -491,15 +501,21 @@ def main():
     parser.add_argument('--verbose',default=False, action='store_true', help="verbose mode")
     parser.add_argument('--mass',default=10, type=float,help="stellar mass, which can be validated")
     parser.add_argument('--nodust',default=False, action='store_true', help=" dont do dust corrections (default is to do it)")
+    parser.add_argument('--asciiout',default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
+    parser.add_argument('--md',default='all', type =str, help=" metallivity diagnostic to calculate. default is 'all', options are: D02, Z94, M91,C01, Pi01, PP04, pyqz, KD02, KD02comb")
     args=parser.parse_args()
+
+
 
     global CLOBBER
     global VERBOSE
     global BINMODE
+    global ASCIIOUTPUT
     CLOBBER=args.clobber
     VERBOSE=args.verbose
     BINMODE=args.binmode
 
+    ASCIIOUTPUT=args.asciiout
     if args.unpickle and NOPICKLE:
         args.unpickle = False
         print "cannot use pickle on this machine, wont save and won't read saved realizations. Ctr-C to exit, Return to continue?\n"
@@ -515,7 +531,7 @@ def main():
     if args.nsample>=100:
         fi=input_format(args.name, path=path)
         if fi!=-1:
-            run(fi,args.nsample,args.mass,delog=args.delog, unpickle=args.unpickle, dust_corr=(not args.nodust), verbose=VERBOSE)
+            run(fi,args.nsample,args.mass,args.md, delog=args.delog, unpickle=args.unpickle, dust_corr=(not args.nodust), verbose=VERBOSE)
     else:
         print "nsample must be at least 100"
     
