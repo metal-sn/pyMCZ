@@ -53,10 +53,15 @@ def is_number(s):
 
 def getknuth(m,data,N):
     m=int(m)
+    if m > N:
+        return (-1)
     bins=np.linspace(min(data),max(data), int(m) + 1)
     nk,bins=np.histogram(data,bins)
-    return -(N*np.log(m) + gammaln(0.5*m) - m*gammaln(0.5) -
-             gammaln(N+0.5*m)+np.sum(gammaln(nk+0.5)))
+    return -(N*np.log(m) 
+             + gammaln(0.5*m) 
+             - m*gammaln(0.5) 
+             - gammaln(N + 0.5*m)
+             + np.sum(gammaln(nk+0.5)))
 
 def knuthn(data, maxM=None):
     assert data.ndim==1, "data must be 1D array to calculate Knuth's number of bins"
@@ -64,7 +69,7 @@ def knuthn(data, maxM=None):
     if not maxM:
         maxM=5*np.sqrt(N)
     m0=2.0*N**(1./3.)
-    mkall= optimize.fmin(getknuth,m0, args=(data,N), disp=VERBOSE, maxiter=30)#[0]
+    mkall= optimize.fmin(getknuth,m0, args=(data,N), disp=VERBOSE, maxiter=30)#, maxfun=1000)#[0]
     mk=mkall[0]
     if mk>maxM or mk<0.3*np.sqrt(N):
         mk=m0
@@ -248,7 +253,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
     if 1:
 #    try:
         ###find C.I.###
-        median,pc16,pc84=np.percentile(data,[50,16,84])
+        median,m5sig,pc16,pc84,p5sig=np.percentile(data,[50,0.0000003,16,84,100-0.0000003])
         std=np.std(data)
         left=pc16
         right=pc84
@@ -315,6 +320,13 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         plt.minorticks_on()
         plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.xlim(maxleft,maxright)
+        xticks=plt.xticks()[0]
+        xticks=xticks[(xticks<maxright)*(xticks>maxleft)]
+        if (maxright-xticks[-1])<0.25*(xticks[-1]-xticks[-2]):
+            maxright=maxright+0.25*(xticks[-1]-xticks[-2])
+            maxleft =maxleft -0.25*(xticks[-1]-xticks[-2])
+        plt.xlim(maxleft,maxright)
+        plt.xticks(xticks, ['%.2f'%s for s in xticks])           
         plt.ylim(0,1.15)
         plt.yticks(np.arange(0.2,1.1,0.2 ), [ "%.1f"%x for x in np.arange(0.2,1.1,0.2)])  
         plt.axvspan(left,right,color='DarkOrange',alpha=0.4)
@@ -391,8 +403,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
     if unpickle:
         RUNSIM=False
         if not os.path.isfile(picklefile):
-            print "missing pickled file for this simulation: name, nsample.\nrun the MonteCarlo? Ctr-C to exit, Return to continue?\n"
-            raw_input()
+            raw_input("missing pickled file for this simulation: name, nsample.\nrun the MonteCarlo? Ctr-C to exit, Return to continue?\n")
             RUNSIM=True
         else:
             pklfile = open(picklefile, 'rb')
@@ -473,9 +484,10 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
 
     from matplotlib.font_manager import findfont, FontProperties
     
-    print findfont(FontProperties())
     if 'Time' not in  findfont(FontProperties()):
         fs=15
+    print "FONT: %s, %d"%(findfont(FontProperties()),fs)
+
     ###Bin the results and save###
     print '{0:15} {1:20} {2:>13} - {3:>7} + {4:>7} {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
     #return -1
@@ -525,8 +537,8 @@ def main():
     ASCIIOUTPUT=args.asciiout
     if args.unpickle and NOPICKLE:
         args.unpickle = False
-        print "cannot use pickle on this machine, wont save and won't read saved realizations. Ctr-C to exit, Return to continue?\n"
-        raw_input();
+        raw_input("cannot use pickle on this machine, we won't save and won't read saved pickled realizations. Ctr-C to exit, Return to continue?\n")
+        
 
     if args.path:
         path=args.path

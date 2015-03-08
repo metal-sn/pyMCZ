@@ -118,7 +118,7 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,mds,outfilename='blah.tx
     if 'all' in mds:
          diags.calcD02()
          if   os.getenv("PYQZ_DIR"):
-              cmd_folder = os.getenv("PYQZ_DIR")
+              cmd_folder = os.getenv("PYQZ_DIR")+'/'
               if cmd_folder not in sys.path:
                    sys.path.insert(0, cmd_folder)
               import pyqz
@@ -166,7 +166,7 @@ PYQZ_DIR if you want this diagnostic. '''
        diags.Pmethod()
     if 'C01' in mds:
        diags.calcC01_ZR23()
-    if 'KD02' in mds and not comb in mds:
+    if 'KD02' in mds :
        diags.calcKD02_N2O2()
        diags.calcKD03_N2Ha()
        

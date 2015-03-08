@@ -354,7 +354,6 @@ class diagnostics:
         # upper branch: if no lines are available, metallicity is set to 8.7        
         self.Z_init_guess=np.zeros(self.nm)+8.7 
         # use [N2]/Ha 
-        N2O2=np.zeros(self.nm)
         if self.hasHa and self.hasN2:
             self.Z_init_guess[(self.logN2Ha < -1.3)&(self.N26584 != 0.0)]=8.2
             self.Z_init_guess[(self.logN2Ha < -1.1)&(self.logN2Ha >= -1.3)&(self.N26584 != 0.0)]=8.4
@@ -420,7 +419,7 @@ class diagnostics:
             if self.hasO3Hb :
                 self.mds['PP04_O3N2']=8.73 - 0.32*(self.logO3Hb-self.logN2Ha)
             else:
-                print "######WARNING: need O3Hb for PP04_O3N2"
+                print "WARNING: need O3Hb for PP04_O3N2"
         else:
             print "WARNING: need N2Ha to do this. did you run setHab and setNII"
 
@@ -483,7 +482,7 @@ class diagnostics:
                 P_R23=R2+R3
                 P_R23=10**self.logR23
                 P_abund_old=(P_R23+54.2+59.45*P+7.31*P**2)/(6.07+6.71*P+0.371*P**2+0.243*P_R23)
-            self.mds['Pi01_old']=np.zeros(self.nm)
+            self.mds['Pi01_old']=np.zeros(self.nm)+float('NaN')
             self.mds['Pi01_old'][self.Z_init_guess >= 8.4]=P_abund_old[self.Z_init_guess >= 8.4]
         else:
             print "WARNING: need OIIIOII to calculate Pi01_Z_old, did you set them up with  setOlines()?"
@@ -495,7 +494,7 @@ class diagnostics:
         if self.hasO3 and self.hasO2 and self.hasO3Hb:
             x2=self.O2O35007/1.5
             x3=(10**self.logO3Hb)*0.5
-            self.mds['C01_R23']=np.zeros(self.nm)        
+            self.mds['C01_R23']=np.zeros(self.nm)+float('NaN')        
             self.mds['C01_R23'][self.O2O35007<0.8]=np.log10(3.78e-4 * (x2[self.O2O35007<0.8])**0.17 * x3[self.O2O35007<0.8]**(-0.44))+12.0    
          
             self.mds['C01_R23'][ self.O2O35007 >= 0.8]=np.log10(3.96e-4 * x3[self.O2O35007 >= 0.8]**(-0.46))+12.0   
@@ -539,7 +538,7 @@ class diagnostics:
             if self.Z_init_guess==None:
                 self.initialguess()
                 
-            self.mds['M91']=np.zeros(self.nm)
+            self.mds['M91']=np.zeros(self.nm)+float('NaN')
             M91_Z_low=nppoly.polyval(self.logR23,[12.0-4.944,0.767,0.602])-self.logO3O2*nppoly.polyval(self.logR23,[0.29,0.332,-0.331])
             M91_Z_up=nppoly.polyval(self.logR23,[12.0-2.939,-0.2,-0.237,-0.305,-0.0283])-self.logO3O2*nppoly.polyval(self.logR23,[0.0047,-0.0221,-0.102,-0.0817,-0.00717])
 
@@ -848,7 +847,7 @@ class diagnostics:
         if KD02_R23_Z == None or self.mds['Z94']==None or self.mds['M91']==None:
             print "WARNING:  cannot calculate KD02comb_R23 because  KD02_R23, M91, or Z94 failed"
         else:
-            self.mds['KD02comb_R23']=np.zeros(self.nm)
+            self.mds['KD02comb_R23']=np.zeros(self.nm)+float('NaN')
 
             # LK02 averaged with M91 and Z94            
             indx=self.mds['Z94']>=9.0
@@ -900,7 +899,7 @@ class diagnostics:
         
         # initializing:
         
-        N2S2_Z[:,0]=self.mds['KD02_N2O2']  # use [NII]/[OII] abundance as initial estimate
+        N2S2_Z[:,0]=self.mds['KD02_N2O2'].copy()  # use [NII]/[OII] abundance as initial estimate
 
         if self.hasO3 and self.hasO2 and self.hasN2S2:
             # coefficients from KD02 paper:
@@ -969,11 +968,10 @@ class diagnostics:
                     
                 N2S2_Z[indx*(-1),ite]=N2S2_Z[indx*(-1),ite-1]  
                 q[indx*(-1),ite]=q[indx*(-1),ite-1]
-
         
         KD02_N2S2_Z=N2S2_Z[:,n_ite]
         if not self.mds['KD02_N2O2']==None:
-            self.mds['KD02comb']=self.mds['KD02_N2O2']
+            self.mds['KD02comb']=self.mds['KD02_N2O2'].copy()
         else:
             self.mds['KD02comb']=np.zeros(self.nm)+float('NaN')
         if KD02_R23_Z == None or self.mds['Z94']==None or self.mds['M91']==None:
@@ -991,13 +989,13 @@ class diagnostics:
             # if [NII]/[OII] abundance available and [NII]/Ha abundance < 8.4, then 
             # use R23. 
             
-            self.mds['KD02comb_updated']=np.zeros(self.nm)
+            self.mds['KD02comb_updated']=np.zeros(self.nm)+float('NaN')
             indx=self.Z_init_guess > 8.4
-            self.mds['KD02comb_updated'][indx]=self.mds['KD02_N2O2'][indx]
+            self.mds['KD02comb_updated'][indx]=self.mds['KD02_N2O2'][indx].copy()
 
             indx=(self.mds['KD03_R23_updated'] > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
-            self.mds['KD02comb_updated'][indx]=0.5*(self.mds['KD03_R23_updated'][indx]+self.mds['M91'][indx])
+            self.mds['KD02comb_updated'][indx]=0.5*(self.mds['KD03_R23_updated'][indx].copy()+self.mds['M91'][indx].copy())
             indx=(self.mds['KD03_R23_updated'] <= 0.0) * (self.mds['M91'] <= 0.0 ) * (self.Z_init_guess <= 8.4)
             if not self.mds['KD03_N2Ha']==None:
-                self.mds['KD02comb_updated'][indx]=self.mds['KD03_N2Ha'][indx]
+                self.mds['KD02comb_updated'][indx]=self.mds['KD03_N2Ha'][indx].copy()
             

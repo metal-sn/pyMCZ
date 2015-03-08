@@ -17,6 +17,7 @@ mpl.rcParams['xtick.major.size']= 10.
 mpl.rcParams['xtick.minor.size']= 5.
 mpl.rcParams['ytick.major.size']= 10.
 mpl.rcParams['ytick.minor.size']= 5.
+mpl.rcParams['figure.autolayout']= True
 
 fontsize=20
 #mpl.rc('axes',  titlesize=fontsize)
@@ -26,14 +27,13 @@ fontsize=20
 #mpl.rc('font', size=fontsize, family='serif', serif='Utopia',
 #              style='normal', variant='normal',
 #              stretch='normal', weight='normal')
-mpl.rc('font',**{'family':'sans-serif', 'serif':['Bitstream Vera Serif'], 
-                 'sans-serif':['Helvetica'], 'size':20, 
-                 'weight':'normal'})
-mpl.rc('axes',**{'labelweight':'bold', 'linewidth':1})
+#mpl.rc('font',**{'family':'serif','serif':[ 'Times New Roman', 'Times', 'serif'],
+#                 'sans-serif':['Helvetica'], 'size':19, 
+#                 'weight':'normal'})
+mpl.rc('axes',**{'labelweight':'normal', 'linewidth':1})
+mpl.rc('axes',**{'labelweight':'normal', 'linewidth':1})
 mpl.rc('ytick',**{'major.pad':8, 'color':'k'})
 mpl.rc('xtick',**{'major.pad':8, 'color':'k'})
-mpl.rc('mathtext',**{'default':'regular','fontset':'cm', 
-                     'bf':'monospace:bold'})
 params = {'legend.fontsize': 20,
           'legend.linewidth': 1,
           'legend.numpoints':1,
