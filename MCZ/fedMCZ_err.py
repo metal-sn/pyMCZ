@@ -7,8 +7,10 @@ from scipy import optimize
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
+
 #modules of this package
 import pylabsetup
+
 #import metallicity_save2 as metallicity
 import fedmetallicity as metallicity
 
@@ -51,10 +53,15 @@ def is_number(s):
 
 def getknuth(m,data,N):
     m=int(m)
+    if m > N:
+        return (-1)
     bins=np.linspace(min(data),max(data), int(m) + 1)
     nk,bins=np.histogram(data,bins)
-    return -(N*np.log(m) + gammaln(0.5*m) - m*gammaln(0.5) -
-             gammaln(N+0.5*m)+np.sum(gammaln(nk+0.5)))
+    return -(N*np.log(m) 
+             + gammaln(0.5*m) 
+             - m*gammaln(0.5) 
+             - gammaln(N + 0.5*m)
+             + np.sum(gammaln(nk+0.5)))
 
 def knuthn(data, maxM=None):
     assert data.ndim==1, "data must be 1D array to calculate Knuth's number of bins"
@@ -62,7 +69,7 @@ def knuthn(data, maxM=None):
     if not maxM:
         maxM=5*np.sqrt(N)
     m0=2.0*N**(1./3.)
-    mkall= optimize.fmin(getknuth,m0, args=(data,N), disp=True, maxiter=30)#[0]
+    mkall= optimize.fmin(getknuth,m0, args=(data,N), disp=VERBOSE, maxiter=30)#, maxfun=1000)#[0]
     mk=mkall[0]
     if mk>maxM or mk<0.3*np.sqrt(N):
         mk=m0
@@ -218,7 +225,7 @@ def checkhist(snname,Zs,nsample,i,path):
 ##Save the result as histogram as name
 ## delog - if true de-logs the data. False by default
 ##############################################################################
-def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
+def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=18):
     global BINMODE
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
@@ -246,7 +253,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
     if 1:
 #    try:
         ###find C.I.###
-        median,pc16,pc84=np.percentile(data,[50,16,84])
+        median,m5sig,pc16,pc84,p5sig=np.percentile(data,[50,0.0000003,16,84,100-0.0000003])
         std=np.std(data)
         left=pc16
         right=pc84
@@ -309,29 +316,37 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
             countsnorm=counts/np.max(counts)
 
         ###plot hist###
-        
         plt.bar(bins[:-1],countsnorm,widths,color=['gray'])
         plt.minorticks_on()
         plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.xlim(maxleft,maxright)
+        xticks=plt.xticks()[0]
+        xticks=xticks[(xticks<maxright)*(xticks>maxleft)]
+        if (maxright-xticks[-1])<0.25*(xticks[-1]-xticks[-2]):
+            maxright=maxright+0.25*(xticks[-1]-xticks[-2])
+            maxleft =maxleft -0.25*(xticks[-1]-xticks[-2])
+        plt.xlim(maxleft,maxright)
+        plt.xticks(xticks, ['%.2f'%s for s in xticks])           
         plt.ylim(0,1.15)
         plt.yticks(np.arange(0.2,1.1,0.2 ), [ "%.1f"%x for x in np.arange(0.2,1.1,0.2)])  
         plt.axvspan(left,right,color='DarkOrange',alpha=0.4)
         plt.axvline(x=median,linewidth=2,color='white',ls='--')
         st='%s '%(snname)
-        plt.annotate(st, xy=(0.13, 0.6), xycoords='axes fraction',fontsize=18,fontweight='bold')
+        plt.annotate(st, xy=(0.13, 0.6), xycoords='axes fraction',size=fs,fontweight='bold')
         st='%s '%(Zs.replace('_',' '))
-        plt.annotate(st, xy=(0.62, 0.93), xycoords='axes fraction',fontsize=18,fontweight='bold')
+        plt.annotate(st, xy=(0.62, 0.93), xycoords='axes fraction',fontsize=fs,fontweight='bold')
         st='measurement %d of %d\n\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f'%(i+1,nmeas,round(median,3),round(left,3),round(right,3))
-        plt.annotate(st, xy=(0.62, 0.65), xycoords='axes fraction',fontsize=18)
+        plt.annotate(st, xy=(0.62, 0.65), xycoords='axes fraction',fontsize=fs)
         st='MC sample size %d\nhistogram rule: %s'%(nsample,binning[BINMODE])   
         if bm:
             st='MC sample size %d\nhistogram rule: %s'%(nsample,binning[bm])
-        plt.annotate(st, xy=(0.62, 0.55), xycoords='axes fraction',fontsize=13)
+        plt.annotate(st, xy=(0.62, 0.55), xycoords='axes fraction',fontsize=fs-5)
         if delog:
             plt.xlabel('O/H')
-        elif Zs == "E(B-V)":
+        elif "E(B-V)" in Zs:
             plt.xlabel('E(B-V) [mag]')
+        elif "logR23" in Zs:
+            plt.xlabel('logR23')
         else:
             plt.xlabel('12+log(O/H)')
         plt.ylabel('relative counts')
@@ -358,7 +373,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False):
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickle=False, dust_corr=True, verbose=False):
+def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickle=False, dust_corr=True, verbose=False, fs=18):
     global RUNSIM,BINMODE
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
@@ -388,8 +403,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
     if unpickle:
         RUNSIM=False
         if not os.path.isfile(picklefile):
-            print "missing pickled file for this simulation: name, nsample.\nrun the MonteCarlo? Ctr-C to exit, Return to continue?\n"
-            raw_input()
+            raw_input("missing pickled file for this simulation: name, nsample.\nrun the MonteCarlo? Ctr-C to exit, Return to continue?\n")
             RUNSIM=True
         else:
             pklfile = open(picklefile, 'rb')
@@ -436,7 +450,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
                 print '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
                 fluxi[k]=flux[k][i]*np.ones(len(sample))+err[k][i]*sample
                 warnings.filterwarnings("ignore")
-            success=metallicity.calculation(diags,fluxi,nm,bss,smass,mds,disp=VERBOSE, dust_corr=dust_corr)
+            success=metallicity.calculation(diags,fluxi,nm,bss,smass,mds,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
             if success==-1:
                 print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717','Ha','Hb' and 6.0<Smass<14 MSun"
 
@@ -467,6 +481,13 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
         if not NOPICKLE:
             pickle.dump(res,open(picklefile,'wb'))
             
+
+    from matplotlib.font_manager import findfont, FontProperties
+    
+    if 'Time' not in  findfont(FontProperties()):
+        fs=15
+    print "FONT: %s, %d"%(findfont(FontProperties()),fs)
+
     ###Bin the results and save###
     print '{0:15} {1:20} {2:>13} - {3:>7} + {4:>7} {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
     #return -1
@@ -478,7 +499,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
             if len(res[key].shape)>1 and sum(sum(~np.isnan(res[key])))>0:
-                s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog, verbose=verbose)+'\n'
+                s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog, verbose=verbose, fs=fs)+'\n'
                 if ASCIIOUTPUT:
                     fi.write(s)
 
@@ -505,8 +526,6 @@ def main():
     parser.add_argument('--md',default='all', type =str, help=" metallivity diagnostic to calculate. default is 'all', options are: D02, Z94, M91,C01, Pi01, PP04, pyqz, KD02, KD02comb")
     args=parser.parse_args()
 
-
-
     global CLOBBER
     global VERBOSE
     global BINMODE
@@ -518,8 +537,8 @@ def main():
     ASCIIOUTPUT=args.asciiout
     if args.unpickle and NOPICKLE:
         args.unpickle = False
-        print "cannot use pickle on this machine, wont save and won't read saved realizations. Ctr-C to exit, Return to continue?\n"
-        raw_input();
+        raw_input("cannot use pickle on this machine, we won't save and won't read saved pickled realizations. Ctr-C to exit, Return to continue?\n")
+        
 
     if args.path:
         path=args.path
