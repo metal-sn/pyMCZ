@@ -230,6 +230,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
     outfile=os.path.join(outdir,name+".pdf")
+    fig=plt.figure(figsize=(11,8))
     plt.clf()
     ###de-log###
     if delog:
@@ -354,7 +355,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
             plt.xlabel('12+log(O/H)')
         plt.ylabel('relative counts')
         plt.savefig(outfile,format='pdf')
-
+        fig.close()
 
         ###print out the confidence interval###
         print '{0:15} {1:20} {2:>13.3f} - {3:>7.3f} + {4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
@@ -502,7 +503,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
         if ASCIIOUTPUT:
             fi=open(os.path.join(binp,'%s_n%d_%d.txt'%(name,nsample,i+1)),'w')
             fi.write("%s\t Median Oxygen abundance (12+log(O/H))\t 16th percentile\t 84th percentile\n"%name)
-
+        
         boxlabels=[]
         datas=[]
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
