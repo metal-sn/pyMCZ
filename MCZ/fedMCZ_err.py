@@ -243,15 +243,15 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
     n=data.shape[0]
     if not n>0:
         if verbose:print "data must be an actual distribution (n>0 elements!, %s)"%Zs
-        return "-1,-1"
+        return "-1,-1",[]
     #if not max(data)-min(data)>0.1:
     #    if verbose:print "the data must be in a distribution, not all the same!"
     #    return "-1,-1"
     if data.shape[0]<=0 or np.sum(data)<=0:
         print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(name.split('_')[0],Zs,-1,-1,-1)
-        return "-1, -1, -1"    
-    if 1:
-#    try:
+        return "-1, -1, -1",[]    
+#    if 1:
+    try:
         ###find C.I.###
         median,m5sig,pc16,pc84,p5sig=np.percentile(data,[50,0.0000003,16,84,100-0.0000003])
         std=np.std(data)
@@ -265,7 +265,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         if round(right,5)==round(left,5) and round(left,5)==round(median,5):
             print '{0:15} {1:20} {2:>13.3f} - {3:>7.3f} + {4:>7.3f} (no distribution)'.format(name.split('_')[0],Zs,median,0,0 )
 
-            return "-2,-2"
+            return "-1,-1,-1",[]
         ######histogram######
         ##if sklearn is available use it to get Kernel Density
         if BINMODE=='kd':
@@ -321,10 +321,11 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.xlim(maxleft,maxright)
         xticks=plt.xticks()[0]
+        dx=xticks[-1]-xticks[-2]
         xticks=xticks[(xticks<maxright)*(xticks>maxleft)]
-        if (maxright-xticks[-1])<0.25*(xticks[-1]-xticks[-2]):
-            maxright=maxright+0.25*(xticks[-1]-xticks[-2])
-            maxleft =maxleft -0.25*(xticks[-1]-xticks[-2])
+        if (maxright-xticks[-1])<0.25*dx:
+            maxright=maxright+0.25*dx
+            maxleft =maxleft -0.25*dx
         plt.xlim(maxleft,maxright)
         plt.xticks(xticks, ['%.2f'%s for s in xticks])           
         plt.ylim(0,1.15)
@@ -348,17 +349,23 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         elif "logR23" in Zs:
             plt.xlabel('logR23')
         else:
+            #plt.plot([8.9,8.9],[0,1.2],'k-', linewidth=1)
+            #plt.text(8.9+0.02*(maxright-maxleft),0.2, "solar Z", rotation=90)
             plt.xlabel('12+log(O/H)')
         plt.ylabel('relative counts')
         plt.savefig(outfile,format='pdf')
+
+
         ###print out the confidence interval###
         print '{0:15} {1:20} {2:>13.3f} - {3:>7.3f} + {4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
-        return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3))
-
-#    except (OverflowError,AttributeError,ValueError):
-#        if VERBOSE: print data
-#        print name, 'had infinities'
-#        return "-2, -2"
+        
+        
+        return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3)), data
+        
+    except (OverflowError,AttributeError,ValueError):
+        if VERBOSE: print data
+        print name, 'had infinities'
+        return "-1, -1,-1",[]
 
 
 ##############################################################################
@@ -495,14 +502,44 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
         if ASCIIOUTPUT:
             fi=open(os.path.join(binp,'%s_n%d_%d.txt'%(name,nsample,i+1)),'w')
             fi.write("%s\t Median Oxygen abundance (12+log(O/H))\t 16th percentile\t 84th percentile\n"%name)
-        
+
+        boxlabels=[]
+        datas=[]
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
             if len(res[key].shape)>1 and sum(sum(~np.isnan(res[key])))>0:
-                s=key+"\t "+savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog, verbose=verbose, fs=fs)+'\n'
+                sh,data=savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog, verbose=verbose, fs=fs)
+                s=key+"\t "+sh+'\n'
                 if ASCIIOUTPUT:
                     fi.write(s)
+                if not key in ["E(B-V)" ,"logR23"]:
+                    boxlabels.append(key)
+                    datas.append(data)
+        fig= plt.figure(figsize=(8,15))
+        ax = fig.add_subplot(111)
 
+        bp = ax.boxplot(datas,patch_artist=True)
+        for box in bp['boxes']:
+            # change outline color
+            box.set( color='#7570b3', linewidth=2)
+            # change fill color
+            box.set( facecolor = 'DarkOrange' , alpha=0.4)
+        for whisker in bp['whiskers']:
+            whisker.set(color='#7570b3', linewidth=2)
+        for cap in bp['caps']:
+            cap.set(color='#7570b3', linewidth=2)
+        for median in bp['medians']:
+            median.set(color='k', linewidth=2)
+        for flier in bp['fliers']:
+            flier.set(marker='o', color='#7570b3', alpha=0.4)
+        plt.title("measurement %d"%(i+1))
+        plt.xticks(range(1,len(boxlabels)+1), boxlabels, rotation=90, fontsize=fs-5)
+        plt.plot(range(1,len(boxlabels)+1),[8.9]*len(boxlabels), 'k', alpha=0.5)
+        dy=0.02*(plt.ylim()[1]-plt.ylim()[0])
+        plt.text(2, 8.9+dy,"solar Z")
+        plt.xlabel("diagnostic")
+        plt.ylabel('12+log(O/H)')
+        plt.savefig(binp+"/"+name+"_boxplot%d_m%d.pdf"%(nsample,i+1),format='pdf')
         if ASCIIOUTPUT:
             fi.close()
         
