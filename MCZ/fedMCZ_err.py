@@ -251,8 +251,8 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
     if data.shape[0]<=0 or np.sum(data)<=0:
         print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(name.split('_')[0],Zs,-1,-1,-1)
         return "-1, -1, -1",[]    
-#    if 1:
-    try:
+    if 1:
+#    try:
         ###find C.I.###
         median,m5sig,pc16,pc84,p5sig=np.percentile(data,[50,0.0000003,16,84,100-0.0000003])
         std=np.std(data)
@@ -363,10 +363,10 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         
         return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3)), data
         
-    except (OverflowError,AttributeError,ValueError):
-        if VERBOSE: print data
-        print name, 'had infinities'
-        return "-1, -1,-1",[]
+#    except (OverflowError,AttributeError,ValueError):
+#        if VERBOSE: print data
+#        print name, 'had infinities'
+#        return "-1, -1,-1",[]
 
 
 ##############################################################################
