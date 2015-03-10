@@ -5,6 +5,8 @@
 \usepackage{hyperref}
 %\usepackage{csvsimple}
 
+\newcommand{\kms}{\ensuremath{{\rm km~s}^{-1}}}
+\newcommand{\oxab}{\ensuremath{12~+~\log(O/H)}}
 %\usepackage[toc\input{Metallicity_MCuncertainties.tex}
 %,page]{appendix}
 %\usepackage{amsmath}
@@ -81,14 +83,17 @@ Here we introduce the open-source python code "". pro .. In \S~\ref{method_sec} 
 %\epsscale{0.6}
 \begin{center}
 \centerline{
-\includegraphics[width=0.95\columnwidth]{exampledata_n50000_KD02comb_updated_1.ps}
-\includegraphics[width=0.95\columnwidth]{exampledata_n50000_PP04_O3N2_1.ps}
-}
+\includegraphics[width=0.95\columnwidth]{exampledata_n2000_KD02comb_1.pdf}
+%exampledata_n50000_KD02comb_updated_1.ps}
+\includegraphics[width=0.95\columnwidth]{exampledata_n2000_PP04_O3N2_1.pdf}}
+%exampledata_n50000_PP04_O3N2_1.ps}
 \vspace{0.2in}
 \centerline{
-\includegraphics[width=0.95\columnwidth]{exampledata_n50000_M91_1.ps}
-\includegraphics[width=0.95\columnwidth]{exampledata_n50000_EBV_1.ps}
-}
+\includegraphics[width=0.95\columnwidth]{exampledata_n2000_M91_1.pdf}
+% exampledata_n50000_M91_1.ps}
+\includegraphics[width=0.95\columnwidth]{exampledata_n20000_E(B-V)_1.pdf}}
+%exampledata_n50000_EBV_1.ps}
+
 \caption{WILL UPDATE WITH NEW FIGURES BASED ON A PUBLISHED SN WITH SIGNFICANT E(B-V) AND WRITE MORE TEXT. Metallicity and reddening ($E(B-V)$) parameter distributions based on example data (namely, emission line data of the HII regions at the position of SN~2008D, published in \citet{modjaz11}, based on $N$=20,0000 samples. The median value is shown with the dashed lines, while the 16th till 84th confidence region is shaded in tan color. The shown metallicity scales are  by \citet{kewley02}, updated by \citet{kewley08} (KD02combupdated), \citet{pettini04}, using OIII and NII  (PP04-O3N2) and \citet{mcgaugh91} (M91). These are the same plots that are outputted by the code, which produces such plots for all scales (namely those of s\textbf{LIST THEM ALL}). The legend also includes the ID number of }
  \label{metallicity_distribution}
 \end{center}
@@ -112,16 +117,36 @@ As output, we obtain metallicity values and their uncertainties in the following
 
 
 \subsection{Computing Uncertainties}
-The novel aspect of our work is that we introduce a Monte Carlo (MC) resampling method to obtain numerous iterations via random sampling, and thus a more robust result for error estimation (e.g., \citealt{efron79,hastie09,andrae10}). Given a data set with error bars from which certain parameters are estimated, Monte Carlo resampling generates synthetic data samples drawing from given distribution. 
-Here we draw synthetic data from a Gaussian distribution centered on each measured line flux value, with standard deviation corresponding to the measurement error. The implicit assumption is made, of course, that the line flux error is Gaussian distributed in nature\footnote{In case the user provides their own probability distribution for the emission line uncertainties the users can easily modify the code to suite their needs.}. 
+The novel aspect of our work is that for every set of input line measurements we introduce a Monte Carlo (MC) resampling method to obtain iterations via random sampling within the measurement errors, and thus we obtain a robust result for error estimation (e.g., \citealt{efron79,hastie09,andrae10}). 
 
-Every iteration randomly takes an input value from this distribution (for each inputted line) to run the calculations. This effectively simulates conducting multiple experiments when repeated observation is impractical or impossible, as in the case of the emission line flux data, and thus generates alternative data sets. We generated $N$ Monte Carlo samples of emission line fluxes (where an appropriate value of $N=20,000$ is determined below) and calculated the metallicity for each set of line fluxes. At the end of $N$ iterations, a parameter estimate distribution of oxygen abundance is generated for each scale by binning the results to histograms, and metallicity confidence regions are measured  (see below)\footnote{However, note this method is a conservative approach, since it overestimates the intrinsic metallicity uncertainty, as we are centering this error distribution on the measured values instead of the (unknown) true values \citep{andrae10}.} . This is done for each scale. The fiftieth (50\%) percentile, i.e.  the median, is reported as the measured value. The output of our code includes the oxygen abundance measurements plus confidence regions in all scales, as well as plots of the distributions of the oxygen abundance value in all scales. 
-Figure \ref{metallicity_distribution} shows the metallicity estimate distribution for 4 representative scales - similar plots that are outputted by our code for all scales as listed above (not all shown here). Although the input distributions are Gaussian, the metallicity distributions rarely are, for two reasons: first, since the metallicities are computed based on log values of line flux ratios, symmetric error bars in linear space will translate into asymmetric error bars in log space; and second, some metallicity computations are non-linear, and (especially those that include $R_{23}$) sometimes bimodal since they choose upper vs lower branch to break degeneracy.
+Given a data set with error bars from which certain parameters are estimated, Monte Carlo resampling generates synthetic data samples drawing from a given distribution. 
+Here we draw synthetic data from a Gaussian distribution centered on each measured line flux value, with standard deviation corresponding to the measurement error. The implicit assumption is made, of course, that the line flux error is Gaussian distributed in nature\footnote{The user may wish to provides their own probability distribution for the emission line uncertainties, and easily modify the code to suite their needs.}. 
+
+% FED: because we vectorize, we actually do not do this sample by sample so we cannot say ``Every iteration''
+For each metallicity scale, for each of $N$  values chosen randomely within the relevant emission line distributions we run the calculations that derives the metallicity.
+This effectively simulates conducting multiple experiments when repeating observations is impractical or impossible, as in the case of the emission line flux data, and thus generates alternative data sets. 
+%FED redundant: We generated $N$ Monte Carlo flux samples for each emission line, and calculated the metallicity for each set of line fluxes. 
+The sample size $N$ is set by the user, and one should expect an appropriate value of $N$ to be a few 1000s, depending on the metallicity scale chosen and measurement errors (for example  $N=2,000$ is determined to be sufficient for our example data, as shown below, and we provide tools to assure the sample size is sufficiently large). 
+%FED: note that 2000 is ok for our sample but it does not need to be! it depends on the error size, and the shape of the distribution, so it depends on the input. if for example the distribution 
+% , FED: because we vectorize, we actually do not do this sample by sample, so we cannot say ``At the end of $N$ iterations''
+A parameter estimate distribution of oxygen abundance is generated for each scale, the metallicity and its confidence region are calculated,
+%We bin to visualize, but we calculate percentiles on the actual distribution
+and the results are bunned abd visualized in a histogram (see below)\footnote{However, note this method is a conservative approach, since it overestimates the intrinsic metallicity uncertainty, as we are centering this error distribution on the measured values instead of the (unknown) true values \citep{andrae10}.
+%FED i do not know what that means. i would think that this method is NOT conservative on account of that!
+}. This is done for each scale the user chooses to calculate. The fiftieth (50\%) percentile, i.e.  the median, is reported as the measuredtrue metallicity value, and the 16th and 84th percentiles of the distribution as its confidence region. %FED redundant? The output of our code includes the oxygen abundance measurements plus confidence regions in all scales, as well as plots of the distributions of the oxygen abundance value in all scales. 
 
 This MC resampling approach takes into account the impact of the uncertain reddening (due to the uncertainties in the measurement of the 
 H$\alpha$ and H$\beta$ fluxes), when the option for de-reddened metallicities is chosen. Since for each iteration, a new reddening value is calculated based on the resampled H$\alpha$ and H$\beta$ fluxes, which is used to compute the de-reddened metallicity value, the derived distribution of metallicity values takes into account the uncertain redding. As part of the output, a probability distribution plot for E(B-V) is provided (see last plot in figure~\ref{metallicity_distribution}, along with confidence intervals derived using the same method as for the metallicity measurements. If either H$\alpha$ or H$\beta$ flux is not provided, then no reddening correction can be applied and the computed metallicity will not be  reddening-corrected and the E(B-V) output will be set to zero.
 
-We note that our code  does not output the \emph{systematic} uncertainty of each scale, which are e.g., $\sim$ 0.07 dex (or 0.14 dex \textbf{CHECK}) for PP04-O2N2.  Thus systematic errors can be as large, if not larger, than the statistical errors, however, if all metallicity measurements are in the \emph{same} scale and only \emph{relative} comparisons are made, then the systematic error does not have any impact (by definition!). 
+Figure \ref{metallicity_distribution} shows the metallicity estimate distribution for 3 representative scales, and for the reddening parameter E(B-V) - similar plots that are outputted by our code for all scales as listed above (not all shown here). Although the input distributions are Gaussian, the metallicity distributions 
+%FED: in log space they are NEVER gonna be gaussian so not ``rarely are'',
+are not, for two reasons: first, since the metallicities are computed based on log values of line flux ratios, symmetric error bars in linear space will translate into asymmetric error bars in log space; and second, some metallicity computations are non-linear, and (especially those that include $R_{23}$) sometimes bimodal since they choose upper vs lower branch to break degeneracy.
+
+Since the metallicity distributions are rarely Gaussian, the percentiles we report cannot be expressed in terms of $\sigma$ values. In determining the confidence region intervals for asymmetric and multi-modal distributions, there are broadly three approaches (e.g., \citealt{andrae10}): choosing a symmetric interval, the shortest interval,  or a ``central'' interval.  With the "central" method we determined the  confidence interval by choosing the left and right boundaries such that the region outside the confidence interval each equally contains $16\%$ of the total distribution - in analogy to the one-sigma-interval of the Gaussian distribution. This ensures that the algorithm finds the proper boundaries even for asymmetric, non-Gaussian, distributions, (i.e., multimodal likelihood distributions) and in the case of multiple peaks. 
+
+In summary, the output for the measured value corresponds to the fiftieth (50\%) percentile, while the lower error bar corresponds to the 50$^{th}$-16$^{th}$ percentile and the upper error bar corresponds to 84$^{th}$-50$^{th}$ of the metallicity parameter estimate distribution. However, we urge that the reader always inspect the appropriate metallicity distribution plots, which are also outputted, to check for themselves whether the outputted median and confidence regions properly represent the full metallicity distribution (see Section~\ref{visz}).
+
+We note that our code  does not output the \emph{systematic} uncertainty of each scale, which are e.g., $\sim$ 0.07 dex (or 0.14 dex \textbf{CHECK}) for PP04-O2N2.  Thus systematic errors can be as large, if not larger, than the statistical errors, however, if all metallicity measurements are in the \emph{same} scale and only \emph{relative} comparisons are made, then the systematic error does not have any impact (by definition!). The distributions for the D02 scale include the uncertainty in the fit parameters: the oxygen aboundance in this scale is generated as \oxab~=~$9.12~\pm 0.05 + (0.73~\pm 0.10)~\mathrm{NII}$, as published in  \citet{denicolo02}. The parameter fit are generated as the sum of the nominal parameter (9.12 and 0.73) and a Gaussianly distributed random value centered on zero, and within a standard deviation of 0.05 and 0.10, respectively.
 
 %However, the
 %relative metallicity difference measured between a given pair
@@ -132,18 +157,42 @@ We note that our code  does not output the \emph{systematic} uncertainty of each
 
 %from Kewley & Ellison08: The cause of the metallicity calibration discrepancies remains unclear. The discrepancy has been attributed to either an unknown problem with the photoionization models (Kennicutt et al. 2003) or temperature gradients or fluctuations that may cause metallicities based on the electron temperature method to underestimate the true metallicities (Stasin«ska 2002, 2005; Bresolin 2006). Until this discrepancy is resolved, the absolute metallicity scale is uncertain.
 
-\subsubsection{Histogram Bin Size and Confidence Region}
+\subsubsection{Visual diagnostics}\label{visz}
+In order for the user to check the validity of a measurement, and to better understand the distribution, we provide two visualizations: for each metallicity scale calculated, for each input set, we generate a histogram of the output distribution (Figure \ref{metallicity_distribution} and \ref{fig:KDE}), and for each set of input line we generate a \emph{box-and-whiskers} plot (herehance \emph{boxplot}, for short) summarizing the result of all scales calculated (Figure \ref{boxplot}). 
 
-Choosing the binning for a histogram is not trivial.  \citet{hogg08} describes various data analysis recipes for selecting a histogram bin size. Too many bins will result in many empty bins and an "over-fit" histogram, while too few bins may lose features of a probability distribution. While for our default option, we use Rice Rule (e.g., \citealt{hastie09}), namely using $2\sqrt[3]{N}$ as a number for our bins (which was appropriate for most of our test cases), we enable a number of binning options from which the user can choose, including 
-Doane's formula, as well as Knuth's rule , which determines the number of equally sized bins by optimization of a Bayesian fitness function \citep{knuth06}, and the full Bayesian solution, known as Bayesian Blocks, which optimizes a fitness function across an arbitrary configuration of bins, such that the bins are of variable size \citep{scargle13}. The implementation of these methods requires the \verb=astroML= python package to be installed on the user's system (\citealt{astroml}, \url{https://github.com/astroML/astroML}). If the \verb=astroML= package is not found, the code will default to Rice Rule.
+Choosing the binning size for a histogram is not a trivial task.  \citet{hogg08} describes various data analysis recipes for selecting a histogram bin size. Too many bins will result in many empty bins and an ``over-fit'' histogram, while too few bins may miss features of the distribution. 
+By default, we use \emph{Knuth's Method} to choose the number of bins $N_\mathrm{bins}$ for each histogram. Knuth's method  optimizes  a Bayesian fitness function across fixed-width bins \citep{Knuth06}. Additionally, however, we enable a number of binning options from which the user can choose, including: 
+the square root of the number of bins, \emph{Rice rule} ($N_\mathrm{bins}~=~2\sqrt[3]{N}$, e.g., \citealt{hastie09}), 
+\emph{Doane's formula} ($N_\mathrm{bins}~=~1 + \mathrm{log}_2{N} + \mathrm{log}_2\left(1 + \mathrm{Kurt}\sqrt{(N / 6)}\right)$, where Kurt is the third standardized moment of the distribution \citealt{Doane76}\footnote{\citet{Doane76} attempted to address the issue of finding the proper number of bins for the histogram of a skewed distribution. Several version of the so-called Doane's formula can be found in the literature. Our formula can, for example, be found in \citealt{Pharmacokinetic}}), and the full Bayesian solution, known as Bayesian Blocks, which optimizes a fitness function across an arbitrary configuration of bins, such that the bins are of variable size \citep{scargle13}. The implementation of the latter method requires the \verb=astroML= python package to be installed on the user's system (\citealt{astroml}\footnote{\url{https://github.com/astroML/astroML}}). If the \verb=astroML= package is not found, the code will default to Knuth's Rule. 
+
+As mentioned, Knuth's method implies an optimization. In cases in which the convergence of this minimization takes too long (or if the number of bins after the minimization is  $N_\mathrm{bins}/\sqrt{N} > 5$ or $N_\mathrm{bins}/\sqrt{N} < 1/3$) the code will revert to Rice rule.
+
+\begin{figure}[ht!]
+%  \includegraphics[trim = 10mm 0mm 10mm 0mm, clip]{abcomparison6.eps}
+  \includegraphics[width=0.95\columnwidth]{exampledata_n2000_PP04_O3N2_1KDE.pdf}
+   \caption{\textbf{FINISH}}
+\label{fig:KDE}
+\end{figure}
+Lastly, we enable the user to obtain a distribution Kernel Density if the \verb=sklearn= is available. The Kernel Density of the distribution is then calculated via  \emph{KD Tree} with a top-hat function, as explained in the sklearn package documentation \footnote{\url{http://scikit-learn.org/stable/modules/density.html}}. The results will then show both a histogram, with $N_\mathrm{bins}$ chosen via Knuth's method, as well as the distribution Kernel Density, as shown in Figure~\ref{fig:KDE}.
+
+
+\begin{figure}[ht!]
+%  \includegraphics[trim = 10mm 0mm 10mm 0mm, clip]{abcomparison6.eps}
+  \includegraphics[width=0.95\columnwidth]{exampledata_boxplot2000_m1.pdf}
+   \caption{\textbf{FINISH}}
+ \label{boxplot}
+\end{figure}
+
+The boxplot summarizes the resut from each scale the user chooses to calculate. For each scale a box is shown, and the box height represents the 25\% percentile of the \oxab~ distribution. Inside the box a black line represents the distribution median, the bars represent the maximum and minimum value of the distribution, excluding outliers, and the outliers are plotted as circles, and are defined as all datapoints more than one and a half times the length of the box from either end of the box (or 1.5xIQR, where IQR is the the \emph{interquartile range}). The solar oxigen aboundance is indicated in this plot for comparison: a gray box shows a range of estimated values for solar oxigen aboundances, from \oxab=8.69 \citep{Asplund09} to \oxab=8.76 \citep{Caffau11}. 
+Notice that only the diagnostics requested by the user have a slot in the plot (in the example in Figure~\ref{fig:KDE} the computed scales are M91, the PP04 scales, and the KD02 scales. However these slot exists on the plot whether the diagnostic can be produced or not, i.e. if the input lines to not allow a requested scale to be calculated an empty coulmn will be generated in this plot in correspondence of said metallicity scale.\
 
 %Using a bin size of $\sqrt{N}$ was recommended, but this proved to be slightly over-fitting, and after a number of tests, we found $2* \sqrt[3]{N}$ to be appropriate for most cases.
 
-Since the metallicity distributions are rarely Gaussian, the percentiles we report cannot be expressed in terms of $\sigma$ values. In determining the confidence region intervals for asymmetric and multi-modal distributions, there are broadly three approaches (e.g., \citealt{andrae10}): choosing a symmetric interval, the shortest interval,  or a ``central'' interval.  With the "central" method we determined the  confidence interval by choosing the left and right boundaries such that the region outside the confidence interval each equally contains $16\%$ of the total distribution - in analogy to the one-sigma-interval of the Gaussian distribution. This ensures that the algorithm finds the proper boundaries even for asymmetric, non-Gaussian, distributions, (i.e., multimodal likelihood distributions) and in the case of multiple peaks. 
+% While the histograms at sufficiently high $N$, where $N$ is the total number of iterations, yielded single peaked results, at lower $N$ there were occasional multiple peaks resulting from a non-smooth gaussian being sampled. In selecting the value of $N$, we found that around $N=20,000$ the KS tests showed the same distributions as larger sized samples, i.e. that the results converged ({\bf FED CHECK MY WORDING!}). 
 
- While the histograms at sufficiently high $N$, where $N$ is the total number of iterations, yielded single peaked results, at lower $N$ there were occasional multiple peaks resulting from a non-smooth gaussian being sampled. In selecting the value of $N$, we found that around $N=20,000$ the KS tests showed the same distributions as larger sized samples, i.e. that the results converged ({\bf FED CHECK MY WORDING!}). 
 
-In summary, the output for the measured value corresponds to the fiftieth (50\%) percentile, while the lower error bar corresponds to the 50$^{th}$-16$^{th}$ percentile and the upper error bar corresponds to 84$^{th}$-50$^{th}$ of the metallicity parameter estimate distribution. However, we urge that the reader always inspect the appropriate metallicity distribution plots, which are also outputted, to check for themselves whether the outputted median and confidence regions properly represent the full metallicity distribution.
+
+
 
 
 
@@ -161,6 +210,9 @@ A previous method for determining the uncertainty in the oxygen abundance (as us
    \caption{\textbf{FINISH}.Comparison of metallicity estimation between the analytic method and our Monte Carlo resampling method (top) and their residuals (bottom) for 3 different metallicity scales. Flux measurements come from 19 galaxies previously measured in \citet{modjaz11}. To add asymmetric errors in quadrature we use $residual_{min}=\sqrt {x_{max}^2 + y_{min}^2}$ and $residual_{max}=\sqrt {x_{min}^2 + y_{max}^2}$}
  \label{comp_anal_MC}
 \end{figure}
+
+
+
 
 %Although the flux probability distribution function is assumed to be symmetric, the metallicity errors are asymmetric because they are derived from the log of minimized and maximized flux ratios.
 %Rupke: Errors were propagated primarily using analytic expressions, but for abundance and gradient errors we employed Monte Carlo methods.
