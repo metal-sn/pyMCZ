@@ -252,6 +252,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(name.split('_')[0],Zs,-1,-1,-1)
         return "-1, -1, -1",[]    
 #    if 1:
+
     try:
         ###find C.I.###
         median,m5sig,pc16,pc84,p5sig=np.percentile(data,[50,0.0000003,16,84,100-0.0000003])
@@ -355,7 +356,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
             plt.xlabel('12+log(O/H)')
         plt.ylabel('relative counts')
         plt.savefig(outfile,format='pdf')
-        fig.close()
+        plt.close(fig)
 
         ###print out the confidence interval###
         print '{0:15} {1:20} {2:>13.3f} - {3:>7.3f} + {4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
@@ -365,7 +366,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         
     except (OverflowError,AttributeError,ValueError):
         if VERBOSE: print data
-        print name, 'had infinities'
+        print name, 'had infinities (or something in plotting went wrong)'
         return "-1, -1,-1",[]
 
 
