@@ -348,6 +348,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
             plt.xlabel('O/H')
         elif "E(B-V)" in Zs:
             plt.xlabel('E(B-V) [mag]')
+            outfile=outfile.replace('(','').replace(')','')
         elif "logR23" in Zs:
             plt.xlabel('logR23')
         else:
