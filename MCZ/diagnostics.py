@@ -103,8 +103,8 @@ class diagnostics:
             'Pi01':None,
             'KD02_N2O2':None, 
             'KD02comb_updated':None, 
-            'KD03new_R23':None,
-            'KD03_N2Ha':None,
+            'KD02new_R23':None,
+            'KD02_N2Ha':None,
             'C01_R23':None,
             'C01':None
         }
@@ -341,7 +341,8 @@ class diagnostics:
             print "WARNING: need O3, O2, Hb"
             
     def calcS23(self):
-        #the original code here uses S267176731, which is however set to 6717 as default
+        #the original code here uses S267176731, 
+        #which is however set to 6717 as default
         #Vilchez & Esteban (1996)
         if  self.hasS2 :
             if self.hasS39069 and self.hasHb:
@@ -581,12 +582,12 @@ class diagnostics:
 
 
 
-    def calcKD03_N2Ha(self):
+    def calcKD02_N2Ha(self):
         # calculating [N2]/Ha abundance estimates using [O3]/[O2] also
         if self.mds['KD02_N2O2'] == None:
             self.calcKD02_N2O2()
             if self.mds['KD02_N2O2'] == None:
-                print "WARNING: without KD02_N2O2 cannot calculate KD03_NHa"
+                print "WARNING: without KD02_N2O2 cannot calculate KD02_N2Ha"
                 return -1
 
         Z_new_N2Ha=self.mds['KD02_N2O2'].copy()  # was 8.6
@@ -602,14 +603,14 @@ class diagnostics:
                     self.logq=7.37177
                     self.logN2Ha=np.log10(self.N26584/self.Ha)
                 Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
-            self.mds['KD03_N2Ha']=Z_new_N2Ha
+            self.mds['KD02_N2Ha']=Z_new_N2Ha
         else:
             print "WARNING: need NII6584  and Ha to calculate this. did you run  setHab() and setNII()?"
 
 
 
 
-    def calcKD03R23(self):
+    def calcKD02R23(self):
         #Kewley, L. J., & Dopita, M. A., 2003 
         # calculating upper and lower metallicities for objects without
         # Hb  and for objects without [O3] and/or [O2]
@@ -655,7 +656,7 @@ class diagnostics:
                 if (self.hasHb):
                     #2014 FED: changed moc value to None, not 0!
                     Z_new[(Z_new_lims[0]>Z_new_lims[1])]=None
-                    self.mds['KD03_R23_updated']=Z_new
+                    self.mds['KD02_R23_updated']=Z_new
 
 
 
@@ -671,6 +672,8 @@ class diagnostics:
         if not self.logN2O2==None:
             self.mds['KD02_N2O2']=np.log10(8.511e-4*(1.54020+1.26602*self.logN2O2+0.167977*self.logN2O2**2))+12.
         else: self.mds['KD02_N2O2']=np.zeros(self.nm)+float('NaN')
+        if self.mds['KD02_N2Ha']==None:
+            self.calcKD02_N2Ha()
         # ionization parameter        
         logq_final=np.zeros(self.nm)
         if self.hasN2 and self.hasO2 and self.hasHb and self.hasHa and self.hasO3O2:
@@ -991,11 +994,12 @@ class diagnostics:
             
             self.mds['KD02comb_updated']=np.zeros(self.nm)+float('NaN')
             indx=self.Z_init_guess > 8.4
+            self.mds['KD02_R23_updated']=np.zeros(self.nm)+float('NaN')
             self.mds['KD02comb_updated'][indx]=self.mds['KD02_N2O2'][indx].copy()
 
-            indx=(self.mds['KD03_R23_updated'] > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
-            self.mds['KD02comb_updated'][indx]=0.5*(self.mds['KD03_R23_updated'][indx].copy()+self.mds['M91'][indx].copy())
-            indx=(self.mds['KD03_R23_updated'] <= 0.0) * (self.mds['M91'] <= 0.0 ) * (self.Z_init_guess <= 8.4)
-            if not self.mds['KD03_N2Ha']==None:
-                self.mds['KD02comb_updated'][indx]=self.mds['KD03_N2Ha'][indx].copy()
+            indx=(self.mds['KD02_R23_updated'] > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
+            self.mds['KD02comb_updated'][indx]=0.5*(self.mds['KD02_R23_updated'][indx].copy()+self.mds['M91'][indx].copy())
+            indx=(self.mds['KD02_R23_updated'] <= 0.0) * (self.mds['M91'] <= 0.0 ) * (self.Z_init_guess <= 8.4)
+            if not self.mds['KD02_N2Ha']==None:
+                self.mds['KD02comb_updated'][indx]=self.mds['KD02_N2Ha'][indx].copy()
             

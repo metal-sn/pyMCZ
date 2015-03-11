@@ -34,14 +34,14 @@
  
  
 \begin{abstract}
-\textbf{MODIFY \& FINALIZE AT THE END:} We present an open-source Python code for the determination of the strong-emission-line estimators of oxygen abundance in the standard scales, based on the original IDL-code in \citet{kewley02}. The standard strong line Metallicity scales and diagnostics \text{IMPROVE} have been used to estimate metal abundance through emission line ratios. Here we introduce a Monte Carlo resampling of these methods in order to better characterize an oxygen abundance confidence region.  We output median values, 16th and 84th percentile confidence regions, for various standard metallicity diagnostics, and, when possible, for reddening E(B-V). We produce Monte Carlo parameter distributions for the oxygen abundance and when possible for reddening E(B-V). We test our code on emission lines measurements from a sample of galaxies ($z<0.15$) and compare our metallicity results with those from previous methods. We show that our metallicity estimates are consistent with previous methods but yields smaller uncertainties. The code is open source and can be found at www.github.com/nyusngroup/ \textbf{
+\textbf{MODIFY \& FINALIZE AT THE END:} We present an open-source Python code for the determination of the strong-emission-line estimators of oxygen abundance in the standard scales, based on the original IDL-code in \citet{kewley02}. The standard strong line Metallicity scales and diagnostics \text{IMPROVE} have been used to estimate metal abundance through emission line ratios. Here we introduce a Monte Carlo resampling of these methods in order to better characterize an oxygen abundance confidence region.  We output median values, 16th and 84th percentile confidence regions, for various standard metallicity diagnostics, and, when possible, for reddening E(B-V). We produce Monte Carlo parameter distributions for the oxygen abundance and when possible for reddening E(B-V). We test our code on emission lines measurements from a sample of galaxies ($z<0.15$) and compare our metallicity results with those from previous methods. We show that our metallicity estimates are consistent with previous methods but yields smaller uncertainties. The code is open source and can be found at \url{www.github.com/nyusngroup/} \textbf{
 (add repo and DOI)}.
 \end{abstract}
  
 \section{Introduction}
 The low quantity of carbon, oxygen, nitrogen, sulfur and iron among other elements provide a splash of color to the otherwise dominating greyscape of hydrogen and helium in the stars and gas of galaxies. Nevertheless, even the minute presence of heavy elements (all elements heavier than H and He, also called metals or collectively metallicity) is important for many areas of astrophysics. For example, \citet{johnson12} suggest that if it was not for the relatively high metallicity level in our Solar System, planet formation may not have been possible. With $Z$ representing the mass fraction of metals, for our own Sun the value is measured to be  Z=0.0153 \citep{chaffau11}, though there are others who suggest a lower solar metallicity of $Z=0.0134$ in particular because of oxygen \citep{asplund09_rev,grevesse10}\footnote{Note that these abundances refer to the current abundances in the sun, which are lower than the value with which the sun was formed 4.56 Gyr ago, since diffusion at the bottom of the convection zone has decreased metallicity over time \citep{grevesse10}.}. Furthermore, when properly observed and estimated, metallicity measurements of galaxies can tightly constrain models of galaxy formation and evolution (e.g., \citealt{kewley08} and references therein), tas well as shed light on the metallicity dependence and production conditions for different types of SNe and long-duration GRBs (e.g., \citealt{modjaz08_Z,levesque10_grbhosts,anderson10,modjaz11,kelly12,sanders12,lunnan14,leloudas14}), to just name a few examples.
 
-%chaffau Z=0.0209 12+log=O/H) = 8.76±0.07 i
+%chaffau Z=0.0209 12+log=O/H) = 8.76Â±0.07 i
 %Small variations in chemical abundance can often be critical indicators for stellar and galactic properties like age and activity.
 %Metals are produced in the cores of stars during their fusion lifecycle but also during the extreme conditions of stellar explosions. For example, the majority of iron comes from thermonuclear explosions (SN Ia) while nearly all of oxygen is the result of core collapse (SN Ib, Ic, \& II). Since new stars are born from the clouds these explosions produce, metallicity will increase with each passing generation. Stars like our Sun, which are results of multiple generations of star formation, are often found in the more active parts of the galaxy, such as the disk, and are referred to as Population I stars. Population I stars have higher metallicity than older Population II stars, which are also present in the disk but are the exclusive members of the low activity galactic halo. Population III stars would be first generation stars with zero metallicity, but have yet to be observed.
 %Besides age, metallicity also influences stellar temperature. Metals are more effective at absorbing energy coming from the interior of the star in the stellar atmosphere so their presence increases the stellar opacity. With greater absorption and opacity the radius expands to a size larger than it would be without metals and this larger size results in a cooler effective temperature. While metallicity can help indicate age or activity it's temperature and density dependencies require parameterization to properly be estimated.
@@ -83,15 +83,17 @@ Here we introduce the open-source python code "". pro .. In \S~\ref{method_sec} 
 %\epsscale{0.6}
 \begin{center}
 \centerline{
-\includegraphics[width=0.95\columnwidth]{exampledata_n2000_KD02comb_1.pdf}
-%exampledata_n50000_KD02comb_updated_1.ps}
-\includegraphics[width=0.95\columnwidth]{exampledata_n2000_PP04_O3N2_1.pdf}}
-%exampledata_n50000_PP04_O3N2_1.ps}
+\includegraphics[width=0.95\columnwidth]{exampledata_n2000_E(B-V)_1.pdf}
+\includegraphics[width=0.95\columnwidth]{exampledata_n2000_M91_1.pdf}}
+% exampledata_n50000_M91_1.ps}
 \vspace{0.2in}
 \centerline{
-\includegraphics[width=0.95\columnwidth]{exampledata_n2000_M91_1.pdf}
-% exampledata_n50000_M91_1.ps}
-\includegraphics[width=0.95\columnwidth]{exampledata_n20000_E(B-V)_1.pdf}}
+\includegraphics[width=0.95\columnwidth]{exampledata_n2000_PP04_O3N2_1.pdf}
+\includegraphics[width=0.95\columnwidth]{exampledata_n2000_KD02comb_1.pdf}}
+%exampledata_n50000_KD02comb_updated_1.ps}
+
+%exampledata_n50000_PP04_O3N2_1.ps}
+
 %exampledata_n50000_EBV_1.ps}
 
 \caption{WILL UPDATE WITH NEW FIGURES BASED ON A PUBLISHED SN WITH SIGNFICANT E(B-V) AND WRITE MORE TEXT. Metallicity and reddening ($E(B-V)$) parameter distributions based on example data (namely, emission line data of the HII regions at the position of SN~2008D, published in \citet{modjaz11}, based on $N$=20,0000 samples. The median value is shown with the dashed lines, while the 16th till 84th confidence region is shaded in tan color. The shown metallicity scales are  by \citet{kewley02}, updated by \citet{kewley08} (KD02combupdated), \citet{pettini04}, using OIII and NII  (PP04-O3N2) and \citet{mcgaugh91} (M91). These are the same plots that are outputted by the code, which produces such plots for all scales (namely those of s\textbf{LIST THEM ALL}). The legend also includes the ID number of }
@@ -101,18 +103,27 @@ Here we introduce the open-source python code "". pro .. In \S~\ref{method_sec} 
 \end{figure*}
 
 
-For computing oxygen abundances, we use the iterative code by \citet{kewley02}, which has been updated in \citet{kewley08} and reflects .. \textbf{LISA: YOUR INPUT HERE:what is the update??} which was initially written in IDL.  We translated the code into python, added the new feature of obtaining uncertainties on the metallicity outputs via Monte Carlo resampling, and made it open source via github, as we explain below.
+For computing oxygen abundances, we use the iterative code by \citet{kewley02}, which has been updated in \citet{kewley08} and reflects .. \textbf{LISA: YOUR INPUT HERE:what is the update??} which was initially written in IDL.  We translated the code into python, added new features, most importantly the capability of obtaining uncertainties on the metallicity outputs via Monte Carlo resampling, and made it open source on \emph{github}, as we explain below.
 
 We assume that the observed emission lines to be used to indicate metallicity originate in HII regions and are not due to non-thermal excitation by e.g., AGN or interstellar shocks from SNe or stellar winds.  Tests to exclude data contaminated by such non-thermal sources should be executed using the recommended line ratios by e.g., \citealt{baldwin81,kauffmann03,kewley06_sdss} prior to running this code. Furthermore these lines should have all the correct calibration (at least correct relative calibration) and should have a signal-to-noise ratio (S/N) of at least 3. The latter is important for the success of the Monte Carlo resampling technique as described below.
 
 \subsection{Input and Output of code}
-Emission line flux values are fed into our Python implementation as in the original IDL code by \citet{kewley02}, hereafter referred to as IDLKD02. The inputs are emission line flux values and their uncertainties for the following lines: H$\alpha$, H$\beta$, [OI] 6300, [OII] 3727, [OIII] 4959, [OIII] 5007, [NII] 6584, [SII] 6717, [SII] 6731, SIII 9532, and SIII 9096 \textbf{CHECK AT THE END WITH CODE!} and their uncertainties (consult the README.md in the github repository for details about the input format). If the fluxes for the specified lines are not available, the entry is left to 0 \textbf{FED: we should do NaN!???} and the outputted oxygen abundance scales will be in only metallicity scales that use the provided line fluxes. As part of the code, the inputted line fluxes are corrected for reddening by using the observed Balmer decrement, for which H$\alpha$ and  H$\beta$ flux values need to be provided. We assume case B recombination, and thus the standard value of 2.86 as the
+Emission line flux values are fed into our Python implementation as in the original IDL code by \citet{kewley02}, hereafter referred to as IDLKD02. The inputs are emission line flux values and their uncertainties for the following lines: H$\alpha$, H$\beta$, [OI] 6300, [OII] 3727, [OIII] 4959, [OIII] 5007, [NII] 6584, [SII] 6717, [SII] 6731, SIII 9532, and SIII 9096 \textbf{CHECK AT THE END WITH CODE!} (consult the README.md in the \emph{github} repository for details about the input format). If the fluxes for the specified lines are not available, the entry is left to 'NaN' and the outputted oxygen abundance will be calculated only for metallicity scales that use the provided line fluxes. As part of the code, the inputted line fluxes are corrected for reddening by using the observed Balmer decrement, for which H$\alpha$ and  H$\beta$ flux values need to be provided. We assume case B recombination, and thus the standard value of 2.86 as the
 intrinsic H$\alpha$/H$\beta$ ratio \citep{osterbrock89}, and apply the standard Galactic reddening law with $R_V$ = 3.1 \citep{cardelli89}. However, the user can choose other extinction laws and $R_V$ values, if desired, given the code's open-source nature.
 
-While other parameters, such as the ionization parameter $q$ and the electron density (using the SiII lines) are computed as long as the necessary lines are provided, they are not outputted in the current version of our code $-$ however, the reader is welcome to easily modify the code to suite their needs, given it's an open-source code.
+While other parameters, such as the ionization parameter $q$ and the electron density (using the SiII lines) are computed as long as the necessary lines are provided, they are not outputted in the current version of our code $-$ however, the reader can easily modify the code to suite their needs, given it's an open-source code.
 
-As output, we obtain metallicity values and their uncertainties in the following calibrations, as discussed in detail in \citet{kewley02,kewley08}: \citet{kewley02}(KD02, for the 4 following computations: R23, using the NIIOII ratio, using the NII/Halpha ratio, and a combined method that uses the optimal method given the input line fluxes), \citet{mcgaugh91} (M91), \citet{zaritsky94} (Z94), \citet{pilyugin01} (P01), \citet{denicolo02} (D02), 
-\citet{pettini04} (2 computations: PP04-N2, PP04-O3N2) \textbf{CHECK WITH FINAL CODE - ALSO CHECK whether P01 is P01 or P05 by looking at the code}. If the line fluxes necessary for specific scales are not provided, the output  metallicities will default to -1, if the errors in he measurements are not provided, the code will specify that it cannot create a measurement distribution and determine a confidence interval.
+As output, we obtain metallicity values and their uncertainties in the following calibrations, as discussed in detail in \citet{kewley02,kewley08}: \citet{kewley02}(KD02, for the 4 following computations: R23, using the [NII]/[OII] ratio, using the [NII]/H$\alpha$ ratio, and a combined method that uses the optimal method given the input line fluxes), 
+\citet{mcgaugh91} (M91), 
+\citet{zaritsky94} (Z94), 
+\citet{pilyugin01} (P01), 
+\citet{Charlot01} (both the diagnostic based on R23, C01\_R23, and based on [NII]/[SII], C01\_N2S2), %# - which is however deprecated) 
+\citet{denicolo02} (D02), 
+\citet{pettini04} (2 computations: PP04\_N2, PP04\_O3N2) \textbf{CHECK WITH FINAL CODE - ALSO CHECK whether P01 is P01 or P05 by looking at the code}. 
+In addition, if the user has installed the publicaly available \verb=pyqz=\footnote{\url{https://datacommons.anu.edu.au:8443/DataCommons/item/anudc:5037}} Python Module, based on \citet{Dopita13}, [NII], [SII], [OIII], H$\alpha$, and H$\beta$ lines are fed to the \verb=pyqz= module, which produces up to 8 emission line ratio diagnostics for  12+log(O/H), each using two of the line ratios [NII]/[SII], [NII]/H$\alpha$, [OIII]/[SII], and [OIII]/H$\beta$. The \verb=pyqz= module assumes a $\kappa$-distribution of energy for the electrons in HII regions, as suggested by \citet{Nicholls12}. Our code sets the $\kappa$ parameter to 20, which is the value that \citet{Dopita13} found to best resolve inconsistencies between oxygen aboundances derived with theoretical methods based on temperature (i.e. from temperature
+sensitive line ratios such as [OIII] $\lambda$4363/[OIII] $\lambda$5007) and the R23 based methods\footnote{The user may wish to modify the value of $\kappa$ in the code.}. 
+
+If the line fluxes necessary for specific scales are not provided, the output  metallicities will default to 'NaN', if the errors in he measurements are not provided, the code will specify that it cannot create a measurement distribution and determine a confidence interval, but calculate the noinal metallicity.
 
 
 
@@ -155,7 +166,7 @@ We note that our code  does not output the \emph{systematic} uncertainty of each
 %discrepant diagnostics (Kewley&Ellison 2008).
 
 
-%from Kewley & Ellison08: The cause of the metallicity calibration discrepancies remains unclear. The discrepancy has been attributed to either an unknown problem with the photoionization models (Kennicutt et al. 2003) or temperature gradients or fluctuations that may cause metallicities based on the electron temperature method to underestimate the true metallicities (Stasin«ska 2002, 2005; Bresolin 2006). Until this discrepancy is resolved, the absolute metallicity scale is uncertain.
+%from Kewley & Ellison08: The cause of the metallicity calibration discrepancies remains unclear. The discrepancy has been attributed to either an unknown problem with the photoionization models (Kennicutt et al. 2003) or temperature gradients or fluctuations that may cause metallicities based on the electron temperature method to underestimate the true metallicities (StasinÂ«ska 2002, 2005; Bresolin 2006). Until this discrepancy is resolved, the absolute metallicity scale is uncertain.
 
 \subsubsection{Visual diagnostics}\label{visz}
 In order for the user to check the validity of a measurement, and to better understand the distribution, we provide two visualizations: for each metallicity scale calculated, for each input set, we generate a histogram of the output distribution (Figure \ref{metallicity_distribution} and \ref{fig:KDE}), and for each set of input line we generate a \emph{box-and-whiskers} plot (herehance \emph{boxplot}, for short) summarizing the result of all scales calculated (Figure \ref{boxplot}). 
