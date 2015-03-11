@@ -170,10 +170,10 @@ def setscales(bss):
 ##############################################################################
 def getbinsize(n,data,):
     if BINMODE=='d':
-        g1=stats.mstats.moment(data,moment=3)
+        g1=np.abs(stats.mstats.moment(data,moment=3))#/data.std())
         s1=np.sqrt(float(n)/6.0)
         #s1=1.0/np.sqrt(6.*(n-2.)/((n+1.)*(n+3.)))
-        k=1+np.log(n)+np.log(1+(g1*s1)),0
+        k=1+np.log2(n)+np.log2(1+(g1*s1)),0
     elif BINMODE=='s':
         k=np.sqrt(n),0
     elif BINMODE=='t':
@@ -182,7 +182,7 @@ def getbinsize(n,data,):
         #from astroML.plotting import hist as amlhist
         #distrib=amlhist(data, bins='knuth', normed=True)
         k= knuthn(data)
-        #distrib=amlhist(data, bins='knuth', normed=True)
+        #distrib=amlhist(data, bins='knuth', normed=
     return k
 
 ##############################################################################        
@@ -286,7 +286,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
                 log_dens = kde.score_samples(bins)
                 dens=np.exp(log_dens)
                 #print dens
-                plt.fill(bins[:,0], dens/dens.max(), fc='#AAAAFF')
+                plt.fill(bins[:,0], dens/dens.max(), fc='#7570b3', alpha=0.6)
             numbin,bm=getbinsize(data.shape[0],data)        
             distrib=np.histogram(data, bins=numbin, density=True)            
             ###make hist###
@@ -348,6 +348,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
             plt.xlabel('O/H')
         elif "E(B-V)" in Zs:
             plt.xlabel('E(B-V) [mag]')
+            outfile=outfile.replace('(','').replace(')','')
         elif "logR23" in Zs:
             plt.xlabel('logR23')
         else:
@@ -494,7 +495,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
     from matplotlib.font_manager import findfont, FontProperties
     
     if 'Time' not in  findfont(FontProperties()):
-        fs=15
+        fs=16
     print "FONT: %s, %d"%(findfont(FontProperties()),fs)
 
     ###Bin the results and save###
@@ -536,9 +537,9 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
             flier.set(marker='o', color='#7570b3', alpha=0.4)
         plt.title("measurement %d"%(i+1))
         plt.xticks(range(1,len(boxlabels)+1), boxlabels, rotation=90, fontsize=fs-5)
-        plt.plot(range(1,len(boxlabels)+1),[8.9]*len(boxlabels), 'k', alpha=0.5)
+        plt.fill_between(range(1,len(boxlabels)+1),[8.76]*len(boxlabels),[8.69]*len(boxlabels), facecolor='black', alpha=0.3)
         dy=0.02*(plt.ylim()[1]-plt.ylim()[0])
-        plt.text(2, 8.9+dy,"solar Z")
+        plt.text(1.2, 8.69+dy,"Solar Oxygen Aboundance", alpha=0.7)
         plt.xlabel("diagnostic")
         plt.ylabel('12+log(O/H)')
         plt.savefig(binp+"/"+name+"_boxplot%d_m%d.pdf"%(nsample,i+1),format='pdf')

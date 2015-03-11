@@ -39,8 +39,8 @@ Zs=["E(B-V)", #Halpha, Hbeta
 
 
     "KD02_N2O2",   #Halpha, Hbeta,  [OII]3727, [NII]6584
-    "KD03_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
-    "KD03_R23_updated", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+    "KD02_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
+    "KD02_R23_updated", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
 
     "KD02comb","KD02comb_R23","KD02comb_updated"] #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
 
@@ -136,10 +136,10 @@ export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want
          diags.Pmethod()
 
          diags.calcKD02_N2O2()
-         diags.calcKD03_N2Ha()
+         diags.calcKD02_N2Ha()
          diags.calcC01_ZR23()
          
-         diags.calcKD03R23()
+         diags.calcKD02R23()
 
          diags.calcKDcombined()
     if 'D02' in mds:
@@ -168,8 +168,8 @@ PYQZ_DIR if you want this diagnostic. '''
        diags.calcC01_ZR23()
     if 'KD02' in mds :
        diags.calcKD02_N2O2()
-       diags.calcKD03_N2Ha()
+       diags.calcKD02_N2Ha()
        
-       diags.calcKD03R23()
+       diags.calcKD02R23()
     if 'KD02comb' in mds:
          diags.calcKDcombined()
