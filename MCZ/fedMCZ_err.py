@@ -225,7 +225,7 @@ def checkhist(snname,Zs,nsample,i,path):
 ##Save the result as histogram as name
 ## delog - if true de-logs the data. False by default
 ##############################################################################
-def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=18):
+def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=24):
     global BINMODE
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
@@ -383,7 +383,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickle=False, dust_corr=True, verbose=False, fs=18):
+def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickle=False, dust_corr=True, verbose=False, fs=24):
     global RUNSIM,BINMODE
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
@@ -462,7 +462,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
                 warnings.filterwarnings("ignore")
             success=metallicity.calculation(diags,fluxi,nm,bss,smass,mds,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
             if success==-1:
-                print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717','Ha','Hb' and 6.0<Smass<14 MSun"
+                print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717', and 6.0<Smass<14 MSun"
 
 #            diags.printme()
 #            s=key+"\t "+savehist(t,'test','EB_V',100,i,binp,nm,delog=delog)+'\n'
@@ -495,8 +495,9 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
     from matplotlib.font_manager import findfont, FontProperties
     
     if 'Time' not in  findfont(FontProperties()):
-        fs=16
+        fs=20
     print "FONT: %s, %d"%(findfont(FontProperties()),fs)
+    
 
     ###Bin the results and save###
     print '{0:15} {1:20} {2:>13} - {3:>7} + {4:>7} {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
@@ -520,6 +521,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
                     datas.append(data)
         fig= plt.figure(figsize=(8,15))
         ax = fig.add_subplot(111)
+        plt.grid()
 
         bp = ax.boxplot(datas,patch_artist=True)
         for box in bp['boxes']:
@@ -536,12 +538,11 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
         for flier in bp['fliers']:
             flier.set(marker='o', color='#7570b3', alpha=0.4)
         plt.title("measurement %d"%(i+1))
-        plt.xticks(range(1,len(boxlabels)+1), boxlabels, rotation=90, fontsize=fs-5)
+        plt.xticks(range(1,len(boxlabels)+1), boxlabels, rotation=90, fontsize=fs-3)
         plt.fill_between(range(1,len(boxlabels)+1),[8.76]*len(boxlabels),[8.69]*len(boxlabels), facecolor='black', alpha=0.3)
-        dy=0.02*(plt.ylim()[1]-plt.ylim()[0])
-        plt.text(1.2, 8.69+dy,"Solar Oxygen Aboundance", alpha=0.7)
-        plt.xlabel("diagnostic")
-        plt.ylabel('12+log(O/H)')
+        plt.text(1.2, 8.705,"Solar Oxygen Aboundance", alpha=0.7)
+        plt.xlabel("metallicity scale", fontsize=fs)
+        plt.ylabel('12+log(O/H)', fontsize=fs)
         plt.savefig(binp+"/"+name+"_boxplot%d_m%d.pdf"%(nsample,i+1),format='pdf')
         if ASCIIOUTPUT:
             fi.close()
