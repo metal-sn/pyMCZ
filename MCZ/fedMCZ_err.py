@@ -119,9 +119,12 @@ def readfile(filename):
         bstruct[k]=[i,0]
     print "file header",header
     b = np.loadtxt(filename,skiprows=noheader, dtype={'names':header,'formats':formats})
+    if b.size == 1:
+        b=np.atleast_1d(b)
     #usecols=cols, unpack=True)
     
     for i,k in enumerate(header):
+        print k
         if not k=='flag' and is_number(b[k][0]):
             bstruct[k][1]=np.count_nonzero(b[k])+sum(np.isnan(b[k]))
     j=len(b['galnum'])
@@ -225,6 +228,7 @@ def checkhist(snname,Zs,nsample,i,path):
 ##Save the result as histogram as name
 ## delog - if true de-logs the data. False by default
 ##############################################################################
+#@profile
 def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=24):
     global BINMODE
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
@@ -322,6 +326,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         plt.minorticks_on()
         plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.xlim(maxleft,maxright)
+        #the following lines assure the x tick label is within the length of the x axis
         xticks=plt.xticks()[0]
         dx=xticks[-1]-xticks[-2]
         xticks=xticks[(xticks<maxright)*(xticks>maxleft)]
@@ -383,6 +388,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
+#@profile
 def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickle=False, dust_corr=True, verbose=False, fs=24):
     global RUNSIM,BINMODE
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
@@ -517,7 +523,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
                 if ASCIIOUTPUT:
                     fi.write(s)
                 if not key in ["E(B-V)" ,"logR23"]:
-                    boxlabels.append(key)
+                    boxlabels.append(key.replace('_',' '))
                     datas.append(data)
         fig= plt.figure(figsize=(8,15))
         ax = fig.add_subplot(111)
