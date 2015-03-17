@@ -31,7 +31,7 @@ Zs=["E(B-V)", #Halpha, Hbeta
     "C01",    #[OII]3727, [OIII]5007, [NII]6584, [SII]6717
     "C01_R23",#Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
 
-    "Pi01",   #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+    "Pi05",   #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
     "PP04_N2",#Halpha, [NII]6584
     "PP04_O3N2",   #Halpha, Hbeta,[OIII]5007, [NII]6584
     
@@ -40,7 +40,7 @@ Zs=["E(B-V)", #Halpha, Hbeta
 
     "KD02_N2O2",   #Halpha, Hbeta,  [OII]3727, [NII]6584
     "KD02_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
-    "KD02_R23_updated", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+    "KD02_R23", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
 
     "KD02comb","KD02comb_R23","KD02comb_updated"] #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
 
@@ -53,6 +53,7 @@ def get_keys():
 ##fz_roots function as used in the IDL code  FED:reference the code here!
 ##############################################################################
 
+#@profile
 def calculation(diags,measured,num,(bsmeas,bserr),Smass,mds,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False, verbose=False): 
 
     global IGNOREDUST
@@ -133,7 +134,7 @@ export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want
          diags.calcM91()
          #all these above were checked
 
-         diags.Pmethod()
+         diags.Pi05()
 
          diags.calcKD02_N2O2()
          diags.calcKD02_N2Ha()
@@ -162,8 +163,8 @@ PYQZ_DIR if you want this diagnostic. '''
     if 'M91' in mds:
        diags.calcM91()
        #all these above were checked
-    if 'Pi01' in mds:
-       diags.Pmethod()
+    if 'Pi05' in mds:
+       diags.Pi05()
     if 'C01' in mds:
        diags.calcC01_ZR23()
     if 'KD02' in mds :

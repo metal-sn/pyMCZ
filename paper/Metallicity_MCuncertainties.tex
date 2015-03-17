@@ -144,13 +144,13 @@ intrinsic \ha/\hb~ ratio \citep{osterbrock89}, and apply the standard Galactic r
 
 As output, we obtain metallicity values and their uncertainties in various metallicity scales. The user can choose which of the following calibrations to calculate: 
 \begin{itemize}
-\item {\bf M91} \citep{mcgaugh91}, 
-\item {\bf Z94} \citep{zaritsky94}, 
-\item {\bf C01}: a diagnostic based on R23, C01\_R23, and one based on [NII]/[SII], C01\_N2S2  \citep{charlot01}, %# - which is however deprecated) 
-\item {\bf P01} \citep{pilyugin01},
-\item {\bf D02} \citep{denicolo02},
-\item {\bf KD02}: 4 computations using $R23$ (KD02\_R23), the [NII]/[OII] ratio (KD02\_N2O2), the [NII]/\ha~ ratio (KD02\_N2O2), and a combined method that chooses the optimal method given the input line fluxes (KD02comb) \citep{kewley02},
-\item {\bf PP04}: 2 computations based on the [NII]/\ha~ ratio and [OIII]/\hb~ respectively (PP04\_N2, PP04\_O3N2) \textbf{CHECK WITH FINAL CODE - ALSO CHECK whether P01 is P01 or P05 by looking at the code} \citep{pettini04}.
+\item {\bf M91} \citep{mcgaugh91} based on $R23$. To break the $R23$ degeneracy we follow Appendix 2 in \citet{kewley08}, and use the value of [NII]/[OII].
+\item {\bf Z94} \citep{zaritsky94} which is valid for the upper branch of $R23$ only, so conservatively we constrain it to $R23>0.9$.
+\item {\bf C01}: a diagnostic based on R23, C01\_R23, and one based on [NII]/[SII], C01\_N2S2  \citep{charlot01}, \textbf{CHECK}%# - which is however deprecated) 
+\item {\bf P05} \citep{pilyugin01}, \textbf{CHECK}
+\item {\bf D02} \citep{denicolo02} for which we include, in addition to the uncertainties in the measurements, the uncertainty on the fit parameters.
+\item {\bf KD02}: 4 computations using $R23$ (KD02\_R23, which is KK04 \textbf{CHECK PLEASE}), the [NII]/[OII] ratio (KD02\_N2O2), the [NII]/\ha~ ratio (KD02\_N2O2), and a combined method that chooses the optimal method given the input line fluxes (KD02comb) \citep{kewley02}, \textbf{CHECK}
+\item {\bf PP04}: 2 computations based on the [NII]/\ha~ ratio and [OIII]/\hb~ respectively (PP04\_N2, PP04\_O3N2) \textbf{CHECK WITH FINAL CODE - ALSO CHECK whether P01 is P01 or P05 by looking at the code} \citep{pettini04}.  \textbf{CHECK}
 \item {\bf pyqz}: In addition, if the user has installed the publicly available \verb=pyqz=\footnote{\url{https://datacommons.anu.edu.au:8443/DataCommons/item/anudc:5037}} Python Module, based on \citet{dopita13}, [NII], [SII], [OIII], \ha, and \hb~ lines are fed to the \verb=pyqz= module, which produces up to 8 emission line ratio diagnostics for  12+log(O/H), each using two of the line ratios [NII]/[SII], [NII]/\ha, [OIII]/[SII], and [OIII]/\hb. The \verb=pyqz= module assumes a $\kappa$-distribution of energy for the electrons in HII regions, as suggested by \citet{nicholls12}. Our code sets the $\kappa$ parameter to 20, which is the value that \citet{dopita13} found best resolves the inconsistencies between oxygen abundance values derived from the strong-line method vs. the ``direct'' $T_e$ method \footnote{The user may wish to modify the value of $\kappa$ by editing the code.}. 
 \end{itemize}
 
@@ -326,7 +326,7 @@ R23       &    453.0     \\
 M91       &     356.0     \\ 
 Z94       &      86.0       \\
 C01       &   748.0     \\ 
-P01       &    549.5     \\ 
+P05       &    549.5     \\ 
 D02       &     225.0     \\ 
 PP04      &      156.0     \\ 
 pyqz      &   1127442.0 \\ 
