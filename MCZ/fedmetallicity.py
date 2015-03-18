@@ -32,9 +32,10 @@ Zs=["E(B-V)", #Halpha, Hbeta
     "C01_R23",#Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
 
     "Pi05",   #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+    "Pi01",   #available but deprecated
     "PP04_N2",#Halpha, [NII]6584
     "PP04_O3N2",   #Halpha, Hbeta,[OIII]5007, [NII]6584
-    
+    "DP00",   #S23 available but deprecated
     "pyqzN2S2_O3S2",    "pyqzN2S2_O3Hb",    "pyqzN2S2_O3O2",    "pyqzN2O2_O3S2",    "pyqzN2O2_O3Hb",    "pyqzN2O2_O3O2",    "pyqzN2Ha_O3Hb",    "pyqzN2Ha_O3O2",
 
 
@@ -42,7 +43,7 @@ Zs=["E(B-V)", #Halpha, Hbeta
     "KD02_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
     "KD02_R23", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
 
-    "KD02comb","KD02comb_R23","KD02comb_updated"] #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
+    "KD02comb","KDcomb_R23","KDcomb_new"] #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
 
     
 def get_keys():
@@ -141,8 +142,14 @@ export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want
          diags.calcC01_ZR23()
          
          diags.calcKD02R23()
-
          diags.calcKDcombined()
+
+    if 'DP00' in mds:
+        diags.calcDP00()
+    if 'Pi01' in mds:
+        diags.calcPi01_old()
+    
+         
     if 'D02' in mds:
          diags.calcD02()
     if 'pyqz' in mds:
@@ -162,11 +169,11 @@ PYQZ_DIR if you want this diagnostic. '''
        diags.calcZ94()
     if 'M91' in mds:
        diags.calcM91()
-       #all these above were checked
     if 'Pi05' in mds:
        diags.Pi05()
     if 'C01' in mds:
        diags.calcC01_ZR23()
+       #all these above were checked
     if 'KD02' in mds :
        diags.calcKD02_N2O2()
        diags.calcKD02_N2Ha()
