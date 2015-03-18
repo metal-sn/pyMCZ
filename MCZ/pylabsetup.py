@@ -17,7 +17,7 @@ mpl.rcParams['xtick.major.size']= 15.
 mpl.rcParams['xtick.minor.size']= 10.
 mpl.rcParams['ytick.major.size']= 15.
 mpl.rcParams['ytick.minor.size']= 10.
-mpl.rcParams['figure.autolayout']= True
+#mpl.rcParams['figure.autolayout']= True
 
 #fontsize=26
 #mpl.rc('axes',  titlesize=fontsize)
@@ -32,8 +32,8 @@ mpl.rcParams['figure.autolayout']= True
 #                 'weight':'normal'})
 mpl.rc('axes',**{'labelweight':'normal', 'linewidth':1})
 mpl.rc('axes',**{'labelweight':'normal', 'linewidth':1})
-mpl.rc('ytick',**{'major.pad':8, 'color':'k'})
-mpl.rc('xtick',**{'major.pad':8, 'color':'k'})
+mpl.rc('ytick',**{'major.pad':5, 'color':'k'})
+mpl.rc('xtick',**{'major.pad':5, 'color':'k'})
 params = {'legend.fontsize': 24,
           'legend.linewidth': 1,
           'legend.numpoints':1,

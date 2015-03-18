@@ -544,10 +544,10 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
         for flier in bp['fliers']:
             flier.set(marker='o', color='#7570b3', alpha=0.4)
         plt.title("measurement %d"%(i+1))
-        plt.xticks(range(1,len(boxlabels)+1), boxlabels, rotation=90, fontsize=fs-3)
+        plt.xticks(range(1,len(boxlabels)+1), boxlabels, rotation=90, fontsize=fs-5)
         plt.fill_between(range(1,len(boxlabels)+1),[8.76]*len(boxlabels),[8.69]*len(boxlabels), facecolor='black', alpha=0.3)
         plt.text(1.2, 8.705,"Solar Oxygen Aboundance", alpha=0.7)
-        plt.xlabel("metallicity scale", fontsize=fs)
+        #plt.xlabel("metallicity scale", fontsize=fs)
         plt.ylabel('12+log(O/H)', fontsize=fs)
         plt.savefig(binp+"/"+name+"_boxplot%d_m%d.pdf"%(nsample,i+1),format='pdf')
         if ASCIIOUTPUT:
