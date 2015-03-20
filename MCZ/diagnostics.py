@@ -466,12 +466,13 @@ class diagnostics:
             self.calcR23()
             if self.logR23==None:
                 print "WARNING: Cannot compute this without R23"
-        if not self.logR23==None:
-            self.mds['Z94']=nppoly.polyval(self.logR23, [9.265,-0.33,-0.202,-0.207,-0.333])
-            self.mds['Z94'][(self.logR23 > 0.9)]=None
-            ## 0.9 is a conservative constraint to make sure that we are 
-            ## only using the upper branch (i.e. 12+log(O/H)>8.4
+                return -1
+        self.mds['Z94']=nppoly.polyval(self.logR23, [9.265,-0.33,-0.202,-0.207,-0.333])
+        self.mds['Z94'][(self.logR23 > 0.9)]=None
+        ## 0.9 is a conservative constraint to make sure that we are 
+        ## only using the upper branch (i.e. 12+log(O/H)>8.4
 
+    #@profile
     def Pi05(self):
         # #### P-method #####
         ##Pilyugin+ 2005 method.  Based on [OIII],[OII], Hbeta 
@@ -656,7 +657,7 @@ class diagnostics:
                     logO3O2sq=self.logO3O2**2 
                     self.logq=(32.81 -1.153*logO3O2sq + Z_new_N2Ha*(-3.396 -0.025*self.logO3O2 + 0.1444*logO3O2sq))/(4.603-0.3119*self.logO3O2 -0.163*logO3O2sq+ Z_new_N2Ha*(-0.48 + 0.0271*self.logO3O2+ 0.02037*logO3O2sq)) 
                 else:        
-                    self.logq=7.37177
+                    self.logq=7.37177*np.ones(self.nm)
                 Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
                 convergence=np.abs(self.logq-self.logq_save).mean()
                 self.logq_save=self.logq.copy()
@@ -672,6 +673,7 @@ class diagnostics:
         #Kewley, L. J., & Dopita, M. A., 2003 
         # calculating upper and lower metallicities for objects without
         # Hb  and for objects without [O3] and/or [O2]
+
         print "calculating KD02_R23"
         Hb_up_ID=np.zeros(100)
         if self.hasN2 and self.hasHa:
@@ -692,6 +694,7 @@ class diagnostics:
         if not self.hasO3O2:
             logq=np.zeros(self.nm)
         else:
+            logO3O2sq=self.logO3O2**2
             if self.Z_init_guess==None:
                 self.initialguess()
             Z_new=self.Z_init_guess.copy()
@@ -701,20 +704,26 @@ class diagnostics:
             if self.logR23==None:
                 print "WARNING: Cannot compute this without R23" 
             else:
-                for ii in range(4):
+                logqold,convergence,ii=np.zeros(self.nm)+100,100,0
+                tol=1e-4
+                #for ii in range(4):
+                while convergence>tol and ii<10:
                     #3 iterations are typically enought to achieve convergence KE08 A2.3
-                    logq=(32.81 -1.153*self.logO3O2**2 + Z_new*(-3.396 - 0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603 - 0.3119*self.logO3O2 - 0.163*self.logO3O2**2+Z_new*(-0.48 + 0.0271*self.logO3O2 + 0.02037*self.logO3O2**2))
+                    ii+=1
+                    logq=(32.81 -1.153*logO3O2sq + Z_new*(-3.396 - 0.025*self.logO3O2 + 0.1444*logO3O2sq))/(4.603 - 0.3119*self.logO3O2 - 0.163*logO3O2sq+Z_new*(-0.48 + 0.0271*self.logO3O2 + 0.02037*logO3O2sq))
                     Zmax[(logq >= 6.7) * (logq < 8.3)]=8.4
                     # maximum of R23 curve:               
                     Z_new=nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])
-                    Z_new_lims=[nppoly.polyval(self.logR23,[9.40, 4.65,-3.17])-logq*nppoly.polyval(self.logR23,[0.272,0.547,-0.513]),
-                                nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])]
-
                     indx=self.Z_init_guess<=Zmax
                     Z_new[indx]=nppoly.polyval(self.logR23[indx], [9.40 ,4.65,-3.17])-logq[indx]*nppoly.polyval(self.logR23[indx],[0.272,+0.547,-0.513])
-
+                    convergence=np.abs((logqold-logq).mean())
+                    logqold=logq.copy()
+                    
                 #if (self.hasHb):
                     #2014 FED: changed moc value to None, not 0! and removed the if Hb
+                Z_new_lims=[nppoly.polyval(self.logR23,[9.40, 4.65,-3.17])-logq*nppoly.polyval(self.logR23,[0.272,0.547,-0.513]),
+                            nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])]
+
                 Z_new[(Z_new_lims[0]>Z_new_lims[1])]=None
                 self.mds['KD02_R23']=Z_new
 
@@ -735,7 +744,9 @@ class diagnostics:
         if self.mds['KD02_N2Ha']==None:
             self.calcKD02_N2Ha()
 
-        #alternative way to calculate KD02_N2O2, but we forego it for now
+        #alternative way to calculate KD02_N2O2, stated in the paper KD02,
+        #valid in high Z regimes (Z>8.6)
+        #but we forego it for now
         #if not self.logN2O2==None:
         #    self.mds['KD02_N2O2']=np.log10(8.511e-4*(1.54020+1.26602*self.logN2O2+0.167977*self.logN2O2**2))+12.
         #else: self.mds['KD02_N2O2']=np.zeros(self.nm)+float('NaN')
@@ -1045,35 +1056,35 @@ class diagnostics:
             self.mds['KD02comb']=self.mds['KD02_N2O2'].copy()
         else:
             self.mds['KD02comb']=np.zeros(self.nm)+float('NaN')
-        if KD02_R23_Z == None or self.mds['Z94']==None or self.mds['M91']==None:
-            print "WARNING:  cannot calculate KDcomb_R23 because  KD02_R23, M91, or Z94 failed"
+        self.mds['KDcomb_new']=np.zeros(self.nm)+float('NaN')
+
+        if not KD02_R23_Z == None and not  self.mds['Z94']==None and not self.mds['M91']==None:
+            if not self.mds['KD02_N2O2']==None:
+                indx= (self.mds['KD02_N2O2'] <= 8.6 ) * (M91Z94_ave >= 8.5 )
+                self.mds['KD02comb'][indx]=M91Z94_ave[indx]   # average of M91 and Z94
+                indx= (self.mds['KD02_N2O2'] <= 8.6 ) * (M91Z94_ave < 8.5 )
+                self.mds['KD02comb'][indx]=KD02C01_ave[indx]
+                
+                #-----------------------------------------
+                # ### combined method ###
+                #-----------------------------------------
+                
+                # if [NII]/[OII] abundance available and [NII]/Ha abundance < 8.4, then 
+                # use R23. 
+                
+
+                indx=self.Z_init_guess > 8.4
+                #self.mds['KD02_R23']=KD02_R23_Z#np.zeros(self.nm)+float('NaN')
+                self.mds['KDcomb_new'][indx]=self.mds['KD02_N2O2'][indx].copy()
+            else:
+                #indx=(self.mds['KD02_R23'] > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
+                indx=(KD02_R23_Z > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
+                
+                #FED CHECK: why are we switching from self.mds['KD02_R23'] to KD02_R23_Z??
+                #self.mds['KDcomb_new'][indx]=0.5*(self.mds['KD02_R23'][indx].copy()+self.mds['M91'][indx].copy())
+                self.mds['KDcomb_new'][indx]=0.5*(KD02_R23_Z[indx].copy()+self.mds['M91'][indx].copy())
+                indx=(self.mds['KD02_R23'] <= 0.0) * (self.mds['M91'] <= 0.0 ) * (self.Z_init_guess <= 8.4)
+                if not self.mds['KD02_N2Ha']==None:
+                    self.mds['KDcomb_new'][indx]=self.mds['KD02_N2Ha'][indx].copy()
         else:
-            indx= (self.mds['KD02_N2O2'] <= 8.6 ) * (M91Z94_ave >= 8.5 )
-            self.mds['KD02comb'][indx]=M91Z94_ave[indx]   # average of M91 and Z94
-            indx= (self.mds['KD02_N2O2'] <= 8.6 ) * (M91Z94_ave < 8.5 )
-            self.mds['KD02comb'][indx]=KD02C01_ave[indx]
-        
-            #-----------------------------------------
-            # ### combined method ###
-            #-----------------------------------------
-            
-            # if [NII]/[OII] abundance available and [NII]/Ha abundance < 8.4, then 
-            # use R23. 
-            
-            self.mds['KDcomb_new']=np.zeros(self.nm)+float('NaN')
-            indx=self.Z_init_guess > 8.4
-            #self.mds['KD02_R23']=KD02_R23_Z#np.zeros(self.nm)+float('NaN')
-            self.mds['KDcomb_new'][indx]=self.mds['KD02_N2O2'][indx].copy()
-
-            #indx=(self.mds['KD02_R23'] > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
-            indx=(KD02_R23_Z > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
-
-            #FED CHECK: why are we switching from self.mds['KD02_R23'] to KD02_R23_Z??
-
-
-            #self.mds['KDcomb_new'][indx]=0.5*(self.mds['KD02_R23'][indx].copy()+self.mds['M91'][indx].copy())
-            self.mds['KDcomb_new'][indx]=0.5*(KD02_R23_Z[indx].copy()+self.mds['M91'][indx].copy())
-            indx=(self.mds['KD02_R23'] <= 0.0) * (self.mds['M91'] <= 0.0 ) * (self.Z_init_guess <= 8.4)
-            if not self.mds['KD02_N2Ha']==None:
-                self.mds['KDcomb_new'][indx]=self.mds['KD02_N2Ha'][indx].copy()
-            
+            print "WARNING:  cannot calculate KDcomb_R23 because  KD02_R23, M91, or Z94 failed"            
