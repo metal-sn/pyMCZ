@@ -28,20 +28,20 @@ Zs=["E(B-V)", #Halpha, Hbeta
     "D02",    #Halpha, [NII]6584
     "Z94",    #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
     "M91",    #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
-    "C01",    #[OII]3727, [OIII]5007, [NII]6584, [SII]6717
+    "C01_N2S2",    #[OII]3727, [OIII]5007, [NII]6584, [SII]6717
     "C01_R23",#Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
 
-    "Pi05",   #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
-    "Pi01",   #available but deprecated
-    "PP04_N2",#Halpha, [NII]6584
+    "P05",   #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+    "P01",   #available but deprecated
+    "PP04_N2Ha",#Halpha, [NII]6584
     "PP04_O3N2",   #Halpha, Hbeta,[OIII]5007, [NII]6584
     "DP00",   #S23 available but deprecated
-    "pyqzN2S2_O3S2",    "pyqzN2S2_O3Hb",    "pyqzN2S2_O3O2",    "pyqzN2O2_O3S2",    "pyqzN2O2_O3Hb",    "pyqzN2O2_O3O2",    "pyqzN2Ha_O3Hb",    "pyqzN2Ha_O3O2",
+    "D13_N2S2_O3S2",    "D13_N2S2_O3Hb",    "D13_N2S2_O3O2",    "D13_N2O2_O3S2",    "D13_N2O2_O3Hb",    "D13_N2O2_O3O2",    "D13_N2Ha_O3Hb",    "D13_N2Ha_O3O2",
 
 
     "KD02_N2O2",   #Halpha, Hbeta,  [OII]3727, [NII]6584
     "KD02_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
-    "KD02_R23", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
+    "KK04_R23", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
 
     "KD02comb","KDcomb_R23","KDcomb_new"] #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
 
@@ -135,30 +135,34 @@ export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want
          diags.calcM91()
          #all these above were checked
 
-         diags.Pi05()
+         diags.P05()
 
          diags.calcKD02_N2O2()
          diags.calcKD02_N2Ha()
          diags.calcC01_ZR23()
          
-         diags.calcKD02R23()
+         diags.calcKK04R23()
          diags.calcKDcombined()
 
     if 'DP00' in mds:
         diags.calcDP00()
-    if 'Pi01' in mds:
-        diags.calcPi01_old()
+    if 'P01' in mds:
+        diags.calcP01()
     
          
     if 'D02' in mds:
          diags.calcD02()
-    if 'pyqz' in mds:
+    if 'D13' in mds:
          if   os.getenv("PYQZ_DIR"):
               cmd_folder = os.getenv("PYQZ_DIR")
               if cmd_folder not in sys.path:
                    sys.path.insert(0, cmd_folder)
               import pyqz
               diags.calcpyqz()
+              #in order to see the original pyqz plots
+              #call pyqz with option plot=True by
+              #using the commented line below instead
+              #diags.calcpyqz(plot=True)
          else:
               print '''set path to pyqz as environmental variable 
 PYQZ_DIR if you want this diagnostic. '''
@@ -169,8 +173,8 @@ PYQZ_DIR if you want this diagnostic. '''
        diags.calcZ94()
     if 'M91' in mds:
        diags.calcM91()
-    if 'Pi05' in mds:
-       diags.Pi05()
+    if 'P05' in mds:
+       diags.P05()
     if 'C01' in mds:
        diags.calcC01_ZR23()
        #all these above were checked
@@ -178,6 +182,6 @@ PYQZ_DIR if you want this diagnostic. '''
        diags.calcKD02_N2O2()
        diags.calcKD02_N2Ha()
        
-       diags.calcKD02R23()
+       diags.calcKK04R23()
     if 'KD02comb' in mds:
          diags.calcKDcombined()
