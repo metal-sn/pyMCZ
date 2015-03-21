@@ -481,6 +481,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
 #                    print ' {0:4} {1:4}'.format( stats.nanmean(diags.mds[k]),stats.nanstd(diags.mds[k])),
 #                print ""
             for key in diags.mds.iterkeys():
+                print key
                 res[key][i]=diags.mds[key]
                 if res[key][i]==None:
                     res[key][i]=[float('NaN')]*len(sample)
@@ -526,9 +527,11 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
                     boxlabels.append(key.replace('_',' '))
                     datas.append(data)
         fig= plt.figure(figsize=(8,15))
+        fig.subplots_adjust(bottom=0.18,left=0.18)
         ax = fig.add_subplot(111)
         plt.grid()
-
+        if len(datas)==0:
+            continue
         bp = ax.boxplot(datas,patch_artist=True)
         for box in bp['boxes']:
             # change outline color
@@ -546,8 +549,8 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
         plt.title("measurement %d"%(i+1))
         plt.xticks(range(1,len(boxlabels)+1), boxlabels, rotation=90, fontsize=fs-5)
         plt.fill_between(range(1,len(boxlabels)+1),[8.76]*len(boxlabels),[8.69]*len(boxlabels), facecolor='black', alpha=0.3)
-        plt.text(1.2, 8.705,"Solar Oxygen Aboundance", alpha=0.7)
-        #plt.xlabel("metallicity scale", fontsize=fs)
+        plt.text(1.2, 8.705,"Solar Oxygen Abundance", alpha=0.7)
+        plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.ylabel('12+log(O/H)', fontsize=fs)
         plt.savefig(binp+"/"+name+"_boxplot%d_m%d.pdf"%(nsample,i+1),format='pdf')
         if ASCIIOUTPUT:
@@ -570,7 +573,7 @@ def main():
     parser.add_argument('--mass',default=10, type=float,help="stellar mass, which can be validated")
     parser.add_argument('--nodust',default=False, action='store_true', help=" dont do dust corrections (default is to do it)")
     parser.add_argument('--asciiout',default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
-    parser.add_argument('--md',default='all', type =str, help=" metallivity diagnostic to calculate. default is 'all', options are: D02, Z94, M91,C01, Pi01, PP04, pyqz, KD02, KD02comb")
+    parser.add_argument('--md',default='all', type =str, help=" metallivity diagnostic to calculate. default is 'all', options are: D02, Z94, M91,C01, P05, PP04, D13, KD02, KD02comb, DP00 (deprecated), P01")
     args=parser.parse_args()
 
     global CLOBBER
