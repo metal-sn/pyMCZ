@@ -56,9 +56,6 @@ Furthermore, when properly observed and estimated, metallicity measurements of g
 %FED: I  quite like the following paragraph. I realize it is a lot of detail but maybe we can include up to ``passing generation''?
 Metals are produced in the cores of massive stars during their fusion life cycle but also during the extreme conditions of stellar explosions. For example, the majority of iron is synthesized in thermonuclear explosions (SNe Ia) while nearly all of oxygen and other $\alpha$-elements are released in core collapse SNe (SNe Ib, Ic, \& II). Since new stars are born from the clouds these explosions enrich, metallicity will increase with each passing generation of stars. 
 
-%FED: the following paragraph may be useful if we talk about pyqz and temperature diagnostics vs R23 diagnostics
-%MM: no I don't think it has anything to to do with it since David is talking about stellar atmospheres of stars, not HII regions.
-%
 %Besides age, metallicity also influences stellar temperature. Metals are more effective at absorbing energy coming from the interior of the star in the stellar atmosphere so their presence increases the stellar opacity. With greater absorption and opacity the radius expands to a size larger than it would be without metals and this larger size results in a cooler effective temperature. While metallicity can help indicate age or activity it's temperature and density dependencies require parameterization to properly be estimated.
 
 However, for almost all astronomical objects, metallicity cannot be measured directly. The oxygen abundance in the gas-phase is the canonical choice of metallicity indicator for interstellar medium (ISM) studies, since oxygen is the most abundant metal and only weakly depleted onto dust grains (in contrast to refractory elements such as Mg, Si, Fe, with Fe, being depleted by more than a factor of 10 in Orion; see \citealt{simondiaz11-orion}). The oxygen abundance\footnote{We note that in many cases in the literature, including here, the terms metallicity and oxygen abundance are used interchangeably.} is expressed as  \oxab, where $O$ and $H$ represent the number of Oxygen and Hydrogen atoms, respectively. In particular, \citep{chaffau11} measure a solar oxygen abundance of \oxab = 8.76 $\pm$ 0.07, while \citet{asplund09} suggest \oxab = 8.69.
@@ -90,8 +87,6 @@ Furthermore, \citet{kewley02} showed the importance of ionization parameter, whi
 As to empirical strong-line methods, the most commonly used ones are that by \citet{pettini04} (hereafter PP04) and \citet{pilugyin05}. PP04 used HII regions with measured $T_e$-based metallicities to derive empirical fits to strong-line ratios, and introduced the line ratios of ([NII]/\hb ($N2$) and ([OIII]$/$\hb)$/$([NII]$/$\ha ($O3N2$) as metallicity diagnostics. Since PP04\_N2 employs two closely spaced lines (\ha and NII), which are not affected by stellar absorption, nor (uncertain) reddening, and are easily observed in one simple spectroscopic setup, it has become an often-used scale, at least for low-z SN host galaxy studies (see meta-analysis by e.g,. \citealt{sanders12,modjaz12_proc,leloudas14}). However, it is important to remember that this scale has a number of short-comings: it does not take into account the impact of the ionization parameter, it was initially derived based on only 137 extragalactic HII regions, and the nitrogen emission line employed saturates at high metallicity, and thus the PP04\_N2 method saturated for high-metallicity galaxies (at $\oxab > 8.8$, \citealt{kewley08}). An updated calibration by \citet{marino13} based on many more $T_e$-based metallicities (almost three time larger that that of PP04) derives a significantly shallower slope between $O3N2$ index and oxygen abundance than the PP04 calibration. In addition, most recently, \citet{berg15} suggest that the auroral [OIII] $\lambda$4363 line, commonly used for $T_e$ measurements, is the most problematic auroral line to use amongst those of [OII], [OIII] [NII], [SII], [SIII], giving rise to temperature discrepancies.
 
 
-%FED:C01 is missing! -> MM: a number of other ones are not explicitly mentioned, mostly since they are outdated
-
 As it can be seen, each scale has different advantages and disadvantages and should be used in different metallicity regimes (see detailed discussion in e.g.,  \citealt{kewley02,stasinska02,kewley08,moustakas10,dopita13,blanc15}). Thus, this open-source code outputs the oxygen abundance in the main 7\footnote{as of version v1.0, Spring 2015} metallicity scales (with the KD02 diagnostic having four outputs and the PP04 diagnostic having two outputs). While there is a long-standing debate about which diagnostic to use, as there are systematic metallicity offsets between different methods (recombination lines vs. strong-line method vs. ``direct'' $T_e$ method, see the above sources), \emph{\bf the relative metallicity trends can be considered robust, if the analysis is performed self-consistently in the same scale, and trends are seen across different scales \citep{kewley08,moustakas10}}. Thus, it is then necessary to obtain statistical error bars for relative comparisons that are meaningful. Note however, that while there are conversion values between different scales \citep{kewley08}, they apply for large data sets, since those conversion values were derived based on ten thousands of SDSS galaxies, and thus should be used with caution (or not at all) for smaller samples
 %FED this is not strictly correct: you do want to derive conversions from large samples, but what you are saying is that you do not know about the spread of the conversion distribution, and thus you do not know how much individual data points could deviate. Is that not stated in the papers that derive the conversions??.
 In addition, one should note that there is a debate about the value of the solar oxygen abundance \citep{asplund09_rev,chaffau11}, such that the absolute oxygen calibration is still uncertain.
@@ -121,16 +116,16 @@ Here we introduce the open-source python code "\textbf{FILL IN}". pro .. In \S~\
 % exampledata_n50000_M91_1.ps}
 %\vspace{0.2in}
 \centerline{
-\includegraphics[width=1.0\columnwidth]{exampledata_n2000_PP04_O3N2_1.pdf}
-\includegraphics[width=1.0\columnwidth]{exampledata_n2000_KD02comb_1.pdf}}
-\caption{Metallicity and reddening E(B-V)) parameter distributions based on the example data shown in~\ref{tab:exampledata}: emission line data of the HII regions at the position of SN~2008D, published in \citet{modjaz11}). The distribution are generated from $N$=2,0000 samples. The median values are shown with the dashed lines, while the region between the 16th and the 84th percentile is shaded (orange). We show the metallicity scaled from \citet{kewley02}, updated by \citet{kewley08} (KDcomb, KDcomb\_new), \citet{pettini04}, using OIII and NII  (PP04 O3N2) and \citet{mcgaugh91} (M91). Similar plots are outputted by the code for each metallicity scale calculated. Each plot indicates: the scale, the sequential number of measurement in input, corresponding to a line of the input file, the median, 16th and 84th percentile values, and the method to choose the bin size for the histogram (Kuth's rule in this case, see Section~\ref{vizs}).}
+\includegraphics[width=0.98\columnwidth]{exampledata_n2000_PP04_O3N2_1.pdf}
+\includegraphics[width=0.98\columnwidth]{exampledata_n2000_KD02comb_1.pdf}}
+\caption{Metallicity and reddening E(B-V) parameter distributions based on the example data shown in~\ref{tab:exampledata}: emission line data of the HII regions at the position of SN~2008D, published in \citet{modjaz11}. The distribution are generated from $N$=2,0000 samples. The median values are shown with the dashed lines, while the region between the 16th and the 84th percentile is shaded (orange). We show the metallicity scaled from \citet{kewley02}, updated by \citet{kewley08} (KDcomb, KDcomb\_new), \citet{pettini04}, using OIII and NII  (PP04 O3N2) and \citet{mcgaugh91} (M91). Similar plots are outputted by the code for each metallicity scale calculated. Each plot indicates: the scale, the sequential number of measurement in input, corresponding to a line of the input file, the median, 16th and 84th percentile values, and the method to choose the bin size for the histogram (Kuth's rule in this case, see Section~\ref{vizs}).}
  \label{metallicity_distribution}
 %\end{center}
 %\vspace{-0.5in}
 \end{figure*}
 
 
-For computing oxygen abundances, we use the iterative code by \citet{kewley02}, which has been updated in \citet{kewley08} and reflects .. \textbf{LISA: YOUR INPUT HERE:what is the update if any or is it exactly as in Kewley & Ellison 08??} which was initially written in IDL.  We translated the code into python, and added new features, most importantly the capability of obtaining uncertainties on the metallicity outputs via Monte Carlo resampling, and made it open source on GitHub, as we explain below.
+For computing oxygen abundances, we use the iterative code by \citet{kewley02}, which has been updated in \citet{kewley08} and reflects ... \textbf{LISA: YOUR INPUT HERE:what is the update if any or is it exactly as in Kewley \& Ellison 08?? } which was initially written in IDL.  We translated the code into python, and added new features, most importantly the capability of obtaining uncertainties on the metallicity outputs via Monte Carlo resampling, and made it open source on GitHub, as we explain below.
 
 
 \subsection{Input and Output of code}
@@ -150,17 +145,16 @@ As output, we obtain metallicity values and their uncertainties in various metal
 \item {\bf M91} \citep{mcgaugh91}
 % based on $R_{23}$. To break the $R_{23}$ degeneracy we follow Appendix 2 in \citet{kewley08}, and use the value of [NII]/[OII].
 \item {\bf Z94} \citep{zaritsky94} which is valid for the upper branch of $R_{23}$ only, and we conservatively constrain it to log($R_{23})<0.9$, i.e., the range that is covered by the photoionization model grids.
-%%MM: are you sure that R23 is constrained to be LARGER than 0.9 and not SMALLER (and I think it's the log of R23)
 \item {\bf C01}: a diagnostic based on $R_{23}$, C01\_$R_{23}$, and one based on [NII]/[SII], C01\_N2S2  \citep{charlot01}, \textbf{CHECK}%# - which is however deprecated)  MM: I think we should remove it from the paper and the code
 \item {\bf D02} \citep{denicolo02} for which we include, in addition to the uncertainties in the measurements, the uncertainty on the fit parameters published in D02.
 \item {\bf PP04}:  \citep{pettini04} 2 computations based on the [NII]/\ha~ ratio, called PP04\_N2, and another based on  ([OIII]/\hb) / [NII]/\ha~), called PP04\_O3N2.  
-%MM: Actually no, this is incorrect - PP04 does NOT use R23. It's just a linear relationship b/w metallicity from Te and the line ratio and it's NOT double valued.  I corrected it.
-%We use [OIII]/\hb, and  [NII]/\ha~ to disctiminate between upper and lower branch \citep{kewley08}. \textbf{CHECK WITH FINAL CODE  by looking at the code}
 \item {\bf P05} \citep{pilyugin05}
 %, $R_{23}$ based method that is calibrated via $T_e$ metallicities of a sample of HII regions. We use the values of [NII]/[OII], and  [NII]/Ha to discriminate between upper and lower branch 
 \item {\bf KD02 and KK04}: 4 computations using $R_{23}$ (KD02\_$R_{23}$, which is KK04 \textbf{CHECK PLEASE - YES RIGHT MM - NEED TO RESTRUCTURE}), the [NII]/[OII] ratio (KD02\_N2O2), the [NII]/\ha~ ratio (KD02\_N2O2), and a combined method that chooses the optimal method given the input line fluxes (KD02comb, KDcomb\_$R_{23}$, KDcomb\_new) (\citealt{kewley02}, \citealt{kewley08}). \textbf{FINISH CHECK}
 
-\item {\bf D13}: Recently, \citet{dopita13} has updated the photoionization models used in KD02 and in KK04 by including new atomic data within a modified photoionization code and by no longer assuming that the energy distribution of the electrons in the HII regions  is a simple Maxwell-Boltzmann distribution (as assumed in prior works), but a more realistic $\kappa$ distribution, as observed in solar system astrophysical plasma \citep{nicholls12}. If the user has installed their publicly available code \verb=pyqz=\footnote{\url{https://datacommons.anu.edu.au:8443/DataCommons/item/anudc:5037}} Python Module, [NII], [SII], [OIII], \ha, and \hb~ lines are fed to the \verb=pyqz= module, which produces up to 8 emission line ratio diagnostics for 12+log(O/H), each using two of the line ratios [NII]/[SII], [NII]/\ha, [OIII]/[SII], and [OIII]/\hb. Our code sets the $\kappa$ parameter to 20, which is the value that \citet{dopita13} found best resolves the inconsistencies between oxygen abundance values derived from the strong-line methods vs. the ``direct'' $T_e$ method \footnote{The user can modify the value of $\kappa$ by editing the code, if they wish.}.
+\item {\bf D13}: Recently, \citet{dopita13} has updated the photoionization models used in KD02 and in KK04 by including new atomic data within a modified photoionization code and by no longer assuming that the energy distribution of the electrons in the HII regions  is a simple Maxwell-Boltzmann distribution (as assumed in prior works), but a more realistic $\kappa$ distribution, as observed in solar system astrophysical plasma \citep{nicholls12}. If the user has installed their publicly available 
+%FBBcode redundant with module
+\verb=pyqz=\footnote{\url{https://datacommons.anu.edu.au:8443/DataCommons/item/anudc:5037}} Python module, [NII], [SII], [OIII], \ha, and \hb~ lines are fed to the \verb=pyqz= module, which produces up to 8 emission line ratio diagnostics for 12+log(O/H), each using two of the line ratios [NII]/[SII], [NII]/\ha, [OIII]/[SII], and [OIII]/\hb. Our code sets the $\kappa$ parameter to 20, which is the value that \citet{dopita13} found best resolves the inconsistencies between oxygen abundance values derived from the strong-line methods vs. the ``direct'' $T_e$ method \footnote{The user can modify the value of $\kappa$ by editing the code, if they wish.}.
 %%MM: we need to look at the D13 outputs since they are not necessarily a different "scale"
 % The \verb=pyqz= module assumes a $\kappa$-distribution of energy for the electrons in HII regions, as suggested by \citet{nicholls12}.
 \item{\bf DP00 \& P01 (deprecated)}: (\citealt{diaz00} and \citealt{pilyugin01}, respectively) are also available, but deprecated: P01 is superseded by P05. Therefore they are not part of the default output; however, they are available upon explicit user request, via the command line options. 
@@ -243,6 +237,7 @@ Some methods may be computationally prohibitive with a very large sample size, o
   \includegraphics[width=0.95\columnwidth]{exampledata_boxplot2000_m1.pdf}
    \caption{A box plot shows the comparison of the results of 6 metallicity scales calculated from the same set of measured lines (Table~\ref{tab:exampledata}). For each scale, the median of the resulting distribution is plotted as a horizontal line, the inter quartile range (IQR) is represented as an orange box, and the bars, joined to each end of the box by a dashed line, represent the minimum and maximum of the distribution \emph{excluding outliers}, where outliers are defined as any point farther than $1.5\times$ IQR from the edges for the IQR.}
    %% MM: include the D13 scales
+%%the plot gets very busy very quickly, i included the same scales for which we have the histograms in fig 1
  \label{boxplot}
 \end{figure}
 
@@ -265,7 +260,7 @@ Notice that only the diagnostics requested by the user have a slot in the plot (
 \includegraphics[width=0.65\columnwidth]{exampledata_n20000_testcomplete.pdf}}
 % exampledata_n50000_M91_1.ps}
 %\vspace{0.2in}
-\caption{Cumulative plots of the distribution of metallicity values for the D02 \citep{denicolo02} and KD02 scale (\citealt{kewley02}, updated by \citealt{kewley08}), chosen here just as examples, where $x$ refers to \oxyab. The input used is example data 1. In each plot the cumulative distribution is shown for a randomly chosen subsample of 10\% of the data in the sample, as well as a subsample of 25\%, 50\%, and 75\%, of the data, and for all data in the distribution. In the left plots the distributions are generated from an $N=200$ samples, in the center top and bottom plots from an $N=2,000$  and in the right-most column from a $N=20,000$ sample. The increasing overlap of the distributions informs us about completeness. In the left plots the distributions do not fully overlap, indicating that completeness is not achieved with the $N=200$ sample. On the other end, since all subsamples are indistinguishable in the top and bottom plots on the right, which are generated with $N=20,000$ samples, we conclude that completeness is already achieved at 10\% of the $N=20,000$ sample (the smallest sample in the plots on the right) for our example data.}
+\caption{Cumulative plots of the distribution of metallicity values for the D02 \citep{denicolo02} and KD02 scale (\citealt{kewley02}, updated by \citealt{kewley08}), chosen here just as examples, where $x$ refers to \oxab. The input used is example data 1. In each plot the cumulative distribution is shown for a randomly chosen subsample of 10\% of the data in the sample, as well as a subsample of 25\%, 50\%, and 75\%, of the data, and for all data in the distribution. In the left plots the distributions are generated from an $N=200$ samples, in the center top and bottom plots from an $N=2,000$  and in the right-most column from a $N=20,000$ sample. The increasing overlap of the distributions informs us about completeness. In the left plots the distributions do not fully overlap, indicating that completeness is not achieved with the $N=200$ sample. On the other end, since all subsamples are indistinguishable in the top and bottom plots on the right, which are generated with $N=20,000$ samples, we conclude that completeness is already achieved at 10\% of the $N=20,000$ sample (the smallest sample in the plots on the right) for our example data.}
  \label{cd}
 %\end{center}
 %\vspace{-0.5in}
@@ -275,14 +270,16 @@ The user can choose the $N$, number of samples to be generated. Of course the re
 
 The cumulative distributions for the subsets of the $N=200$ simulation (left panel in Figure~\ref{cd}) are different, and noisy, indicating that 200 data points is not a sufficiently large dataset. Conversely, at $N=20,000$ (right panel) the distributions are indistinguishable, indicating that $N=2,000$ (the smaller subset plotted) is large enough. The $N=2,000$ cumulative distributions rapidly converge, as the subsample size increases, indicating that a value of $N$  between 200 and 2,000 will characterize the distribution appropriately for our example data set.  In the light of this we choose, conservatively, $N=2,000$ to run our simulations for this dataset. 
 
-We remind the user that the appropriate number of $N$ samples will depend on the diagnostic, and on the input data. The way in which the lines are combined, which is in many cases non-linear, will affect the shape of the distribution, and thus the number of datapoints 
-that are needed to fully characterize it. 
+We remind the user that the appropriate number of $N$ samples will depend on the diagnostic, and on the input data. The errors on the measurements, and the calculations performed to derive the metallicity from line ratios, which are for many scales non-linear, will determine the shape of the distribution, and thus the number of datapoints that are needed to fully characterize it. 
+%FBB rephrased
 %MM: Fed I don't understand what you mean by "The way in which the lines are combined" - do you mean how the metallicity is derived based on emission line ratio? The way you have it sounds confusing and out of context (lines of É evidence?)
 
 \subsection{Performance and Benchmarks}
-We ran a bench mark calculation on a MacBook Air with an Intel Core i7 (1.7~GHz) and 8GB of 1600 MHz DDR3 memory. The dataset we used for the calculation includes 2 sets of line measurements (measurement 1, or M1, and measurement 2, M2). The flux values and their associated errors are shown in Table~\ref{tab:exampledata}. The code performs simple algebraic operations on large data arrays. It is vectorized along the sample-size dimension, so that the code loops over the smaller dimension corresponding to the measurements in input (2 in our example data), except when iterations are required by a metallicity scale algorithm (as in the KD02 scales).
-while operations are generally performed on the $N$-dimensional vectors storing the synthetic measurements, and the $N$-dimensional variable hence derived. 
+We ran a bench mark calculation on a MacBook Air with an Intel Core i7 (1.7~GHz) and 8GB of 1600 MHz DDR3 memory. The dataset we used for the calculation includes 2 sets of line measurements (measurement 1, or M1, and measurement 2, M2). The flux values and their associated errors are shown in Table~\ref{tab:exampledata}. The code performs simple algebraic operations on large data arrays. It is vectorized along the sample-size dimension, so that the code loops over the smaller dimension corresponding to the number of sets of line measurements in input (2 in our example data), while operations are generally performed on the $N$-dimensional vectors storing the synthetic measurements, and the $N$-dimensional variable hence derived (certain scales, such as the KD02 and KK04 ones, derive the ionization parameter in an iterative fashion requiring further loops ).
+
 %MM: for the last sentence looks like something is missing? While É, and .. doesn't make sense.
+%nothing was missing... but i moved the part on iterative calculations at the end. perhaps that is what was confusing?
+
 
 %real	0m44.877s
 %user	0m43.748s
@@ -314,38 +311,34 @@ M2 & 2.875 (.101) &	1.251 (.044) &	0.168 (.028) &	0.064 (.025) &	NaN          & 
 \label{tab:exampledata}
 \end{deluxetable*}
 
-With full graphic output (all histograms are being plotted) and performing all possible calculations (except those of D13  \emph{pyqz} ) for these data sets, the time required by the code is $\sim21.5$ seconds (wall clock time), less than 21 seconds of actual CPU time, and less then a second of CPU time spent in the kernel within the process. Adding the scales of D13 \emph{pyqz} for the same datasets, the run time becomes $\sim44$ seconds, with  $\sim43$ seconds of actual CPU time. For a single set of line measurements, the time drops to less than 11 seconds of CPU time. 
-%% MM: not sure I understand the math here: running for all scales, including pyqz, on 2 example data sets, you have 43 seconds of CPU time, OK. Now for the 11 seconds of CPU time, I assume you ran again all scales (including D13) , but this time for only 1 measurement and you get a reduction factor of almost 4? That's a lot! Or is the 11 seconds of CPU time for all scales except D13?
+With full graphic output (all histograms are being plotted) and performing all possible calculations (except those of D13  \emph{pyqz} ) for these data sets, the time required by the code is $\sim21.5$ seconds (wall clock time), less than 21 seconds of actual CPU time, and less then a second of CPU time spent in the kernel within the process. Adding the scales of D13 \emph{pyqz} for the same datasets, the run time becomes $\sim44$ seconds, with  $\sim43$ seconds of actual CPU time. For a single set of line measurements, not including \emph{pyqz}, the time drops to less than 11 seconds of CPU time. 
 
 % MM:  According to the plot it took ~14 seconds of running  for 1 measurement - without or without D13? Those 14 seconds are not mentioned above - perhaps you should mention it explicitly (since you have a plot on it!) after the CPU usage above, in the last sentence.
-The time spent on plotting functions, which includes the calculation of the appropriate number of bins for each scale, is substantial: 1.67 seconds per distribution on average with 14 calls for this data set (one for each metallicity scale, E(B-V), and $R_{23}$). In Table~\ref{tab:time}  we summarize the time spent on each metallicity scale for M1, the first measurement of the sample dataset, for each metallicity scale, and we visualize the run time and memory usage in Figure~\ref{fig:mem}. While the CPU usage is modest, the memory usage can be large, depending on the size of the sample.  The memory usage ramps up quickly , 
-%MM: Does it ramp up quickly b/c it creates the N=2000 samples? if yes, good to mention it.
-and remains fairly constant throughout the run.  Figure~\ref{fig:mem} shows the memory used by each function in the code as a function of time for a single set of input lines of our example data (M1). The scales that take longer time require the root finding, or optimizations, which are done iteratively (e.g. KD02 combined, the D13 \emph{pyqz} scales).
-
-%MM: correct that also D13 does root finding iteratively?  Actually reading the caption it made me wonder - do you include the D13 pyqz at all in here?
+% FBB: the plot is a place holder until we finalize the version of the code.
+The time spent on plotting functions, which includes the calculation of the appropriate number of bins for each scale, is substantial: 1.67 seconds per distribution on average with 14 calls for this data set (one for each metallicity scale, E(B-V), and $R_{23}$). In Table~\ref{tab:time}  we summarize the time spent on each metallicity scale for M1, the first measurement of the sample dataset, for each metallicity scale, and we visualize the run time and memory usage in Figure~\ref{fig:mem}. While the CPU usage is modest, the memory usage can be large, depending on the size of the sample.  The memory usage ramps up quickly, as soon as the line samples are created, 
+and remains fairly constant throughout the run.  Figure~\ref{fig:mem} shows the memory used by each function in the code as a function of time for a single set of input lines of our example data (M1). The scales that take longer time require the root finding, or optimizations, which are done iteratively (e.g. KD02 combined).
 
 \begin{figure}[ht!]
 %  \includegraphics[trim = 10mm 0mm 10mm 0mm, clip]{abcomparison6.eps}
   \includegraphics[width=1.0\columnwidth]{memusage.pdf}
    \caption{Memory usage: we plot the square root of the memory usage in Megabites as a function of time for running our code (using $N$=2,000 and all metallicity scales except the D13 \emph{pyqz} ones) on a single set of measured emission lines (Table~\ref{tab:exampledata}, M1). The square root is plotted, instead of the natural value, to enhance visibility.  
 Two inserts show zoom-ins of the region where most of the metallicity scales are calculated, since the run time of the code is dominated by the calculation for the KD02 combined scale, and, after all scales are computed, by plotting routines, including the calculation of the bin size with Knuth's rule. 
-Each function call is represented by an opening and closing bracket in the main plot, and by a shaded rectangle in the zoom-in inserts, extending for the duration of the function run. 
+Each function call is represented by an opening and closing bracket in the main plot, and by a shaded rectangle in the zoom-in inserts.%, extending for the duration of the function run. 
 The calculation of NIIOII, which requires 0.32 seconds, is split between the two inserts. Altogether, the calculation of metallicity in all scales, except those in the D13 \emph{pyqz} scales, takes 5.96 seconds. For technical details about the D13 \emph{pyqz} scales performance we refer the reader to the \emph{pyqz} package.}
  \label{fig:mem}
 \end{figure}
 
 %% MM: comments as to figure:
-%    - I think we should mention that this is for N=2000 samples. I added that above
 %    -  I would suggest making the x and y axis title much larger and with a larger thickness (see David's figure 6)
 %    - units for memory: is it MB or MiB ?
 %    - caption: I think you mean Megabytes NOT Megabites ?? or do you mean Megabits? The abbreviation for Megabits is Mb and of Megabyte is MB.
-%    - what do you mean by " extending for the duration of the function run. "? Isn't that all for the duration of the function run
+% FBB: i will fix all details it in the final version. The MiB is from the original memory tracking code. i think it is MB (wouldbt make sense to be anything else but i need to check why they use MiB). 
 %    - on the middle right part, there is the number "1e-3+1.177" which seem to be floating and not belonging to anything - right?
+% FBB: no: that is the factor that multiplies the x ticks. there is no way i can fit the full size tick label in the subplot
 %   - let's make sure we understand whether KD02 combined is part due to KK04
+%FBB: yes, this plot will be redone w the final version of the code
 
 
-CPU PLOT?
-%%MM: I don't think a CPU plot is needed
 
 \begin{deluxetable}{lr} 
 %\setlength{\tabcolsep}{0.0001in} 
