@@ -72,11 +72,12 @@ class diagnostics:
         self.logO3Hb=None
         self.logN2Ha=None
         self.logS2Ha=None
-        self.logO3O2=None
+
         self.logO35007O2=None
         self.logO2O35007=None
         self.logO349595007Hb=None
 
+        self.logO3O2sq=None
         self.logq=None
         self.Z_init_guess=None
         self.N2O2_coef0=1106.8660
@@ -238,6 +239,7 @@ class diagnostics:
                     self.logO349595007Hb=np.log10(10**(np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb))+10**(np.log10(O34959/self.Hb)+self.dustcorrect(k_O34959,k_Hb)))
                     self.O34959p5007=O34959 + self.O35007
                     self.logO3O2=np.log10((self.O34959p5007)/self.O23727)+self.dustcorrect(k_O3,k_O2)
+                    #this is useful when we get logq
                     self.hasO3O2=True
         # never used
         #if self.hasHa:
@@ -346,6 +348,11 @@ class diagnostics:
             if self.hasS39069 and self.hasHb:
                 self.logS23=np.log10((self.S26717/self.Hb)*self.dustcorrect(k_S2,k_Hb,flux=True) + (self.S39069/self.Hb)*self.dustcorrect(k_S3,k_Hb,flux=True))                                 
             #self.logS3S2=np.log10(S39069/self.S26717)+self.dustcorrect(k_S3,k_S2)
+
+    def calclogq(self,Z):
+        if self.logO3O2sq==None:
+            self.logO3O2sq=self.logO3O2**2
+        return (32.81 -1.153*self.logO3O2sq + Z*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2sq))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2sq+ Z*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2sq)) 
 
 
     def initialguess(self):
@@ -650,20 +657,21 @@ class diagnostics:
         Z_new_N2Ha=self.mds['KD02_N2O2'].copy()  # was 8.6
 
         if self.hasN2 and self.hasHa:
-            self.logq_save=np.zeros(self.nm)
+            logq_save=np.zeros(self.nm)
             convergence,tol,ii=100,1.0e-3,0
-            while convergence>tol and ii<10:
-                ii+=1
-                if self.hasO3O2 :        
-                    # calculating logq using the [N2]/[O2] 
-                    #metallicities for comparison
-                    logO3O2sq=self.logO3O2**2 
-                    self.logq=(32.81 -1.153*logO3O2sq + Z_new_N2Ha*(-3.396 -0.025*self.logO3O2 + 0.1444*logO3O2sq))/(4.603-0.3119*self.logO3O2 -0.163*logO3O2sq+ Z_new_N2Ha*(-0.48 + 0.0271*self.logO3O2+ 0.02037*logO3O2sq)) 
-                else:        
-                    self.logq=7.37177*np.ones(self.nm)
-                Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
-                convergence=np.abs(self.logq-self.logq_save).mean()
-                self.logq_save=self.logq.copy()
+            if self.hasO3O2 :        
+                # calculating logq using the [N2]/[O2] 
+                # metallicities for comparison
+                while convergence>tol and ii<10:
+                    ii+=1
+                    self.logq=self.calclogq(Z_new_N2Ha)
+                    #(32.81 -1.153*logO3O2sq + Z_new_N2Ha*(-3.396 -0.025*self.logO3O2 + 0.1444*logO3O2sq))/(4.603-0.3119*self.logO3O2 -0.163*logO3O2sq+ Z_new_N2Ha*(-0.48 + 0.0271*self.logO3O2+ 0.02037*logO3O2sq)) 
+                    Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
+                    convergence=np.abs(self.logq-logq_save).mean()
+                    logq_save=self.logq.copy()
+            else:        
+                self.logq=7.37177*np.ones(self.nm)
+
             self.mds['KD02_N2Ha']=Z_new_N2Ha
         else:
             print "WARNING: need NII6584  and Ha to calculate this. did you run  setHab() and setNII()?"
@@ -690,14 +698,12 @@ class diagnostics:
             # See NEW_fitfin.coefs
 
             # trying out just using a single [NII]/Ha value
-        
         Zmax=np.zeros(self.nm)
 
         # ionization parameter
         if not self.hasO3O2:
             logq=np.zeros(self.nm)
         else:
-            logO3O2sq=self.logO3O2**2
             if self.Z_init_guess==None:
                 self.initialguess()
             Z_new=self.Z_init_guess.copy()
@@ -709,11 +715,11 @@ class diagnostics:
             else:
                 logqold,convergence,ii=np.zeros(self.nm)+100,100,0
                 tol=1e-4
-                #for ii in range(4):
+                #3 iterations are typically enought to achieve convergence KE08 A2.3
                 while convergence>tol and ii<10:
-                    #3 iterations are typically enought to achieve convergence KE08 A2.3
+                    Zmax=Zmax*0.0
                     ii+=1
-                    logq=(32.81 -1.153*logO3O2sq + Z_new*(-3.396 - 0.025*self.logO3O2 + 0.1444*logO3O2sq))/(4.603 - 0.3119*self.logO3O2 - 0.163*logO3O2sq+Z_new*(-0.48 + 0.0271*self.logO3O2 + 0.02037*logO3O2sq))
+                    logq=self.calclogq(Z_new)
                     Zmax[(logq >= 6.7) * (logq < 8.3)]=8.4
                     # maximum of R23 curve:               
                     Z_new=nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])
@@ -734,8 +740,7 @@ class diagnostics:
 
     #@profile
     def calcKDcombined(self):
-        #KD02comb_new  Kewley, L. J., & Dopita, M. A., 2002, ApJ, submitted '
-
+        # KD02comb_new  Kewley, L. J., & Dopita, M. A., 2002, ApJ, submitted '
         # ### KD02 [NII]/[OII] estimate ###
         # (can be used for for log(O/H)+12 > 8.6 only)
         # uses equation (5) from paper, this should be identical 
@@ -755,11 +760,11 @@ class diagnostics:
         #else: self.mds['KD02_N2O2']=np.zeros(self.nm)+float('NaN')
 
         # ionization parameter        
-        logq_final=np.zeros(self.nm)
+        logq=np.zeros(self.nm)
         if self.hasN2 and self.hasO2 and self.hasHb and self.hasHa and self.hasO3O2:
-            logq_final=(32.81 + 0.0*self.logO3O2-1.153*self.logO3O2**2 +self.mds['KD02_N2O2']*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603  -0.3119*self.logO3O2 -0.163*self.logO3O2**2+self.mds['KD02_N2O2']*(-0.48 +0.0271*self.logO3O2+ 0.02037*self.logO3O2**2))
-
-            logq_final[self.mds['KD02_N2O2']<=8.4]=self.logq[self.mds['KD02_N2O2']<=8.4]
+            logq=self.calclogq(self.mds['KD02_N2O2'])
+            #(32.81 + 0.0*self.logO3O2-1.153*self.logO3O2**2 +self.mds['KD02_N2O2']*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603  -0.3119*self.logO3O2 -0.163*self.logO3O2**2+self.mds['KD02_N2O2']*(-0.48 +0.0271*self.logO3O2+ 0.02037*self.logO3O2**2))
+            logq[self.mds['KD02_N2O2']<=8.4]=self.logq[self.mds['KD02_N2O2']<=8.4]
 
         else:
             logq_final=self.logq
@@ -931,8 +936,8 @@ class diagnostics:
             self.calcZ94()
 
         #if KD02_R23_Z == None or self.mds['Z94']==None or self.mds['M91']==None:
-        if self.mds['KK04_R23'] == None or self.mds['Z94']==None or self.mds['M91']==None:
-            print "WARNING:  cannot calculate KDcomb_R23 because  KD02_R23, M91, or Z94 failed"
+        if self.mds['KK04_R23'] == None or self.mds['M91']==None:
+            print "WARNING:  cannot calculate KDcomb_R23 because  KK04_R23, M91 failed"
         else:
             self.mds['KDcomb_R23']=np.zeros(self.nm)+float('NaN')
 
@@ -940,23 +945,25 @@ class diagnostics:
             #indx=self.mds['Z94']>=9.0
             indx=self.mds['KK04_R23']>=9.0
             #self.mds['KDcomb_R23'][indx]=(KD02_R23_Z[indx]+self.mds['M91'][indx]+self.mds['Z94'][indx])/3.  
-            self.mds['KDcomb_R23'][indx]=(self.mds['KK04_R23'][indx]+self.mds['M91'][indx])/3.  
+            self.mds['KDcomb_R23'][indx]=(self.mds['KK04_R23'][indx]+self.mds['M91'][indx])/2.  
             
             # average of M91 and Z94
             indx= (self.mds['KDcomb_R23'] <= 9.0) * (self.mds['KDcomb_R23'] >= 8.5)
             self.mds['KDcomb_R23'][indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])                  
-        
+       
+            #FED WHY???
             # average of M91 and Z94
-            indx=(self.mds['Z94'] <= 9.0) * (self.mds['Z94'] >= 8.5)
-            self.mds['KDcomb_R23'][indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])                 
+            #indx=(self.mds['Z94'] <= 9.0) * (self.mds['Z94'] >= 8.5)
+            #self.mds['KDcomb_R23'][indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])                 
             
             indx= self.mds['KDcomb_R23'] <= 8.5 
             self.mds['KDcomb_R23'][indx]=self.mds['KK04_R23'][indx]#KD02_R23_Z[indx]                        
             
-            indx= self.mds['Z94'] <= 8.5 
-            self.mds['KDcomb_R23'][indx]=self.mds['KK04_R23'][indx]#KD02_R23_Z[indx]                        
+            #FED WHY???
+            #indx= self.mds['Z94'] <= 8.5 
+            #self.mds['KDcomb_R23'][indx]=self.mds['KK04_R23'][indx]#KD02_R23_Z[indx]                        
 
-            #KD01 combined
+            #FED WHY???
             indx=(np.abs(self.mds['M91'])>0) * (np.abs(self.mds['Z94'])>0)
             M91Z94_ave[indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])
             
