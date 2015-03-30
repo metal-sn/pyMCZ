@@ -117,14 +117,12 @@ def readfile(filename):
     bstruct={}
     for i,k in enumerate(header):
         bstruct[k]=[i,0]
-    print "file header",header
-    b = np.loadtxt(filename,skiprows=noheader, dtype={'names':header,'formats':formats})
+    b = np.loadtxt(filename,skiprows=noheader, dtype={'names':header,'formats':formats}, comments=';')
     if b.size == 1:
         b=np.atleast_1d(b)
     #usecols=cols, unpack=True)
     
     for i,k in enumerate(header):
-        print k
         if not k=='flag' and is_number(b[k][0]):
             bstruct[k][1]=np.count_nonzero(b[k])+sum(np.isnan(b[k]))
     j=len(b['galnum'])
@@ -253,7 +251,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
     #    if verbose:print "the data must be in a distribution, not all the same!"
     #    return "-1,-1"
     if data.shape[0]<=0 or np.sum(data)<=0:
-        print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(name.split('_')[0],Zs,-1,-1,-1)
+        print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(snname,Zs,-1,-1,-1)
         return "-1, -1, -1",[]    
 #    if 1:
 
@@ -268,8 +266,8 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         if "%2f"%maxright=="%2f"%maxleft:
             maxleft=median-1
             maxright=median+1
-        if round(right,5)==round(left,5) and round(left,5)==round(median,5):
-            print '{0:15} {1:20} {2:>13.3f} - {3:>7.3f} + {4:>7.3f} (no distribution)'.format(name.split('_')[0],Zs,median,0,0 )
+        if round(right,6)==round(left,6) and round(left,6)==round(median,6):
+            print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(snname,Zs,median,0,0 )
 
             return "-1,-1,-1",[]
         ######histogram######
@@ -365,7 +363,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         plt.close(fig)
 
         ###print out the confidence interval###
-        print '{0:15} {1:20} {2:>13.3f} - {3:>7.3f} + {4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
+        print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
         
         
         return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3)), data
@@ -389,7 +387,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
 ##      mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
 #@profile
-def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickle=False, dust_corr=True, verbose=False, fs=24):
+def run((name, flux, err, nm, path, bss), nsample,mds,delog=False, unpickle=False, dust_corr=True, verbose=False, fs=24):
     global RUNSIM,BINMODE
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
@@ -466,9 +464,9 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
                 print '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
                 fluxi[k]=flux[k][i]*np.ones(len(sample))+err[k][i]*sample
                 warnings.filterwarnings("ignore")
-            success=metallicity.calculation(diags,fluxi,nm,bss,smass,mds,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
+            success=metallicity.calculation(diags,fluxi,nm,bss,mds,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
             if success==-1:
-                print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717', and 6.0<Smass<14 MSun"
+                print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
 
 #            diags.printme()
 #            s=key+"\t "+savehist(t,'test','EB_V',100,i,binp,nm,delog=delog)+'\n'
@@ -481,7 +479,6 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
 #                    print ' {0:4} {1:4}'.format( stats.nanmean(diags.mds[k]),stats.nanstd(diags.mds[k])),
 #                print ""
             for key in diags.mds.iterkeys():
-                print key
                 res[key][i]=diags.mds[key]
                 if res[key][i]==None:
                     res[key][i]=[float('NaN')]*len(sample)
@@ -507,7 +504,7 @@ def run((name, flux, err, nm, path, bss), nsample,smass,mds,delog=False, unpickl
     
 
     ###Bin the results and save###
-    print '{0:15} {1:20} {2:>13} - {3:>7} + {4:>7} {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
+    print '{0:15} {1:20} {2:>13}   -{3:>5}     +{4:>5}  {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
     #return -1
     for i in range(nm):
         if ASCIIOUTPUT:
@@ -570,7 +567,6 @@ def main():
     parser.add_argument('--unpickle',   default=False, action='store_true', help="read the pickled realization instead of making a new one")
 
     parser.add_argument('--verbose',default=False, action='store_true', help="verbose mode")
-    parser.add_argument('--mass',default=10, type=float,help="stellar mass, which can be validated")
     parser.add_argument('--nodust',default=False, action='store_true', help=" dont do dust corrections (default is to do it)")
     parser.add_argument('--asciiout',default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
     parser.add_argument('--md',default='all', type =str, help=" metallivity diagnostic to calculate. default is 'all', options are: D02, Z94, M91,C01, P05, PP04, D13, KD02, KD02comb, DP00 (deprecated), P01")
@@ -600,7 +596,7 @@ def main():
     if args.nsample>=100:
         fi=input_format(args.name, path=path)
         if fi!=-1:
-            run(fi,args.nsample,args.mass,args.md, delog=args.delog, unpickle=args.unpickle, dust_corr=(not args.nodust), verbose=VERBOSE)
+            run(fi,args.nsample,args.md, delog=args.delog, unpickle=args.unpickle, dust_corr=(not args.nodust), verbose=VERBOSE)
     else:
         print "nsample must be at least 100"
     
