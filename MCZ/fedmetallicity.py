@@ -15,9 +15,7 @@
 import sys,os
 import numpy as np
 from pylab import hist,show
-##all the lines that go like
-##if S_mass[i] > low_lim and S_mass[i] < 14.0 and all_lines[i] != 0.0:
-##are ignored, replaced by (if not G) where G is set to False
+
 
 IGNOREDUST=False
 
@@ -40,10 +38,10 @@ Zs=["E(B-V)", #Halpha, Hbeta
 
 
     "KD02_N2O2",   #Halpha, Hbeta,  [OII]3727, [NII]6584
-    "KD02_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
+    "KD02_N2S2",
+    "KK04_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
     "KK04_R23", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
-
-    "KD02comb","KDcomb_R23","KDcomb_new"] #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
+    "KD02comb_update","KK04comb"] #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
 
     
 def get_keys():
@@ -55,7 +53,7 @@ def get_keys():
 ##############################################################################
 
 #@profile
-def calculation(diags,measured,num,(bsmeas,bserr),Smass,mds,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False, verbose=False): 
+def calculation(diags,measured,num,(bsmeas,bserr),mds,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False, verbose=False): 
 
     global IGNOREDUST
     diags.setdustcorrect()
@@ -103,7 +101,7 @@ def calculation(diags,measured,num,(bsmeas,bserr),Smass,mds,outfilename='blah.tx
     diags.setNII(raw_lines['[NII]6584'])
     diags.setSII(raw_lines['[SII]6717'],raw_lines['[SII]6731'],raw_lines['[SIII]9069'],raw_lines['[SIII]9532'])
 
-    if diags.checkminimumreq(dust_corr,IGNOREDUST,Smass) == -1:
+    if diags.checkminimumreq(dust_corr,IGNOREDUST) == -1:
         return -1
         
     diags.calcNIIOII()
@@ -138,7 +136,7 @@ export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want
          diags.P05()
 
          diags.calcKD02_N2O2()
-         diags.calcKD02_N2Ha()
+         diags.calcKK04_N2Ha()
          diags.calcC01_ZR23()
          
          diags.calcKK04R23()
@@ -158,11 +156,11 @@ export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want
               if cmd_folder not in sys.path:
                    sys.path.insert(0, cmd_folder)
               import pyqz
-              diags.calcpyqz()
+              #diags.calcpyqz()
               #in order to see the original pyqz plots
               #call pyqz with option plot=True by
               #using the commented line below instead
-              #diags.calcpyqz(plot=True)
+              diags.calcpyqz(plot=True)
          else:
               print '''set path to pyqz as environmental variable 
 PYQZ_DIR if you want this diagnostic. '''
@@ -180,7 +178,7 @@ PYQZ_DIR if you want this diagnostic. '''
        #all these above were checked
     if 'KD02' in mds :
        diags.calcKD02_N2O2()
-       diags.calcKD02_N2Ha()
+       diags.calcKK04_N2Ha()
        
        diags.calcKK04R23()
     if 'KD02comb' in mds:
