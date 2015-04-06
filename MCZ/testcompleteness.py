@@ -38,13 +38,13 @@ def fitdistrib(picklefile):
     pklfile = open(picklefile, 'rb')
     res=pickle.load(pklfile)
 
-    testingdiags=['E(B-V)','D02','PP04_O3N2','KD02comb']
+    testingdiags=['E(B-V)','D02','PP04_O3N2','KK04comb']
     ebvs=res['E(B-V)'].T
     nm=len(ebvs)
     Ndata= len(ebvs[0])
     assert( Ndata>0), "something is wrong with your distribution"
 
-    invalids=[sum(np.isnan(res['D02'].T[i]))+sum(np.isnan(res['KD02comb'].T[i]))+sum(np.isnan(res['Z94'].T[i])) for i in range(nm)]
+    invalids=[sum(np.isnan(res['D02'].T[i]))+sum(np.isnan(res['KK04comb'].T[i]))+sum(np.isnan(res['Z94'].T[i])) for i in range(nm)]
     myi, = np.where(invalids==min(invalids))
     
     try: myi=myi[1] #in case there are more than one solutions
@@ -112,7 +112,7 @@ def fitdistrib(picklefile):
             xold=x.copy()
 
 
-        ax.legend(scatterpoints=1,loc=4)
+        ax.legend(scatterpoints=1,loc=2)
     pl.savefig(picklefile.replace('.pkl','_testcomplete.pdf'))
     pl.show()
     
