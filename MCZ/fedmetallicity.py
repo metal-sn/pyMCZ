@@ -34,14 +34,16 @@ Zs=["E(B-V)", #Halpha, Hbeta
     "PP04_N2Ha",#Halpha, [NII]6584
     "PP04_O3N2",   #Halpha, Hbeta,[OIII]5007, [NII]6584
     "DP00",   #S23 available but deprecated
+    "P10_ONS","P10_ON","M13_O3N2","M13_N2",
+    "M08_R23","M08_N2Ha","M08_O3Hb","M08_O2Hb","M08_O3O2","M08_O3N2",
     "D13_N2S2_O3S2",    "D13_N2S2_O3Hb",    "D13_N2S2_O3O2",    "D13_N2O2_O3S2",    "D13_N2O2_O3Hb",    "D13_N2O2_O3O2",    "D13_N2Ha_O3Hb",    "D13_N2Ha_O3O2",
-
 
     "KD02_N2O2",   #Halpha, Hbeta,  [OII]3727, [NII]6584
     "KD02_N2S2",
     "KK04_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
     "KK04_R23", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
-    "KD02comb_update","KK04comb"] #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
+    "KD02comb_update","KK04comb"]
+#'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
 
     
 def get_keys():
@@ -114,6 +116,7 @@ def calculation(diags,measured,num,(bsmeas,bserr),mds,outfilename='blah.txt',dus
     diags.initialguess()
     mds=mds.split(',')
     #needs N2 and Ha
+    #diags.printme()
     if verbose: print "calculating diagnostics: ",mds
     if 'all' in mds:
          diags.calcD02()
@@ -128,16 +131,19 @@ def calculation(diags,measured,num,(bsmeas,bserr),mds,outfilename='blah.txt',dus
 export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want this diagnostic. '''
 
 
-         diags.calcPP04()
          diags.calcZ94()
          diags.calcM91()
-         #all these above were checked
 
-         diags.P05()
+         diags.calcPP04()
+
+         diags.calcP05()
+         diags.calcP10()
+
+         diags.calcM08()
+         diags.calcM13()
 
          diags.calcKD02_N2O2()
          diags.calcKK04_N2Ha()
-         diags.calcC01_ZR23()
          
          diags.calcKK04R23()
          diags.calcKDcombined()
@@ -146,7 +152,6 @@ export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want
         diags.calcDP00()
     if 'P01' in mds:
         diags.calcP01()
-    
          
     if 'D02' in mds:
          diags.calcD02()
@@ -171,8 +176,14 @@ PYQZ_DIR if you want this diagnostic. '''
        diags.calcZ94()
     if 'M91' in mds:
        diags.calcM91()
+    if 'P10' in mds:
+        diags.calcP10()
+    if 'M13' in mds:
+        diags.calcM13()
+    if 'M08' in mds:
+       diags.calcM08()
     if 'P05' in mds:
-       diags.P05()
+       diags.calcP05()
     if 'C01' in mds:
        diags.calcC01_ZR23()
        #all these above were checked

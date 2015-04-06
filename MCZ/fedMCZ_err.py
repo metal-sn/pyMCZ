@@ -343,9 +343,16 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         plt.annotate(st, xy=(0.62, 0.93), xycoords='axes fraction',fontsize=fs,fontweight='bold')
         st='measurement %d of %d\n\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f'%(i+1,nmeas,round(median,3),round(left,3),round(right,3))
         plt.annotate(st, xy=(0.62, 0.65), xycoords='axes fraction',fontsize=fs)
-        st='MC sample size %d\nhistogram rule: %s'%(nsample,binning[BINMODE])   
+        effectiven=len(data[~np.isnan(data)])
+        if effectiven<nsample:
+            st='MC sample size %d (%d)\nhistogram rule: %s'%(effectiven,nsample,binning[BINMODE])   
+        else:
+            st='MC sample size %d \nhistogram rule: %s'%(nsample,binning[BINMODE])   
         if bm:
-            st='MC sample size %d\nhistogram rule: %s'%(nsample,binning[bm])
+            if effectiven<nsample:
+                st='MC sample size %d (%d)\nhistogram rule: %s'%(effectiven,nsample,binning[bm])
+            else:
+                st='MC sample size %d\nhistogram rule: %s'%(nsample,binning[bm])
         plt.annotate(st, xy=(0.62, 0.55), xycoords='axes fraction',fontsize=fs-5)
         if delog:
             plt.xlabel('O/H')

@@ -4,6 +4,7 @@ import sys
 import scipy.stats as stats
 import numpy.polynomial.polynomial as nppoly
 from fedmetallicity import get_keys
+
 niter=5  # number of iteations+1 for KD02 methods
 
 k_Ha=2.535  # CCM Rv=3.1
@@ -53,7 +54,33 @@ O3O2_coef[:,4]=[-52.6367,16.0880,-1.67443,0.0608004]   # z=1.0
 O3O2_coef[:,5]=[-86.8674,28.0455,-3.01747,0.108311]    # z=1.5
 O3O2_coef[:,6]=[-24.4044,2.51913,0.452486,-0.0491711]  # z=2.0
 O3O2_coef[:,7]=[49.4728,-27.4711,4.50304,-0.232228]    # z=3.0
-            
+     
+M08_coefs={'R23' : [  0.7462, -0.7149, -0.9401, -0.6154, -0.2524   ],
+           #[-0.2524, -0.6154, -0.9401, -0.7149,  0.7462],
+           
+           #'N2Ha': [-0.3330, -0.7201, -0.2811,  1.2357, -0.7732],
+           'N2Ha': [ -0.7732,  1.2357, -0.2811, -0.7201, -0.3330],
+           'O3Hb': [  0.1549, -1.5031, -0.9790, -0.0297],
+           'O3O2': [ -0.2839, -1.3881, -0.3172],
+           'O2Hb': [  0.5603,  0.0450, -1.8017, -1.8434, -0.6549],
+           'O3N2': [  0.4520, -2.6096, -0.7170,  0.1347]}
+
+         
+#this is to check the Maiolino coefficients and find the split maximum of the cirves with degeneracy
+'''
+x=np.arange(7.0,9.5,0.1)
+
+for k in M08_coefs.iterkeys():
+    print k,max(nppoly.polyval(x-8.69,M08_coefs[k])),x[nppoly.polyval(x-8.69,M08_coefs[k])==max(nppoly.polyval(x-8.69,M08_coefs[k]))]
+    pl.plot(x,nppoly.polyval(x-8.69,M08_coefs[k]), label=k+' max:%.1f'%x[nppoly.polyval(x-8.69,M08_coefs[k])==max(nppoly.polyval(x-8.69,M08_coefs[k]))])
+
+print nppoly.polyval(8.4-8.69,M08_coefs['N2Ha'])
+pl.ylabel("log R")
+pl.xlabel("12+log(O/H)")
+pl.legend(loc=3)
+#pl.show()
+1'''
+       
 class diagnostics:
     def __init__(self,num):
         self.nm=num
@@ -76,6 +103,9 @@ class diagnostics:
 
         self.N2O2_roots=None
         #other lines calculated and repeatedly used
+        self.P=None
+        self.R2=None
+        self.R3=None
         self.R23=None
         #self.R23_5007=None
         self.N2=None
@@ -106,7 +136,6 @@ class diagnostics:
 
         self.logO35007O2=None
         self.logO2O35007=None
-        self.logO349595007Hb=None
 
         self.logO3O2sq=None
         self.logq=None
@@ -178,7 +207,7 @@ class diagnostics:
             except: 
                 if verbose: print self.mds[k]
     
-
+    
     def checkminimumreq(self,red_corr,ignoredust):
         if red_corr and not ignoredust:
             if not self.hasHa :
@@ -193,8 +222,11 @@ class diagnostics:
             #    return -1
         if not self.hasN2 and not (self.hasO2 and self.hasO3):
             return -1
-
-
+        #print self.logN2O2 
+        if self.logN2O2 <1.2 :
+            print "WARNING: the KD02 and KK04 (+M08) methods should only ",
+            print "be used for  log([NII]6564/[OII]3727) >1.2, ",
+            print "here log([NII]6564/[OII]3727)=",self.logN2O2
 
     def fz_roots(self,coef): 
         if len(coef.shape)==1:
@@ -245,13 +277,14 @@ class diagnostics:
         if sum(self.O23727>0) : self.hasO2=True
 
         if self.hasO2 and self.hasO3:
-            self.logO35007O2=np.log10( self.O35007/self.O23727 )+self.dustcorrect(k_O3,k_O2)
-            self.logO2O35007=np.log10( self.O23727/self.O35007 )+self.dustcorrect(k_O2,k_O3)
+            self.O35007O2=(self.O35007/self.O23727)*self.dustcorrect(k_O3,k_O2,flux=True)
+            self.O2O35007=(self.O23727/self.O35007)*self.dustcorrect(k_O2,k_O3,flux=True)
+
+            self.logO35007O2=np.log10( self.O35007O2) 
+            self.logO2O35007=np.log10( self.O2O35007)
 
             #self.logO2O35007Hb=np.log10((self.O23727+self.O35007)/self.Hb)
             # ratios for other diagnostics - slightly different ratios needed
-            self.O35007O2=10**(self.logO35007O2)
-            self.O2O35007=10**(self.logO2O35007)
             if self.hasHb:
                 self.logO2O35007Hb=np.log10((self.O23727/self.Hb)* self.dustcorrect(k_O2,k_Hb,flux=True))+ (self.O35007/self.Hb)*self.dustcorrect(k_O35007,k_Hb,flux=True)
 
@@ -264,8 +297,7 @@ class diagnostics:
                 self.logO3Hb=np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
                 self.hasO3Hb=True
                 if not O34959 == None and sum(O34959>0)>0:
-                    self.logO349595007Hb=np.log10(10**(np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb))+10**(np.log10(O34959/self.Hb)+self.dustcorrect(k_O34959,k_Hb)))
-                    self.O34959p5007=O34959 + self.O35007
+                    self.O34959p5007=(O34959 + self.O35007)
                     self.logO3O2=np.log10((self.O34959p5007)/self.O23727)+self.dustcorrect(k_O3,k_O2)
                     #this is useful when we get logq
                     self.hasO3O2=True
@@ -355,7 +387,9 @@ class diagnostics:
 
         #R23 NEW Comb, [NII]/Ha: KK04 = Kobulnicky & Kewley, 2004, submitted'
         if  self.hasO3   and self.hasO2 and self.hasHb:
-            self.R23=((self.O23727/self.Hb)*self.dustcorrect(k_O2,k_Hb, flux=True) + (self.O34959p5007/self.Hb)*self.dustcorrect(k_O3,k_Hb, flux=True) )
+            self.R2=(self.O23727/self.Hb)*self.dustcorrect(k_O2,k_Hb, flux=True) 
+            self.R3=(self.O34959p5007/self.Hb)*self.dustcorrect(k_O3,k_Hb, flux=True) 
+            self.R23=self.R2+self.R3
             self.logR23=np.log10(self.R23)
             #self.R23_5007=(1./self.O35007O2 + 1.)/(1./self.O35007O2 + 1.347)*self.R23  
             self.mds['logR23']=self.logR23
@@ -377,12 +411,13 @@ class diagnostics:
                 self.logS23=np.log10((self.S26717/self.Hb)*self.dustcorrect(k_S2,k_Hb,flux=True) + (self.S39069/self.Hb)*self.dustcorrect(k_S3,k_Hb,flux=True))                                 
             #self.logS3S2=np.log10(S39069/self.S26717)+self.dustcorrect(k_S3,k_S2)
 
+    ##@profile
     def calclogq(self,Z):
         if self.logO3O2sq==None:
             self.logO3O2sq=self.logO3O2**2
         return (32.81 -1.153*self.logO3O2sq + Z*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2sq))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2sq+ Z*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2sq)) 
 
-
+    ##@profile        
     def initialguess(self):
         # Initial Guess - appearing in LK code as of Nov 2006
         # upper branch: if no lines are available, metallicity is set to 8.7        
@@ -510,38 +545,110 @@ class diagnostics:
         ## 0.9 is a conservative constraint to make sure that we are 
         ## only using the upper branch (i.e. 12+log(O/H)>8.4)
 
+
+    def calcP(self):
+       if self.P==None:
+            if self.logR23==None:
+               print "WARNING: Must first calculate R23"
+               self.calcR23()
+               if self.logR23==None:
+                   print "WARNING: Cannot compute this without R23"
+                   return -1
+            #R3=10**self.logO349595007Hb
+            #R2=10**self.logO2Hb
+            #P = R3/(R2+R3)
+            self.P=self.R3/self.R23
+        
     #@profile
-    def P05(self):
+    def calcP05(self):
         # #### P-method #####
         ##Pilyugin+ 2005 method.  Based on [OIII],[OII], Hbeta 
         ##calibrated from Te method
         # make sure you run setOlines() first
         print "calculating P05"
-
+        self.calcP()
         if self.Z_init_guess==None:
             self.initialguess()
-        if self.logR23==None:
-            print "WARNING: Must first calculate R23"
-            self.calcR23()
-            if self.logR23==None:
-                print "WARNING: Cannot compute this without R23"
-                return -1
-        #R3=10**self.logO349595007Hb
-        #R2=10**self.logO2Hb
-        #P = R3/(R2+R3)
-        P=10**self.logO349595007Hb/self.R23
-        Psq=P*P
-        #P_R23=R2+R3
-        #P_R23=self.R23
+        Psq=self.P*self.P
         
-        P_abund_up =(self.R23+726.1+842.2*P+337.5*Psq)/(85.96+82.76*P+43.98*Psq +1.793*self.R23)
-        P_abund_low=(self.R23+106.4+106.8*P- 3.40*Psq)/(17.72+ 6.60*P+ 6.95*Psq -0.302*self.R23)
+        P_abund_up =(self.R23+726.1+842.2*self.P+337.5*Psq)/(85.96+82.76*self.P+43.98*Psq +1.793*self.R23)
+        P_abund_low=(self.R23+106.4+106.8*self.P- 3.40*Psq)/(17.72+ 6.60*self.P+ 6.95*Psq -0.302*self.R23)
         
         self.mds['P05']=P_abund_up
         self.mds['P05'][self.Z_init_guess <  8.4]=P_abund_low[self.Z_init_guess <  8.4]
 
 
 
+    #@profile
+    def calcP10(self):
+        # #### P-method #####
+        ##Pilyugin+ 2010 method. 
+        ##calibrated from Te method
+        # need Hb
+        #The Astrophysical Journal, Volume 720, Issue 2, pp. 1738-1751 (2010).
+        #Published in Sep 2010
+
+        print "calculating P10"
+        
+        if not self.hasHb:
+            print "this method needs Hbeta"
+            return -1
+        self.mds['P10_ONS']=np.zeros(self.nm)+float('NaN')
+        self.mds['P10_ON']=np.zeros(self.nm)+float('NaN')
+        P10N2=np.zeros(self.nm)+float('NaN')
+        P10S2=np.zeros(self.nm)+float('NaN')
+        P10logR3=np.zeros(self.nm)+float('NaN')
+        P10logR2=np.zeros(self.nm)+float('NaN')
+        P10logN2=np.zeros(self.nm)+float('NaN')
+        P10logN2R2=np.zeros(self.nm)+float('NaN')
+        P10logS2R2=np.zeros(self.nm)+float('NaN')
+
+        self.calcP()
+        if not self.R2==None:
+            P10logR2=np.log(self.R2)
+
+        if not self.R3==None:
+            P10logR3=np.log(self.R3)
+
+        if self.hasN2:
+            P10logN2=np.log((self.N26584*1)/self.Hb)+self.dustcorrect(k_N2,k_Hb)
+
+        if self.hasS2 and self.hasS26731:
+            P10logS2=np.log((self.S26717+self.S26731)/self.Hb)+self.dustcorrect(k_S2,k_Hb)
+
+        P10logN2S2=P10logN2-P10logS2
+        P10logN2R2=P10logN2-P10logR2
+        P10logS2R2=P10logS2-P10logR2
+
+        coefsONS0=np.array([8.277, 0.657,-0.399,-0.061, 0.005])
+        coefsONS1=np.array([8.816,-0.733, 0.454, 0.710,-0.337])
+        coefsONS2=np.array([8.774,-1.855, 1.517, 0.304, 0.328])
+
+        vsONS=np.array([np.ones(self.nm),self.P,P10logR3,P10logN2R2,P10logS2R2]).T
+
+        coefsON0=np.array([8.606,-0.105,-0.410,-0.150])
+        coefsON1=np.array([8.642, 0.077, 0.411, 0.601])
+        coefsON2=np.array([8.013, 0.905, 0.602, 0.751])
+        
+        vsON=np.array([np.ones(self.nm),P10logR3,P10logR2,P10logN2R2]).T
+
+        indx=P10logN2 > -0.1
+        self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS0)
+        self.mds['P10_ON'][indx] = np.dot(vsON[indx],coefsON0)
+
+        indx=(P10logN2 < -0.1)*(P10logN2S2 > -0.25)
+        self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS1)
+        self.mds['P10_ON'][indx] = np.dot(vsON[indx],coefsON1)
+
+        indx=(P10logN2 < -0.1)*(P10logN2S2 < -0.25)
+        self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS2)
+        self.mds['P10_ON'][indx] = np.dot(vsON[indx],coefsON2)
+        
+        indx=~((self.mds['P10_ONS']>7.1) * (self.mds['P10_ON']>7.1)*(self.mds['P10_ONS']<9.4) * (self.mds['P10_ON']<9.4))
+        self.mds['P10_ONS'][indx]= float('NaN')
+        self.mds['P10_ON'][indx] = float('NaN')
+        
+        
     #@profile
     def calcP01(self):
         # P-method 2001 upper branch (derecated and commented out)
@@ -636,6 +743,104 @@ class diagnostics:
         
         #2014 FED: changed wrong values to None
         self.mds['M91'][(M91_Z_up < M91_Z_low)]=float('NaN')
+
+    #@profile
+    def calcM13(self):
+        print "calculating M13"
+
+        if not self.hasHa  or not self.hasN2:
+            print "need O3, N2, Ha and Hb, or at least N2 and Ha"
+            return -1
+        else:
+            e1=np.random.normal(0,0.027,self.nm)
+            e2=np.random.normal(0,0.024,self.nm)
+            self.mds["M13_N2"] = 8.743+e1 - (0.462+e2)*self.logN2Ha
+            if   self.hasHb and self.hasO3:
+                e1=np.random.normal(0,0.012,self.nm)
+                e2=np.random.normal(0,0.012,self.nm)
+                O3N2=self.logO3Hb-self.logN2Ha
+                self.mds["M13_O3N2"] = 8.533+e1 - (0.214+e1)*O3N2
+
+
+    #@profile
+    def calcM08(self):
+        #Maiolino+ 2008
+        #Astronomy and Astrophysics, Volume 488, Issue 2, 2008, pp.463-479
+        #Published in Sep 2008
+        import numpy.ma as ma
+        print "calculating M08"
+        highZ=None
+        if not self.logO35007O2==None:
+            self.mds['M08_O3O2']=np.zeros(self.nm)+float('NaN')
+            coefs=np.array([M08_coefs['O3O2']]*self.nm).T
+            coefs[0]=coefs[0]-self.logO35007O2
+            sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
+            indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)).cumsum(1).cumsum(1)==1
+            self.mds['M08_O3O2'][(indx.sum(1))==True]=sols[indx]
+            highZ=np.median(self.logO35007O2)<0
+
+        if not self.logN2Ha==None:
+            self.mds['M08_N2Ha']=np.zeros(self.nm)+float('NaN')
+            coefs=np.array([M08_coefs['N2Ha']]*self.nm).T
+            coefs[0]=coefs[0]-self.logN2Ha
+            sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
+            indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)).cumsum(1).cumsum(1)==1
+            self.mds['M08_N2Ha'][(indx.sum(1))==True]=sols[indx]
+            if highZ==None:
+                highZ=np.median(self.logN2Ha)>-1.3
+            
+        if self.logR23==None:
+            print "WARNING: Must first calculate R23"
+            self.calcR23()
+        if self.logR23==None:
+            print "WARNING: Cannot compute this without R23" 
+        else:
+            self.mds['M08_R23']=np.zeros(self.nm)+float('NaN')
+            coefs=np.array([M08_coefs['R23']]*self.nm).T
+            coefs[0]=coefs[0]-self.logR23
+            sols=np.array([self.fz_roots(coefs.T)])[0]+8.69            
+            if highZ==True:
+                indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real>=8.0)).cumsum(1).cumsum(1)==1
+                self.mds['M08_R23'][(indx.sum(1))==True]=sols[indx]
+            elif highZ==False:
+                indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=8.0)).cumsum(1).cumsum(1)==1
+                self.mds['M08_R23'][(indx.sum(1))==True]=sols[indx]
+
+        if not self.logO3Hb==None:
+            self.mds['M08_O3Hb']=np.zeros(self.nm)+float('NaN')
+            coefs=np.array([M08_coefs['O3Hb']]*self.nm).T
+            coefs[0]=coefs[0]-self.logO3Hb
+            sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
+            if highZ==True:
+                indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real>=7.9)).cumsum(1).cumsum(1)==1
+                self.mds['M08_O3Hb'][(indx.sum(1))==True]=sols[indx]
+            elif highZ==False:
+                indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=7.9)).cumsum(1).cumsum(1)==1
+                self.mds['M08_O3Hb'][(indx.sum(1))==True]=sols[indx]
+
+
+        if not self.logO2Hb==None:
+            self.mds['M08_O2Hb']=np.zeros(self.nm)+float('NaN')
+            coefs=np.array([M08_coefs['O2Hb']]*self.nm).T
+            coefs[0]=coefs[0]-self.logO2Hb
+            sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
+            if highZ==True:
+                indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real>=8.7)).cumsum(1).cumsum(1)==1
+                self.mds['M08_O2Hb'][(indx.sum(1))==True]=sols[indx]
+            elif highZ==False:
+                indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=8.7)).cumsum(1).cumsum(1)==1
+                self.mds['M08_O2Hb'][(indx.sum(1))==True]=sols[indx]
+
+
+
+        if self.hasO3  and self.hasN2:
+            self.mds['M08_O3N2']=np.zeros(self.nm)+float('NaN')
+            coefs=np.array([M08_coefs['O3N2']]*self.nm).T
+            coefs[0]=coefs[0]-np.log(self.O35007/self.N26584)*self.dustcorrect(k_O35007,k_N2)
+            sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
+            indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)).cumsum(1).cumsum(1)==1
+            self.mds['M08_O3N2'][(indx.sum(1))==True]=sols[indx]
+
 
     #@profile
     def calcKD02_N2O2(self):
@@ -1023,8 +1228,6 @@ class diagnostics:
                     #   is defined over by the model grids, and it must be real.
                     #if sum(indx1)<=1: continue
                     q_roots[:,indx1]=self.fz_roots(O3O2_coefi[indx1,:,j]).T  
-#                        if not ii:
-#                            continue
                 for k in range(3) :
                         indx1=(q_roots[k][indx].imag==0.0)*(q_roots[k][indx].real>=6.54407)*(q_roots[k][indx].real <= 8.30103)
                         #if (q_roots[k,i].imag) == 0.0 :
