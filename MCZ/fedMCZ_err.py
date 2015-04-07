@@ -56,12 +56,15 @@ def getknuth(m,data,N):
     if m > N:
         return (-1)
     bins=np.linspace(min(data),max(data), int(m) + 1)
-    nk,bins=np.histogram(data,bins)
-    return -(N*np.log(m) 
-             + gammaln(0.5*m) 
-             - m*gammaln(0.5) 
-             - gammaln(N + 0.5*m)
-             + np.sum(gammaln(nk+0.5)))
+    try:
+        nk,bins=np.histogram(data,bins)
+        return -(N*np.log(m) 
+                 + gammaln(0.5*m) 
+                 - m*gammaln(0.5) 
+                 - gammaln(N + 0.5*m)
+                 + np.sum(gammaln(nk+0.5)))
+    except:
+        return [-1]
 
 def knuthn(data, maxM=None):
     assert data.ndim==1, "data must be 1D array to calculate Knuth's number of bins"
@@ -69,22 +72,18 @@ def knuthn(data, maxM=None):
     if not maxM:
         maxM=5*np.sqrt(N)
     m0=2.0*N**(1./3.)
-    mkall= optimize.fmin(getknuth,m0, args=(data,N), disp=VERBOSE, maxiter=30)#, maxfun=1000)#[0]
+    gk=getknuth
+    if gk == [-1]:
+        return mk, 't'
+    mkall= optimize.fmin(gk,m0, args=(data,N), disp=VERBOSE, maxiter=30)#, maxfun=1000)#[0]
     mk=mkall[0]
     if mk>maxM or mk<0.3*np.sqrt(N):
         mk=m0
         return mk, 't'
     return mk, 0
-    '''
 
-    m0=2.0*(N**(1.0/3.0))
-    mkall= optimize.fmin(getknuth,m0, args=(data,N), disp=VERBOSE, maxiter=30)
-    mk=mkall[0]
-    if mk>maxM:
-        mk=m0
-    return mk 
-    '''
-
+##############################################################################
+##The input data
 ##############################################################################
 ##Reads the flux file and returns it as an array.
 ##Ignores non-numeric lines
@@ -94,7 +93,7 @@ def readfile(filename):
     noheader=1
     findex=-1
     f=open(filename,'r')
-    l0=f.readline()
+    l0=f.readline().replace(' ','')
     l1=f.readline().split()
     if l0.startswith('#') or l0.startswith(';'):
         header=l0.strip().replace(";",'').replace("#",'').split(',');
@@ -106,13 +105,11 @@ def readfile(filename):
         header=header[:len(l1)]
 
 
-    #print header
+    #print "HEADER:", header
     formats=['i']+['f']*(len(header)-1)
     if 'flag' in header:
         findex=header.index('flag')
         formats[findex]='S10'
-    #cols=tuple([i for i in range(len(header)) if not i==findex])
-    #print formats
     
     bstruct={}
     for i,k in enumerate(header):
@@ -120,25 +117,12 @@ def readfile(filename):
     b = np.loadtxt(filename,skiprows=noheader, dtype={'names':header,'formats':formats}, comments=';')
     if b.size == 1:
         b=np.atleast_1d(b)
-    #usecols=cols, unpack=True)
     
     for i,k in enumerate(header):
         if not k=='flag' and is_number(b[k][0]):
             bstruct[k][1]=np.count_nonzero(b[k])+sum(np.isnan(b[k]))
     j=len(b['galnum'])
     return b,j,bstruct
-
-##############################################################################
-##The input format generator
-##############################################################################
-def input_format(filename,path):
-    p = os.path.join(path,"input") 
-    assert os.path.isdir(p), "bad data directory %s"%p
-    if os.path.isfile(os.path.join(p,filename+'_err.txt')):
-        if os.path.isfile(os.path.join(p,filename+'_meas.txt')):
-            return ingest_data(filename,path=p)            
-    print "Unable to find _meas and _err files ",filename+'_meas.txt',filename+'_err.txt',"in directory ",p
-    return -1
 
 def ingest_data(filename,path):
     ###Initialize###
@@ -148,19 +132,21 @@ def ingest_data(filename,path):
     ###read the max, meas, min flux files###    
     meas,nm, bsmeas=readfile(measfile)
     err, nn, bserr =readfile(errfile)
+    
+    snr=(meas.view(np.float32).reshape(meas.shape + (-1,))[:,1:])/(err.view(np.float32).reshape(err.shape + (-1,))[:,1:])
+    if snr[~np.isnan(snr)].any()<3:  raw_input("WARNING: signal to noise ratio smaller than 3 for at least some lines! You should only use SNR>3 measurements (return to proceed)")
     return (filename, meas, err, nm, path, (bsmeas,bserr))
 
-##############################################################################
-##sets which metallicity scales can be calculated based on the available lines
-#############################################################################
+def input_data(filename,path):
+    p = os.path.join(path,"input") 
+    assert os.path.isdir(p), "bad data directory %s"%p
+    if os.path.isfile(os.path.join(p,filename+'_err.txt')):
+        if os.path.isfile(os.path.join(p,filename+'_meas.txt')):
+            return ingest_data(filename,path=p)            
+    print "Unable to find _meas and _err files ",filename+'_meas.txt',filename+'_err.txt',"in directory ",p
+    return -1
 
-def setscales(bss):
-    Zs= metallicity.get_keys()
-    scales={}
-    #set all to true for now
-    for s in Zs:
-        scales[s]=True
-    return scales
+
 
 ##############################################################################
 ##returns appropriate bin size for the number of data
@@ -180,36 +166,12 @@ def getbinsize(n,data,):
     elif BINMODE=='t':
         k=2.*n**(1./3.),0
     else:
-        #from astroML.plotting import hist as amlhist
-        #distrib=amlhist(data, bins='knuth', normed=True)
         k= knuthn(data)
-        #distrib=amlhist(data, bins='knuth', normed=
     return k
 
-##############################################################################        
-##estimating error starting at the peak.
-##(almost) symmetric - make it go same l and r
-##not well behaved in case of multiple peaks
-##DEPRECATED
-##############################################################################        
-def err_est1(count,prob=0.68):
-    peak=np.argmax(count)
-    total=np.sum(count)
-    temp=0
-    l=0
-    r=0
-    while temp<total*prob:
-        if count[peak-l]>=count[peak+r]:
-            temp+=count[peak-l]
-            l+=1
-        else:
-            temp+=count[peak+r]
-            r+=1
-
-    return peak-l,peak-r,(total-temp)/total,0,0
 
 ##############################################################################
-##Check if hist files need to be replaced
+##Check if hist files already exist and need to be replaced
 ##############################################################################
 def checkhist(snname,Zs,nsample,i,path):
     global CLOBBER
@@ -224,38 +186,27 @@ def checkhist(snname,Zs,nsample,i,path):
 
 ##############################################################################
 ##Save the result as histogram as name
-## delog - if true de-logs the data. False by default
 ##############################################################################
 #@profile
-def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=24):
+def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
     global BINMODE
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
     outfile=os.path.join(outdir,name+".pdf")
     fig=plt.figure(figsize=(11,8))
     plt.clf()
-    ###de-log###
-    if delog:
-        with np.errstate(invalid='ignore'):
-            data=np.power(10,np.absolute(data-12))
         
-    ####kill outliers###
+    ####kill outliers, infinities, and bad distributions###
     data=data[np.isfinite(data)]
-    #if max(data)-min(data)>0.0001:
-    #    data,ignore,ignore=stats.sigmaclip(data,high=5.0,low=5.0)
     n=data.shape[0]
     if not n>0:
         if verbose:print "data must be an actual distribution (n>0 elements!, %s)"%Zs
         return "-1,-1",[]
-    #if not max(data)-min(data)>0.1:
-    #    if verbose:print "the data must be in a distribution, not all the same!"
-    #    return "-1,-1"
     if data.shape[0]<=0 or np.sum(data)<=0:
         print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(snname,Zs,-1,-1,-1)
         return "-1, -1, -1",[]    
-#    if 1:
-
     try:
+
         ###find C.I.###
         median,m5sig,pc16,pc84,p5sig=np.percentile(data,[50,0.0000003,16,84,100-0.0000003])
         std=np.std(data)
@@ -270,9 +221,10 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
             print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(snname,Zs,median,0,0 )
 
             return "-1,-1,-1",[]
+
         ######histogram######
-        ##if sklearn is available use it to get Kernel Density
         if BINMODE=='kd':
+            ##if sklearn is available use it to get Kernel Density
             try:
                 from sklearn.neighbors import KernelDensity
             except:
@@ -295,11 +247,11 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
             counts, bins=distrib[0],distrib[1]
             widths=np.diff(bins)
             countsnorm=counts/np.max(counts)
-#            plt.bar(bins[:-1],countsnorm,widths,color=['gray'], alpha=0.3)
+
         ###find appropriate bin size###
-        ##if astroML is available use it to get Bayesian blocks
         else:
             if BINMODE=='bb' :
+                ##if astroML is available use it to get Bayesian blocks
                 try:
                     from astroML.plotting import hist as amlhist
                     if BINMODE=='bb':
@@ -314,6 +266,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
             else:
                 numbin,bm=getbinsize(data.shape[0],data)        
                 distrib=np.histogram(data, numbin, density=True)            
+
             ###make hist###
             counts, bins=distrib[0],distrib[1]
             widths=np.diff(bins)
@@ -324,7 +277,9 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
         plt.minorticks_on()
         plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.xlim(maxleft,maxright)
-        #the following lines assure the x tick label is within the length of the x axis
+
+        #the following lines assure the x tick label is 
+        #within the length of the x axis
         xticks=plt.xticks()[0]
         dx=xticks[-1]-xticks[-2]
         xticks=xticks[(xticks<maxright)*(xticks>maxleft)]
@@ -333,10 +288,13 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
             maxleft =maxleft -0.25*dx
         plt.xlim(maxleft,maxright)
         plt.xticks(xticks, ['%.2f'%s for s in xticks])           
+
         plt.ylim(0,1.15)
         plt.yticks(np.arange(0.2,1.1,0.2 ), [ "%.1f"%x for x in np.arange(0.2,1.1,0.2)])  
         plt.axvspan(left,right,color='DarkOrange',alpha=0.4)
         plt.axvline(x=median,linewidth=2,color='white',ls='--')
+        
+        #labels and legends
         st='%s '%(snname)
         plt.annotate(st, xy=(0.13, 0.6), xycoords='axes fraction',size=fs,fontweight='bold')
         st='%s '%(Zs.replace('_',' '))
@@ -354,16 +312,12 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
             else:
                 st='MC sample size %d\nhistogram rule: %s'%(nsample,binning[bm])
         plt.annotate(st, xy=(0.62, 0.55), xycoords='axes fraction',fontsize=fs-5)
-        if delog:
-            plt.xlabel('O/H')
-        elif "E(B-V)" in Zs:
+        if "E(B-V)" in Zs:
             plt.xlabel('E(B-V) [mag]')
             outfile=outfile.replace('(','').replace(')','')
         elif "logR23" in Zs:
             plt.xlabel('logR23')
         else:
-            #plt.plot([8.9,8.9],[0,1.2],'k-', linewidth=1)
-            #plt.text(8.9+0.02*(maxright-maxleft),0.2, "solar Z", rotation=90)
             plt.xlabel('12+log(O/H)')
         plt.ylabel('relative counts')
         plt.savefig(outfile,format='pdf')
@@ -382,23 +336,24 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,delog=False, verbose=False, fs=
 
 
 ##############################################################################
-## The main function. takes the flux and its error as input. 
+##The main function. takes the flux and its error as input. 
 ##  filename - a string 'filename' common to the three flux files
 ##  flux - np array of the fluxes
 ##  err - the flux errors, must be the same dimension as flux
 ##  nsample - the number of samples the code will generate. Default is 100
 ##  errmode - determines which method to choose the bin size.
-##      mode 'k' calculates this based on Knuth's rule
+##      mode 'k' calculates this based on Knuth's rule (default)
 ##      mode 'd' calculates this based on Doane's formula
 ##      mode 's' calculates this based on sqrt of number of data
-##      mode 't' calculates this based on 2*n**1/3 (default)
+##      mode 't' calculates this based on 2*n**1/3
 ##############################################################################
 #@profile
-def run((name, flux, err, nm, path, bss), nsample,mds,delog=False, unpickle=False, dust_corr=True, verbose=False, fs=24):
+def run((name, flux, err, nm, path, bss), nsample,mds, unpickle=False, dust_corr=True, verbose=False, fs=24):
     global RUNSIM,BINMODE
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
     assert(len(err['galnum'])== nm), "flux and err must be same dimensions" 
+
     
     newnsample=int(nsample+0.1*nsample)
     p=os.path.join(path,'..')
@@ -406,21 +361,18 @@ def run((name, flux, err, nm, path, bss), nsample,mds,delog=False, unpickle=Fals
     ###retrieve the metallicity keys
     Zs= metallicity.get_keys()
 
-    ###make necessary paths
+    ###make necessary paths for output files
     if not os.path.exists(os.path.join(p,'output','%s'%name)):
         os.makedirs(os.path.join(p,'output','%s'%name))
     if not os.path.exists(os.path.join(p,'output','%s'%name,'hist')):
         os.makedirs(os.path.join(p,'output','%s'%name,'hist'))
     binp=os.path.join(p,'output','%s'%name)
     picklefile=os.path.join(binp,'%s_n%d.pkl'%(name,nsample))
-
     if VERBOSE: print "output files will be stored in ",binp
-
     if not CLOBBER:
         for key in Zs:
             for i in range(nm):
                 checkhist(name,key,nsample,i,binp)
-
     if unpickle:
         RUNSIM=False
         if not os.path.isfile(picklefile):
@@ -457,12 +409,13 @@ def run((name, flux, err, nm, path, bss), nsample,mds,delog=False, unpickle=Fals
                 del bss[0][k]
                 del bss[1][k]
 
-        scales=setscales(bss[0])
         import diagnostics as dd
+
+        #looping over nm spectra
         for i in range(nm):
             diags=dd.diagnostics(newnsample)
             print "\n\nreading in measurements ",i+1
-            #for i in range(newnsample):
+
             fluxi={}#np.zeros((len(bss[0]),nm),float)
             for j,k in enumerate(bss[0].iterkeys()):
                 print '{0:15} '.format(k),
@@ -475,29 +428,15 @@ def run((name, flux, err, nm, path, bss), nsample,mds,delog=False, unpickle=Fals
             if success==-1:
                 print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
 
-#            diags.printme()
-#            s=key+"\t "+savehist(t,'test','EB_V',100,i,binp,nm,delog=delog)+'\n'
-#            plt.hist(t)
-#            plt.show()
-#            for k in diags.mds.iterkeys():
-#                if k in ['KD_comb_NEW']: print '*',
-#                print '{0:20}'.format(k),
-#                if not diags.mds[k]==None:
-#                    print ' {0:4} {1:4}'.format( stats.nanmean(diags.mds[k]),stats.nanstd(diags.mds[k])),
-#                print ""
             for key in diags.mds.iterkeys():
                 res[key][i]=diags.mds[key]
                 if res[key][i]==None:
                     res[key][i]=[float('NaN')]*len(sample)
         for key in diags.mds.iterkeys():
             res[key]=np.array(res[key]).T
-        #recast the result into np.array
-        ##        for key in Zs:
-        ##           res[key]=np.array(res[key])
-        
         if VERBOSE: print "Iteration Complete"
     
-        #"I CAN PICKLE THIS!"
+        #"WE CAN PICKLE THIS!"
         #pickle this realization
         if not NOPICKLE:
             pickle.dump(res,open(picklefile,'wb'))
@@ -512,7 +451,6 @@ def run((name, flux, err, nm, path, bss), nsample,mds,delog=False, unpickle=Fals
 
     ###Bin the results and save###
     print '{0:15} {1:20} {2:>13}   -{3:>5}     +{4:>5}  {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
-    #return -1
     for i in range(nm):
         if ASCIIOUTPUT:
             fi=open(os.path.join(binp,'%s_n%d_%d.txt'%(name,nsample,i+1)),'w')
@@ -523,13 +461,15 @@ def run((name, flux, err, nm, path, bss), nsample,mds,delog=False, unpickle=Fals
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
             if len(res[key].shape)>1 and sum(sum(~np.isnan(res[key])))>0:
-                sh,data=savehist(res[key][:,i],name,key,nsample,i,binp,nm,delog=delog, verbose=verbose, fs=fs)
+                sh,data=savehist(res[key][:,i],name,key,nsample,i,binp,nm, verbose=verbose, fs=fs)
                 s=key+"\t "+sh+'\n'
                 if ASCIIOUTPUT:
                     fi.write(s)
                 if not key in ["E(B-V)" ,"logR23"]:
                     boxlabels.append(key.replace('_',' '))
                     datas.append(data)
+
+        #make box_and_whiskers plot
         fig= plt.figure(figsize=(8,15))
         fig.subplots_adjust(bottom=0.18,left=0.18)
         ax = fig.add_subplot(111)
@@ -538,9 +478,7 @@ def run((name, flux, err, nm, path, bss), nsample,mds,delog=False, unpickle=Fals
             continue
         bp = ax.boxplot(datas,patch_artist=True)
         for box in bp['boxes']:
-            # change outline color
             box.set( color='#7570b3', linewidth=2)
-            # change fill color
             box.set( facecolor = 'DarkOrange' , alpha=0.4)
         for whisker in bp['whiskers']:
             whisker.set(color='#7570b3', linewidth=2)
@@ -559,8 +497,6 @@ def run((name, flux, err, nm, path, bss), nsample,mds,delog=False, unpickle=Fals
         plt.savefig(binp+"/"+name+"_boxplot%d_m%d.pdf"%(nsample,i+1),format='pdf')
         if ASCIIOUTPUT:
             fi.close()
-        
-    
         if VERBOSE: print "uncertainty calculation complete"
 
 def main():
@@ -568,7 +504,6 @@ def main():
     parser.add_argument('name', metavar='<name>', type=str, help="the SN file name (root of the _min,_max file names")
     parser.add_argument('nsample', metavar='N', type=int, help="number of iterations, minimum 100")
     parser.add_argument('--clobber',default=False, action='store_true', help="replace existing output")
-    parser.add_argument('--delog',default=False, action='store_true', help="result in natural, not log space. default is log space")
     parser.add_argument('--binmode', default='k', type=str, choices=['d','s','k','t','bb','kd'], help="method to determine bin size {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), k: Knuth's rule, bb: Bayesian blocks, kd: Kernel Density}")
     parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _max.txt and _min.txt files in a subdirectory sn_data)")
     parser.add_argument('--unpickle',   default=False, action='store_true', help="read the pickled realization instead of making a new one")
@@ -601,9 +536,9 @@ def main():
     assert(os.path.isdir(path)),"pass a path or set up the environmental variable MCMetdata pointing to the path where the _min _max _med files live"
 
     if args.nsample>=100:
-        fi=input_format(args.name, path=path)
+        fi=input_data(args.name, path=path)
         if fi!=-1:
-            run(fi,args.nsample,args.md, delog=args.delog, unpickle=args.unpickle, dust_corr=(not args.nodust), verbose=VERBOSE)
+            run(fi,args.nsample,args.md, unpickle=args.unpickle, dust_corr=(not args.nodust), verbose=VERBOSE)
     else:
         print "nsample must be at least 100"
     
@@ -614,8 +549,5 @@ if __name__ == "__main__":
         cProfile.run("main()")
     else:
         main()
-    #files=['sn2006ss','ptf10eqi-z']
-    #filename=files[1]
-    #nsample=10000
     
 

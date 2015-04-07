@@ -55,7 +55,7 @@ def get_keys():
 ##############################################################################
 
 #@profile
-def calculation(diags,measured,num,(bsmeas,bserr),mds,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False, verbose=False): 
+def calculation(diags,measured,num,(bsmeas,bserr),mds,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False, verbose=False, scales=None): 
 
     global IGNOREDUST
     diags.setdustcorrect()
@@ -72,7 +72,6 @@ def calculation(diags,measured,num,(bsmeas,bserr),mds,outfilename='blah.txt',dus
     ######FED why this????????????
     raw_lines['[OIII]4959']=raw_lines['[OIII]5007']/3.
     raw_lines['[OIII]49595007']=raw_lines['[OIII]4959']+raw_lines['[OIII]5007']
-    
     diags.setHab(raw_lines['Ha'],raw_lines['Hb'])
     
 
