@@ -222,18 +222,13 @@ class diagnostics:
             #    return -1
         if not self.hasN2 and not (self.hasO2 and self.hasO3):
             return -1
-        #print self.logN2O2 
-        if self.logN2O2 <1.2 :
-            print "WARNING: the KD02 and KK04 (+M08) methods should only ",
-            print "be used for  log([NII]6564/[OII]3727) >1.2, ",
-            print "here log([NII]6564/[OII]3727)=",self.logN2O2
 
     def fz_roots(self,coef): 
         if len(coef.shape)==1:
             coef[~(np.isfinite(coef))]=0.0
             rts= np.roots(coef[::-1])
             if rts.size==0:
-                print 'fz_roots failed'
+                print 'WARNING: fz_roots failed'
                 rts=np.zeros(coef.size-1)
             return rts
 
@@ -357,7 +352,6 @@ class diagnostics:
         print "calculating E(B-V)"
         #logHaHb=np.log10(Ha/Hb)
         self.mds['E(B-V)']=np.log10(2.86/(self.Ha/self.Hb))/(0.4*(k_Ha-k_Hb)) # E(B-V)
-        #print self.mds['E(B-V)']
         self.mds['E(B-V)'][self.mds['E(B-V)']<=0]=0.00001
         
 
@@ -375,12 +369,20 @@ class diagnostics:
         if self.hasN2 and self.hasO2:
             self.logN2O2=np.log10(self.N26584/self.O23727)+self.dustcorrect(k_N2,k_O2) 
             self.hasN2O2=True
+        if not self.hasN2O2 or np.mean(self.logN2O2) <1.2 :
+            print "WARNING: the KD02 and KK04 (+M08) methods should only ",
+            print "be used for  log([NII]6564/[OII]3727) >1.2, ",
+            print "here the mean log([NII]6564/[OII]3727)=",
+            try: print np.mean(self.logN2O2)
+            except TypeError: print self.logN2O2
+        if not self.hasN2O2:
+            self.N2O2_roots=np.zeros(self.nm)+float('NaN')
+        else:
             N2O2_coef=np.array([[self.N2O2_coef0,-532.15451,96.373260,-7.8106123,0.23928247]]*self.nm).T# q=2e7 line (approx average)
             N2O2_coef[0]-=self.logN2O2
             N2O2_coef=N2O2_coef.T
             # finding roots for == (4)
             self.N2O2_roots=np.array([self.fz_roots(N2O2_coef)])[0]          
-
     #@profile
     def calcR23(self):
         print "calculating R23"
@@ -405,7 +407,6 @@ class diagnostics:
         #the original code here uses S267176731, 
         #which is however set to 6717 as default
         #Vilchez & Esteban (1996)
-        print self.hasS2, self.hasS39069
         if  self.hasS2 :
             if self.hasS39069 and self.hasHb:
                 self.logS23=np.log10((self.S26717/self.Hb)*self.dustcorrect(k_S2,k_Hb,flux=True) + (self.S39069/self.Hb)*self.dustcorrect(k_S3,k_Hb,flux=True))                                 
@@ -566,7 +567,9 @@ class diagnostics:
         ##calibrated from Te method
         # make sure you run setOlines() first
         print "calculating P05"
-        self.calcP()
+        
+        if self.calcP()==-1:
+            return -1
         if self.Z_init_guess==None:
             self.initialguess()
         Psq=self.P*self.P
@@ -602,8 +605,10 @@ class diagnostics:
         P10logN2=np.zeros(self.nm)+float('NaN')
         P10logN2R2=np.zeros(self.nm)+float('NaN')
         P10logS2R2=np.zeros(self.nm)+float('NaN')
+        P10logS2=np.zeros(self.nm)+float('NaN')
 
         self.calcP()
+            
         if not self.R2==None:
             P10logR2=np.log(self.R2)
 
@@ -631,21 +636,25 @@ class diagnostics:
         coefsON2=np.array([8.013, 0.905, 0.602, 0.751])
         
         vsON=np.array([np.ones(self.nm),P10logR3,P10logR2,P10logN2R2]).T
-
+        
         indx=P10logN2 > -0.1
-        self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS0)
+        if not self.P==None:
+            self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS0)
         self.mds['P10_ON'][indx] = np.dot(vsON[indx],coefsON0)
 
         indx=(P10logN2 < -0.1)*(P10logN2S2 > -0.25)
-        self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS1)
+        if not self.P==None:
+            self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS1)
         self.mds['P10_ON'][indx] = np.dot(vsON[indx],coefsON1)
 
         indx=(P10logN2 < -0.1)*(P10logN2S2 < -0.25)
-        self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS2)
+        if not self.P==None:
+            self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS2)
         self.mds['P10_ON'][indx] = np.dot(vsON[indx],coefsON2)
         
         indx=~((self.mds['P10_ONS']>7.1) * (self.mds['P10_ON']>7.1)*(self.mds['P10_ONS']<9.4) * (self.mds['P10_ON']<9.4))
-        self.mds['P10_ONS'][indx]= float('NaN')
+        if not self.P==None:
+            self.mds['P10_ONS'][indx]= float('NaN')
         self.mds['P10_ON'][indx] = float('NaN')
         
         
@@ -861,11 +870,9 @@ class diagnostics:
             if not self.hasN2O2:
                 print "WARNING: must calculate logN2O2 first"
                 self.calcNIIOII()
-
-                if  self.N2O2_root == None:
-                    print "WARNING:  cannot calculate N2O2"
-                    return -1
-
+            if  not self.hasN2O2 or self.N2O2_roots == None or sum(np.isnan(self.N2O2_roots.flatten())) == len(self.N2O2_roots.flatten()):
+                print "WARNING:  cannot calculate N2O2"
+                return -1
             roots=self.N2O2_roots.T
             for k in range(4):
                 indx=(abs(roots[k]) >= 7.5) * (abs(roots[k]) <= 9.4) * (roots[k][:].imag ==  0.0 )
@@ -968,8 +975,7 @@ class diagnostics:
 
                 Z_new[(Z_new_lims[0]>Z_new_lims[1])]=None
                 self.mds['KK04_R23']=Z_new
-
-
+                
 
     #@profile
     def calcKDcombined(self):
@@ -1165,7 +1171,7 @@ class diagnostics:
             #self.mds['KDcomb_R23'][indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])                 
             
             indx= self.mds['KK04comb'] <= 8.5 
-            self.mds['KK04comb'][indx]=self.mds['KK04_R23'][indx]#KD02_R23_Z[indx]                        
+            self.mds['KK04comb'][indx]=self.mds['KK04_R23'][indx]#KD02_R23_Z[indx]                 
             
             #FED WHY???
             #indx= self.mds['Z94'] <= 8.5 

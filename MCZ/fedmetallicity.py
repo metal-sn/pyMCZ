@@ -18,6 +18,7 @@ from pylab import hist,show
 
 
 IGNOREDUST=False
+MP=True
 
 ##list of metallicity methods, in order calculated
 Zs=["E(B-V)", #Halpha, Hbeta
@@ -45,7 +46,7 @@ Zs=["E(B-V)", #Halpha, Hbeta
     "KD02comb_update","KK04comb"]
 #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
 
-    
+
 def get_keys():
     return Zs
  
@@ -55,7 +56,7 @@ def get_keys():
 ##############################################################################
 
 #@profile
-def calculation(diags,measured,num,(bsmeas,bserr),mds,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False, verbose=False): 
+def calculation(diags,measured,num,(bsmeas,bserr),mds,nps,outfilename='blah.txt',dust_corr=True,disp=False,saveres=False, verbose=False, scales=None): 
 
     global IGNOREDUST
     diags.setdustcorrect()
@@ -72,18 +73,19 @@ def calculation(diags,measured,num,(bsmeas,bserr),mds,outfilename='blah.txt',dus
     ######FED why this????????????
     raw_lines['[OIII]4959']=raw_lines['[OIII]5007']/3.
     raw_lines['[OIII]49595007']=raw_lines['[OIII]4959']+raw_lines['[OIII]5007']
-    
     diags.setHab(raw_lines['Ha'],raw_lines['Hb'])
     
-
+    print nps
     #if Ha or Hb is zero, cannot do red correction
     if dust_corr and diags.hasHa and diags.hasHb:
         with np.errstate(invalid='ignore'):
-            #print 'extinction correction ',i
             diags.calcEB_V()
     elif dust_corr and not IGNOREDUST:
-        response=raw_input("WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!! Continuing without reddening correction? [Y/n]\n").lower()
-        assert(not (response.startswith('n'))),"please fix the input file to include Halpha and Hbeta measurements"
+        if nps>1:
+            response=raw_input("WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!! Continuing without reddening correction? [Y/n]\n").lower()
+            assert(not (response.startswith('n'))),"please fix the input file to include Halpha and Hbeta measurements"
+        else: print "WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!!"
+
         IGNOREDUST=True
         dust_corr=False
         diags.mds['E(B-V)']=np.ones(len(raw_lines['Ha']))*1e-5
@@ -171,26 +173,24 @@ export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want
 PYQZ_DIR if you want this diagnostic. '''
 
     if 'PP04' in mds:
-       diags.calcPP04()
+        diags.calcPP04()
     if 'Z94' in mds:
-       diags.calcZ94()
+        diags.calcZ94()
     if 'M91' in mds:
-       diags.calcM91()
+        diags.calcM91()
     if 'P10' in mds:
         diags.calcP10()
     if 'M13' in mds:
         diags.calcM13()
     if 'M08' in mds:
-       diags.calcM08()
+        diags.calcM08()
     if 'P05' in mds:
-       diags.calcP05()
+        diags.calcP05()
     if 'C01' in mds:
-       diags.calcC01_ZR23()
-       #all these above were checked
+        diags.calcC01_ZR23()
     if 'KD02' in mds :
-       diags.calcKD02_N2O2()
-       diags.calcKK04_N2Ha()
-       
-       diags.calcKK04R23()
+        diags.calcKD02_N2O2()
+        diags.calcKK04_N2Ha()       
+        diags.calcKK04R23()
     if 'KD02comb' in mds:
-         diags.calcKDcombined()
+        diags.calcKDcombined()
