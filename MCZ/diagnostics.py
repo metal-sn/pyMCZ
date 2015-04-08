@@ -375,14 +375,14 @@ class diagnostics:
             print "here the mean log([NII]6564/[OII]3727)=",
             try: print np.mean(self.logN2O2)
             except TypeError: print self.logN2O2
+        if not self.hasN2O2:
             self.N2O2_roots=np.zeros(self.nm)+float('NaN')
-        elif self.hasN2O2:
+        else:
             N2O2_coef=np.array([[self.N2O2_coef0,-532.15451,96.373260,-7.8106123,0.23928247]]*self.nm).T# q=2e7 line (approx average)
             N2O2_coef[0]-=self.logN2O2
             N2O2_coef=N2O2_coef.T
             # finding roots for == (4)
             self.N2O2_roots=np.array([self.fz_roots(N2O2_coef)])[0]          
-
     #@profile
     def calcR23(self):
         print "calculating R23"
@@ -870,14 +870,11 @@ class diagnostics:
             if not self.hasN2O2:
                 print "WARNING: must calculate logN2O2 first"
                 self.calcNIIOII()
-            if  not self.hasN2O2 or self.N2O2_roots == None or len(np.isnan(self.N2O2_roots)) == len(self.N2O2_roots):
+            if  not self.hasN2O2 or self.N2O2_roots == None or sum(np.isnan(self.N2O2_roots.flatten())) == len(self.N2O2_roots.flatten()):
                 print "WARNING:  cannot calculate N2O2"
                 return -1
-            
-            print "here ",self.hasN2O2,self.N2O2_roots, self.N2O2_roots.T
             roots=self.N2O2_roots.T
             for k in range(4):
-                print roots[k], abs(roots[k])
                 indx=(abs(roots[k]) >= 7.5) * (abs(roots[k]) <= 9.4) * (roots[k][:].imag ==  0.0 )
                 self.mds['KD02_N2O2'][indx]=abs(roots[k][indx]) 
         else:
@@ -978,8 +975,7 @@ class diagnostics:
 
                 Z_new[(Z_new_lims[0]>Z_new_lims[1])]=None
                 self.mds['KK04_R23']=Z_new
-
-
+                
 
     #@profile
     def calcKDcombined(self):
@@ -1175,7 +1171,7 @@ class diagnostics:
             #self.mds['KDcomb_R23'][indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])                 
             
             indx= self.mds['KK04comb'] <= 8.5 
-            self.mds['KK04comb'][indx]=self.mds['KK04_R23'][indx]#KD02_R23_Z[indx]                        
+            self.mds['KK04comb'][indx]=self.mds['KK04_R23'][indx]#KD02_R23_Z[indx]                 
             
             #FED WHY???
             #indx= self.mds['Z94'] <= 8.5 

@@ -14,6 +14,10 @@ import pylabsetup
 #import metallicity_save2 as metallicity
 import fedmetallicity as metallicity
 
+import itertools
+import multiprocessing as mpc
+
+
 PROFILING = True
 PROFILING = False
 
@@ -21,9 +25,7 @@ PROFILING = False
 alllines=['[OII]3727','Hb','[OIII]4959','[OIII]5007','[OI]6300','Ha','[NII]6584','[SII]6717','[SII]6731','[SIII]9069','[SIII]9532']
 morelines=['E(B-V)','dE(B-V)','scale_blue','d scale_blue']
 
-
-
-OLD=False
+MAXPROCESSES=10
 
 #pickle may not be installed
 NOPICKLE=False
@@ -40,6 +42,8 @@ ASCIIOUTPUT=False
 RUNSIM=True
 BINMODE='k'
 binning={'bb':'Bayesian blocks','k':"Knuth's rule",'d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2 N^{1/3}$', 'kd':'Kernel Density'}
+
+MP=False
 
 def is_number(s):
     if not type(s) is np.string_:
@@ -180,7 +184,7 @@ def checkhist(snname,Zs,nsample,i,path):
     outdir=os.path.join(path,'hist')
     outfile=os.path.join(outdir,name+".pdf")
     if os.path.isfile(outfile) and not CLOBBER:
-        replace=raw_input("replacing existing image files, starting with: %s ? [Y/n]\n"%outfile).lower()
+        replace=raw_input("replacing existing  image files, starting with: %s ? [Y/n]\n"%outfile).lower()
         assert(not (replace.startswith('n'))),"save your existing output directory under another name first"
         CLOBBER =True
 
@@ -221,7 +225,9 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
             print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(snname,Zs,median,0,0 )
 
             return "-1,-1,-1",[]
-
+        ###print out the confidence interval###
+        print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
+        if NOPLOT: return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3)), data
         ######histogram######
         if BINMODE=='kd':
             ##if sklearn is available use it to get Kernel Density
@@ -239,7 +245,6 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
                 bins=np.linspace(maxleft,maxright,1000)[:, np.newaxis]
                 log_dens = kde.score_samples(bins)
                 dens=np.exp(log_dens)
-                #print dens
                 plt.fill(bins[:,0], dens/dens.max(), fc='#7570b3', alpha=0.6)
             numbin,bm=getbinsize(data.shape[0],data)        
             distrib=np.histogram(data, bins=numbin, density=True)            
@@ -323,9 +328,6 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
         plt.savefig(outfile,format='pdf')
         plt.close(fig)
 
-        ###print out the confidence interval###
-        print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
-        
         
         return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3)), data
         
@@ -335,6 +337,31 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
         return "-1, -1,-1",[]
 
 
+def parallel_function(f):
+    def easy_parallize(f, sequence):
+        """ assumes f takes sequence as input, easy w/ Python's scope """
+    from functools import partial
+    return partial(easy_parallize, f)
+
+#function.parallel = parallel_function(test_primes)
+
+def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,diags,nps))):
+    print "\n\nreading in measurements ",i+1
+    fluxi={}#np.zeros((len(bss[0]),nm),float)
+    for j,k in enumerate(bss[0].iterkeys()):
+        print '{0:15} '.format(k),
+        print '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
+        fluxi[k]=flux[k][i]*np.ones(len(sample[i]))+err[k][i]*sample[i]
+        warnings.filterwarnings("ignore")
+    success=metallicity.calculation(diags,fluxi,nm,bss,mds,nps,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
+    if success==-1:
+        print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
+        
+    for key in diags.mds.iterkeys():
+        res[key][i]=diags.mds[key]
+        if res[key][i]==None:
+            res[key][i]=[float('NaN')]*len(sample)
+    return res
 ##############################################################################
 ##The main function. takes the flux and its error as input. 
 ##  filename - a string 'filename' common to the three flux files
@@ -348,7 +375,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
 ##      mode 't' calculates this based on 2*n**1/3
 ##############################################################################
 #@profile
-def run((name, flux, err, nm, path, bss), nsample,mds, unpickle=False, dust_corr=True, verbose=False, fs=24):
+def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=False, dust_corr=True,verbose=False, fs=24):
     global RUNSIM,BINMODE
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
@@ -369,7 +396,7 @@ def run((name, flux, err, nm, path, bss), nsample,mds, unpickle=False, dust_corr
     binp=os.path.join(p,'output','%s'%name)
     picklefile=os.path.join(binp,'%s_n%d.pkl'%(name,nsample))
     if VERBOSE: print "output files will be stored in ",binp
-    if not CLOBBER:
+    if not CLOBBER and not NOPLOT:
         for key in Zs:
             for i in range(nm):
                 checkhist(name,key,nsample,i,binp)
@@ -386,7 +413,7 @@ def run((name, flux, err, nm, path, bss), nsample,mds, unpickle=False, dust_corr
         ###Sample 'nsample' points from a gaussian centered on 0 with std 1
         mu=0
         sigma=1
-        sample=np.random.normal(mu,sigma,newnsample)
+        sample=[np.random.normal(mu,sigma,newnsample) for i in range(nm)]
         
         ###Start calculation###
         ## the flux to be feed to the calculation will be
@@ -409,29 +436,41 @@ def run((name, flux, err, nm, path, bss), nsample,mds, unpickle=False, dust_corr
                 del bss[0][k]
                 del bss[1][k]
 
-        import diagnostics as dd
-
-        #looping over nm spectra
-        for i in range(nm):
+        import diagnostics as dd        
+        nps = min (mpc.cpu_count()-1 or 1, MAXPROCESSES)
+        print "\n\n\nrunning on %d threads\n\n\n"%nps
+        raw_input()
+        if multiproc and nps>1:
             diags=dd.diagnostics(newnsample)
-            print "\n\nreading in measurements ",i+1
+            second_args=[sample,flux,err,nm,bss,mds,VERBOSE, dust_corr,VERBOSE,res,diags,nps]
+            pool = mpc.Pool(processes=nps) # depends on available cores
+            rr = pool.map(calc, itertools.izip(range(nm), itertools.repeat(second_args))) # for i in range(nm): result[i] = f(i, second_args)
+            for ri,r  in enumerate(rr): 
+                for kk in r.iterkeys(): res[kk][ri]=r[kk][ri]
+            pool.close() # not optimal! but easy
+            pool.join()
+        else: 
+            #looping over nm spectra
+            for i in range(nm):
+                diags=dd.diagnostics(newnsample)
+                print "\n\n measurements ",i+1
 
-            fluxi={}#np.zeros((len(bss[0]),nm),float)
-            for j,k in enumerate(bss[0].iterkeys()):
-                print '{0:15} '.format(k),
-                #print bss[0][k][1], bss[1][k][1]
-                #print_options.set_float_precision(2)
-                print '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
-                fluxi[k]=flux[k][i]*np.ones(len(sample))+err[k][i]*sample
-                warnings.filterwarnings("ignore")
-            success=metallicity.calculation(diags,fluxi,nm,bss,mds,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
-            if success==-1:
-                print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
+                fluxi={}#np.zeros((len(bss[0]),nm),float)
+                for j,k in enumerate(bss[0].iterkeys()):
+                    print '{0:15} '.format(k),
+                    print '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
+                    fluxi[k]=flux[k][i]*np.ones(len(sample[i]))+err[k][i]*sample[i]
+                    warnings.filterwarnings("ignore")
+                success=metallicity.calculation(diags,fluxi,nm,bss,mds,1,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
+                if success==-1:
+                    print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
 
-            for key in diags.mds.iterkeys():
-                res[key][i]=diags.mds[key]
-                if res[key][i]==None:
-                    res[key][i]=[float('NaN')]*len(sample)
+                for key in diags.mds.iterkeys():
+                    res[key][i]=diags.mds[key]
+                    if res[key][i]==None:
+                        res[key][i]=[float('NaN')]*len(sample)
+        del sample
+                        
         for key in diags.mds.iterkeys():
             res[key]=np.array(res[key]).T
         if VERBOSE: print "Iteration Complete"
@@ -441,7 +480,6 @@ def run((name, flux, err, nm, path, bss), nsample,mds, unpickle=False, dust_corr
         if not NOPICKLE:
             pickle.dump(res,open(picklefile,'wb'))
             
-
     from matplotlib.font_manager import findfont, FontProperties
     
     if 'Time' not in  findfont(FontProperties()):
@@ -461,7 +499,7 @@ def run((name, flux, err, nm, path, bss), nsample,mds, unpickle=False, dust_corr
         print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
             if len(res[key].shape)>1 and sum(sum(~np.isnan(res[key])))>0:
-                sh,data=savehist(res[key][:,i],name,key,nsample,i,binp,nm, verbose=verbose, fs=fs)
+                sh,data=savehist(res[key][:,i],name,key,nsample,i,binp,nm,verbose=verbose, fs=fs)
                 s=key+"\t "+sh+'\n'
                 if ASCIIOUTPUT:
                     fi.write(s)
@@ -509,24 +547,27 @@ def main():
     parser.add_argument('--unpickle',   default=False, action='store_true', help="read the pickled realization instead of making a new one")
 
     parser.add_argument('--verbose',default=False, action='store_true', help="verbose mode")
-    parser.add_argument('--nodust',default=False, action='store_true', help=" dont do dust corrections (default is to do it)")
+    parser.add_argument('--nodust',default=False, action='store_true', help=" don't do dust corrections (default is to do it)")
+    parser.add_argument('--noplot',default=False, action='store_true', help=" don't plot individual distributions (default is to plot all distributions)")
     parser.add_argument('--asciiout',default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
     parser.add_argument('--md',default='all', type =str, help=" metallivity diagnostic to calculate. default is 'all', options are: D02, Z94, M91,C01, P05, PP04, D13, KD02, KD02comb, DP00 (deprecated), P01")
+    parser.add_argument('--multiproc',default=False, action='store_true', help=" multiprocess, with number of threads max(available cores-1, MAXPROCESSES)")
     args=parser.parse_args()
 
     global CLOBBER
     global VERBOSE
     global BINMODE
     global ASCIIOUTPUT
+    global NOPLOT
     CLOBBER=args.clobber
     VERBOSE=args.verbose
     BINMODE=args.binmode
-
+    NOPLOT=args.noplot
     ASCIIOUTPUT=args.asciiout
+
     if args.unpickle and NOPICKLE:
         args.unpickle = False
         raw_input("cannot use pickle on this machine, we won't save and won't read saved pickled realizations. Ctr-C to exit, Return to continue?\n")
-        
 
     if args.path:
         path=args.path
@@ -538,7 +579,7 @@ def main():
     if args.nsample>=100:
         fi=input_data(args.name, path=path)
         if fi!=-1:
-            run(fi,args.nsample,args.md, unpickle=args.unpickle, dust_corr=(not args.nodust), verbose=VERBOSE)
+            run(fi,args.nsample,args.md,args.multiproc, unpickle=args.unpickle, dust_corr=(not args.nodust), verbose=VERBOSE)
     else:
         print "nsample must be at least 100"
     
