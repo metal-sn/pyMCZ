@@ -17,17 +17,39 @@ python fedMCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
 
 nsample: the number of MC samples desired 
 
---path: the directory in which subdirectory "input" is located. If not provided, will default to environmental variable MCMetdata that should be set to point to that directory. _err.txt _meas.txt must live in <path>/input
+  --clobber             replace existing output
+  --unpickle            if it exists, a pickle output files for this SN and this 
+                        number of samples is read, instead of recalculating the metalicity
 
---unpickle: if it exists, a pickle output files for this SN and this number of samples is read, instead of recalculating the metalicity
+  --binmode             how to choose the number of bins for plotting the histogram:
+                            'd' is based on Doane's formula (wilipedia's version),  
+                            's' is the sqrt of number of data,        
+                            't' is on 2*n**1/3 , 
+                            'kb' uses Knuth's block rule (default), 
+                            'bb' uses bayesian blocks (must have astroML installed or it defaults to 'kb')
+                            'kd' is the kernel density, which requires sklearn installed and additioinally plots the                             histogram with 't' mode
 
---binmode: how to choose the number of bins for plotting the histogram:'d' is based on Doane's formula (wilipedia's version), 's' is the sqrt of number of data, 't' is on 2*n**1/3 (default), 'kb' uses Knuth's block rule, 'bb' uses bayesian blocks (must have astroML installed or it defaults to 't')
+  --clobber             If set to true, will overwrite existing output files. Default False.
 
---clobber: If set to true, will overwrite existing output files. Default False.
+  --verbose          verbose mode. Default False.
 
---delog: If set to true, result will be in natural space instead of log space. Default False.
+  --path PATH           the directory in which subdirectory "input" is located. If not provided, will default
+                        environmental variable MCMetdata that should be set to point to that directory. 
+                        _err.txt _meas.txt must live in <path>/input
 
---verbose: verbose mode. Default False.
+  --unpickle            read the pickled realization instead of making a new
+                        one
+  --nodust              don't do dust corrections (default is to do it)
+  --noplot              don't plot individual distributions (default is to
+                        plot all distributions)
+  --asciiout            write distribution in an ascii output (default is not
+                        to)
+  --md MD               metallivity diagnostic to calculate. default is 'all',
+                        options are: D02, Z94, M91, M08,C01, P05,P10, PP04, M13, D13, KD02,
+                        KD02comb, DP00 (deprecated), P01
+  --multiproc           multiprocess, with number of threads nps=max(available
+                        cores-1, MAXPROCESSES)
+
 
 
 ====================
