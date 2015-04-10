@@ -193,3 +193,5 @@ PYQZ_DIR if you want this diagnostic. '''
         diags.calcKK04_N2Ha()       
         diags.calcKK04R23()
         diags.calcKDcombined()
+
+    print diags.mds['logR23']

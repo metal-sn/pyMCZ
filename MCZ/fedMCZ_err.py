@@ -109,7 +109,6 @@ def readfile(filename):
         header=header[:len(l1)]
 
 
-    #print "HEADER:", header
     formats=['i']+['f']*(len(header)-1)
     if 'flag' in header:
         findex=header.index('flag')
@@ -136,9 +135,11 @@ def ingest_data(filename,path):
     ###read the max, meas, min flux files###    
     meas,nm, bsmeas=readfile(measfile)
     err, nn, bserr =readfile(errfile)
-    
-    snr=(meas.view(np.float32).reshape(meas.shape + (-1,))[:,1:])/(err.view(np.float32).reshape(err.shape + (-1,))[:,1:])
-    if snr[~np.isnan(snr)].any()<3:  raw_input("WARNING: signal to noise ratio smaller than 3 for at least some lines! You should only use SNR>3 measurements (return to proceed)")
+    try:
+        snr=(meas.view(np.float32).reshape(meas.shape + (-1,))[:,1:])/(err.view(np.float32).reshape(err.shape + (-1,))[:,1:])
+        if snr[~np.isnan(snr)].any()<3:  raw_input("WARNING: signal to noise ratio smaller than 3 for at least some lines! You should only use SNR>3 measurements (return to proceed)")
+    except:
+        pass
     return (filename, meas, err, nm, path, (bsmeas,bserr))
 
 def input_data(filename,path):
@@ -203,20 +204,16 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
         
     ####kill outliers, infinities, and bad distributions###
     data=data[np.isfinite(data)]
-    #if 'KD02_N2O2' in Zs:
-        #print data        
-        #raw_input()
 
     n=data.shape[0]
-    #print n
-    #if 'KD02_N2O2' in Zs: raw_input()
+
     if not n>0:
         if verbose:print "data must be an actual distribution (n>0 elements!, %s)"%Zs
         return "-1,-1,_1",[]
 
     if data.shape[0]<=0 or np.sum(data)<=0:
         print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(snname,Zs,-1,-1,-1)
-        return "-1, -1, -1",[]    
+        return "-1, -1, -1",[]  
     if 1:
     #try:
 
@@ -227,7 +224,6 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
         right=pc84
         maxleft=median-std*5
         maxright=median+std*5
-        #print maxright,maxleft,std,median
         if "%2f"%maxright=="%2f"%maxleft:
             maxleft=median-1
             maxright=median+1
@@ -466,17 +462,18 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
                 if success==-1:
                     print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
 
+                
                 for key in diags.mds.iterkeys():
                     res[key][i]=diags.mds[key]
                     if res[key][i]==None:
                         res[key][i]=[float('NaN')]*newnsample
                     elif len(res[key][i])<newnsample:
                         res[key][i]=res[key][i]+[float('NaN')]*(newnsample-len(res[key][i]))
+                
         #del sample
                         
         for key in diags.mds.iterkeys():
             res[key]=np.array(res[key]).T
-
         if VERBOSE: print "Iteration Complete"
     
         #"WE CAN PICKLE THIS!"
@@ -502,7 +499,6 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
         datas=[]
         print "\n\n\n\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
-            #print key, res[key], len(res[key].shape), sum(sum(~np.isnan(res[key])))
             if len(np.array(res[key][:,i]))>1 and sum(~np.isnan(res[key][:,i]))>0:
                 sh,data=savehist(res[key][:,i],name,key,nsample,i,binp,nm,verbose=verbose, fs=fs)
                 s=key+"\t "+sh+'\n'
