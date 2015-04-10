@@ -394,6 +394,7 @@ class diagnostics:
             self.logR23=np.log10(self.R23)
             #self.R23_5007=(1./self.O35007O2 + 1.)/(1./self.O35007O2 + 1.347)*self.R23  
             self.mds['logR23']=self.logR23
+            print self.logR23
             #note that values of logR23 > 0.95 are unphysical. 
             #you may choose to uncomment the line below
             #self.logR23[self.logR23>0.95]=0.95
