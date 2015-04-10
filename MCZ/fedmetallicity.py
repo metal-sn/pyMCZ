@@ -192,5 +192,4 @@ PYQZ_DIR if you want this diagnostic. '''
         diags.calcKD02_N2O2()
         diags.calcKK04_N2Ha()       
         diags.calcKK04R23()
-    if 'KD02comb' in mds:
         diags.calcKDcombined()
