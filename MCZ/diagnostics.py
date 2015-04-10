@@ -342,7 +342,7 @@ class diagnostics:
             
             if self.hasN2 and self.NII_SII==None and self.hasS26731:
                 self.NII_SII=np.log10(self.N26584/(self.S26717+self.S26731))#+self.dustcorrect(k_N2,k_O2,flux=True) 
-                    #lines are very close: no dust correction            
+                #lines are very close: no dust correction            
             if self.hasO3  and self.OIII_SII==None and self.hasS26731:
                 self.OIII_SII=np.log10(self.O35007/(self.S26717+self.S26731)+self.dustcorrect(k_O3,k_S2,flux=True) )
 
@@ -350,7 +350,6 @@ class diagnostics:
     #@profile
     def calcEB_V(self):
         print "calculating E(B-V)"
-        #logHaHb=np.log10(Ha/Hb)
         self.mds['E(B-V)']=np.log10(2.86/(self.Ha/self.Hb))/(0.4*(k_Ha-k_Hb)) # E(B-V)
         self.mds['E(B-V)'][self.mds['E(B-V)']<=0]=0.00001
         
