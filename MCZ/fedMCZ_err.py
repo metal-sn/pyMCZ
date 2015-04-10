@@ -194,6 +194,7 @@ def checkhist(snname,Zs,nsample,i,path):
 #@profile
 def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
     global BINMODE
+
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
     outfile=os.path.join(outdir,name+".pdf")
@@ -202,14 +203,22 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
         
     ####kill outliers, infinities, and bad distributions###
     data=data[np.isfinite(data)]
+    #if 'KD02_N2O2' in Zs:
+        #print data        
+        #raw_input()
+
     n=data.shape[0]
+    #print n
+    #if 'KD02_N2O2' in Zs: raw_input()
     if not n>0:
         if verbose:print "data must be an actual distribution (n>0 elements!, %s)"%Zs
-        return "-1,-1",[]
+        return "-1,-1,_1",[]
+
     if data.shape[0]<=0 or np.sum(data)<=0:
         print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(snname,Zs,-1,-1,-1)
         return "-1, -1, -1",[]    
-    try:
+    if 1:
+    #try:
 
         ###find C.I.###
         median,m5sig,pc16,pc84,p5sig=np.percentile(data,[50,0.0000003,16,84,100-0.0000003])
@@ -218,12 +227,13 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
         right=pc84
         maxleft=median-std*5
         maxright=median+std*5
+        #print maxright,maxleft,std,median
         if "%2f"%maxright=="%2f"%maxleft:
             maxleft=median-1
             maxright=median+1
         if round(right,6)==round(left,6) and round(left,6)==round(median,6):
             print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(snname,Zs,median,0,0 )
-
+  
             return "-1,-1,-1",[]
         ###print out the confidence interval###
         print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
@@ -276,7 +286,6 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
             counts, bins=distrib[0],distrib[1]
             widths=np.diff(bins)
             countsnorm=counts/np.max(counts)
-
         ###plot hist###
         plt.bar(bins[:-1],countsnorm,widths,color=['gray'])
         plt.minorticks_on()
@@ -331,19 +340,11 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
         
         return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3)), data
         
-    except (OverflowError,AttributeError,ValueError):
-        if VERBOSE: print data
-        print name, 'had infinities (or something in plotting went wrong)'
-        return "-1, -1,-1",[]
+    #except (OverflowError,AttributeError,ValueError):
+    #    if VERBOSE: print data
+    #    print name, 'had infinities (or something in plotting went wrong)'
+    #    return "-1, -1,-1",[]
 
-
-def parallel_function(f):
-    def easy_parallize(f, sequence):
-        """ assumes f takes sequence as input, easy w/ Python's scope """
-    from functools import partial
-    return partial(easy_parallize, f)
-
-#function.parallel = parallel_function(test_primes)
 
 def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,diags,nps))):
     print "\n\nreading in measurements ",i+1
@@ -438,14 +439,14 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
 
         import diagnostics as dd        
         nps = min (mpc.cpu_count()-1 or 1, MAXPROCESSES)
-        print "\n\n\nrunning on %d threads\n\n\n"%nps
-        raw_input()
         if multiproc and nps>1:
+            print "\n\n\nrunning on %d threads\n\n\n"%nps
+
             diags=dd.diagnostics(newnsample)
             second_args=[sample,flux,err,nm,bss,mds,VERBOSE, dust_corr,VERBOSE,res,diags,nps]
             pool = mpc.Pool(processes=nps) # depends on available cores
             rr = pool.map(calc, itertools.izip(range(nm), itertools.repeat(second_args))) # for i in range(nm): result[i] = f(i, second_args)
-            for ri,r  in enumerate(rr): 
+            for ri,r  in enumerate(rr):
                 for kk in r.iterkeys(): res[kk][ri]=r[kk][ri]
             pool.close() # not optimal! but easy
             pool.join()
@@ -468,11 +469,14 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
                 for key in diags.mds.iterkeys():
                     res[key][i]=diags.mds[key]
                     if res[key][i]==None:
-                        res[key][i]=[float('NaN')]*len(sample)
-        del sample
+                        res[key][i]=[float('NaN')]*newnsample
+                    elif len(res[key][i])<newnsample:
+                        res[key][i]=res[key][i]+[float('NaN')]*(newnsample-len(res[key][i]))
+        #del sample
                         
         for key in diags.mds.iterkeys():
             res[key]=np.array(res[key]).T
+
         if VERBOSE: print "Iteration Complete"
     
         #"WE CAN PICKLE THIS!"
@@ -496,9 +500,10 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
         
         boxlabels=[]
         datas=[]
-        print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
+        print "\n\n\n\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
-            if len(res[key].shape)>1 and sum(sum(~np.isnan(res[key])))>0:
+            #print key, res[key], len(res[key].shape), sum(sum(~np.isnan(res[key])))
+            if len(np.array(res[key][:,i]))>1 and sum(~np.isnan(res[key][:,i]))>0:
                 sh,data=savehist(res[key][:,i],name,key,nsample,i,binp,nm,verbose=verbose, fs=fs)
                 s=key+"\t "+sh+'\n'
                 if ASCIIOUTPUT:
@@ -506,7 +511,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
                 if not key in ["E(B-V)" ,"logR23"]:
                     boxlabels.append(key.replace('_',' '))
                     datas.append(data)
-
+        #sys.exit()
         #make box_and_whiskers plot
         fig= plt.figure(figsize=(8,15))
         fig.subplots_adjust(bottom=0.18,left=0.18)
@@ -536,6 +541,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
         if ASCIIOUTPUT:
             fi.close()
         if VERBOSE: print "uncertainty calculation complete"
+        #del datas
 
 def main():
     parser = argparse.ArgumentParser()
@@ -550,7 +556,7 @@ def main():
     parser.add_argument('--nodust',default=False, action='store_true', help=" don't do dust corrections (default is to do it)")
     parser.add_argument('--noplot',default=False, action='store_true', help=" don't plot individual distributions (default is to plot all distributions)")
     parser.add_argument('--asciiout',default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
-    parser.add_argument('--md',default='all', type =str, help=" metallivity diagnostic to calculate. default is 'all', options are: D02, Z94, M91,C01, P05, PP04, D13, KD02, KD02comb, DP00 (deprecated), P01")
+    parser.add_argument('--md',default='all', type =str, help=" metallivity diagnostic to calculate. default is 'all', options are: D02, Z94, M91,C01, P05, PP04, D13, KD02, DP00 (deprecated), P01")
     parser.add_argument('--multiproc',default=False, action='store_true', help=" multiprocess, with number of threads max(available cores-1, MAXPROCESSES)")
     args=parser.parse_args()
 
