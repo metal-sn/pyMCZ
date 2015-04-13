@@ -16,7 +16,7 @@ import fedmetallicity as metallicity
 
 import itertools
 import multiprocessing as mpc
-
+NM0=0# setting this to say N>0 starts the calculation at measurement N. this is only for exploratory purposes as the code bugs out before plotting and printing the results
 
 PROFILING = True
 PROFILING = False
@@ -359,8 +359,9 @@ def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,diags,nps)))
         if res[key][i]==None:
             res[key][i]=[float('NaN')]*len(sample)
     return res
+
 ##############################################################################
-##The main function. takes the flux and its error as input. 
+##  The main function. takes the flux and its error as input. 
 ##  filename - a string 'filename' common to the three flux files
 ##  flux - np array of the fluxes
 ##  err - the flux errors, must be the same dimension as flux
@@ -395,7 +396,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
     if VERBOSE: print "output files will be stored in ",binp
     if not CLOBBER and not NOPLOT:
         for key in Zs:
-            for i in range(nm):
+            for i in range(NM0,nm):
                 checkhist(name,key,nsample,i,binp)
     if unpickle:
         RUNSIM=False
@@ -410,7 +411,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
         ###Sample 'nsample' points from a gaussian centered on 0 with std 1
         mu=0
         sigma=1
-        sample=[np.random.normal(mu,sigma,newnsample) for i in range(nm)]
+        sample=[np.random.normal(mu,sigma,newnsample) for i in range(NM0,nm)]
         
         ###Start calculation###
         ## the flux to be feed to the calculation will be
@@ -421,7 +422,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
         #initialize the dictionary
         res={}
         for key in Zs:
-            res[key]=[[] for i in range(nm)]
+            res[key]=[[] for i in range(NM0,nm)]
 
         #do the iterations
         temp={}
@@ -441,14 +442,14 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
             diags=dd.diagnostics(newnsample)
             second_args=[sample,flux,err,nm,bss,mds,VERBOSE, dust_corr,VERBOSE,res,diags,nps]
             pool = mpc.Pool(processes=nps) # depends on available cores
-            rr = pool.map(calc, itertools.izip(range(nm), itertools.repeat(second_args))) # for i in range(nm): result[i] = f(i, second_args)
+            rr = pool.map(calc, itertools.izip(range(NM0,nm), itertools.repeat(second_args))) # for i in range(nm): result[i] = f(i, second_args)
             for ri,r  in enumerate(rr):
                 for kk in r.iterkeys(): res[kk][ri]=r[kk][ri]
             pool.close() # not optimal! but easy
             pool.join()
         else: 
             #looping over nm spectra
-            for i in range(nm):
+            for i in range(NM0,nm):
                 diags=dd.diagnostics(newnsample)
                 print "\n\n measurements ",i+1
 
@@ -490,7 +491,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, unpickle=Fals
 
     ###Bin the results and save###
     print '{0:15} {1:20} {2:>13}   -{3:>5}     +{4:>5}  {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
-    for i in range(nm):
+    for i in range(NM0,nm):
         if ASCIIOUTPUT:
             fi=open(os.path.join(binp,'%s_n%d_%d.txt'%(name,nsample,i+1)),'w')
             fi.write("%s\t Median Oxygen abundance (12+log(O/H))\t 16th percentile\t 84th percentile\n"%name)
