@@ -147,7 +147,7 @@ export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want
          diags.calcKD02_N2O2()
          diags.calcKK04_N2Ha()
          
-         diags.calcKK04R23()
+         diags.calcKK04_R23()
          diags.calcKDcombined()
 
     if 'DP00' in mds:
@@ -191,7 +191,6 @@ PYQZ_DIR if you want this diagnostic. '''
     if 'KD02' in mds :
         diags.calcKD02_N2O2()
         diags.calcKK04_N2Ha()       
-        diags.calcKK04R23()
+        diags.calcKK04_R23()
         diags.calcKDcombined()
 
-    print diags.mds['logR23']
