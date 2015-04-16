@@ -12,7 +12,7 @@ Place the  _meas and _err  files in the "input" directory (example files are pro
 
 From the commandline simply use as:
 ```
-python fedMCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
+python mcz.py <filename> nsample --path PATH --clobber --delog --verbose
 ```
 \<filename\>: the SN name which should be the common name of the _meas and _err files (e.g. testdata for testdata_meas.txt and testdata_err.txt)
 
