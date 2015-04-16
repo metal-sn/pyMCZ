@@ -2,7 +2,7 @@ MC Metallicity
 ====================
 
 This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, please cite <b>OUR PAPER HERE!!</b>
-Monte Carlo method to calculate metalicity uncertainty 
+This code is released under MIT licence: see LICENSE.txt
 
 ====================
 Usage:
