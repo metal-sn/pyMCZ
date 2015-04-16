@@ -246,19 +246,20 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
                 BINMODE='bb'
         if BINMODE=='kd':
             bw=(data.max()-data.min())/4.
-            if bw >0:
-                kde = KernelDensity(kernel='tophat', bandwidth=bw).fit(data[:, np.newaxis])
-                bins=np.linspace(maxleft,maxright,1000)[:, np.newaxis]
-                log_dens = kde.score_samples(bins)
-                dens=np.exp(log_dens)
-                plt.fill(bins[:,0], dens/dens.max(), fc='#7570b3', alpha=0.6)
             numbin,bm=getbinsize(data.shape[0],data)        
             distrib=np.histogram(data, bins=numbin, density=True)            
             ###make hist###
             counts, bins=distrib[0],distrib[1]
             widths=np.diff(bins)
             countsnorm=counts/np.max(counts)
-
+            if bw >0:
+                kde = KernelDensity(kernel='tophat', bandwidth=bw).fit(data[:, np.newaxis])
+                kdebins=np.linspace(maxleft,maxright,1000)[:, np.newaxis]
+                log_dens = kde.score_samples(kdebins)
+                dens=np.exp(log_dens)
+                norm=countsnorm.mean()/dens.mean()
+                plt.fill(kdebins[:,0], dens*norm, fc='#7570b3', alpha=0.6)
+            
         ###find appropriate bin size###
         else:
             if BINMODE=='bb' :
@@ -283,7 +284,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
             widths=np.diff(bins)
             countsnorm=counts/np.max(counts)
         ###plot hist###
-        plt.bar(bins[:-1],countsnorm,widths,color=['gray'])
+        plt.bar(bins[:-1],countsnorm,widths,color=['gray'], alpha=0.9)
         plt.minorticks_on()
         plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.xlim(maxleft,maxright)
