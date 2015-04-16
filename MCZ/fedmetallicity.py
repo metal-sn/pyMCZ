@@ -75,7 +75,6 @@ def calculation(diags,measured,num,(bsmeas,bserr),mds,nps,outfilename='blah.txt'
     raw_lines['[OIII]49595007']=raw_lines['[OIII]4959']+raw_lines['[OIII]5007']
     diags.setHab(raw_lines['Ha'],raw_lines['Hb'])
     
-    print nps
     #if Ha or Hb is zero, cannot do red correction
     if dust_corr and diags.hasHa and diags.hasHb:
         with np.errstate(invalid='ignore'):

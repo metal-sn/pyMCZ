@@ -414,7 +414,7 @@ class diagnostics:
     ##@profile
     def calclogq(self,Z):
         if not self.hasO3O2:
-            print "NEEDS O3,O2,Hb to calculate logq properly."
+            print "WARNING: needs O3,O2,Hb to calculate logq properly."
             return -1
         if self.logO3O2sq==None:
             self.logO3O2sq=self.logO3O2**2
@@ -515,13 +515,10 @@ class diagnostics:
         print "calculating PP04"
         if self.hasN2 and self.hasHa:
             self.mds['PP04_N2Ha']= nppoly.polyval(self.logN2Ha,[9.37, 2.03, 1.26, 0.32])
-            print self.logN2Ha
             
             #FED: restricting the range as per paper
             index=(self.logN2Ha>-2.5)*(self.logN2Ha<-0.3)
-            print ~index
             self.mds['PP04_N2Ha'][~index]=float('NaN')
-            print self.mds['PP04_N2Ha']
             if self.hasO3Hb :
                 self.mds['PP04_O3N2']=8.73 - 0.32*(self.logO3Hb-self.logN2Ha)
                 index=(self.logO3Hb>2)
@@ -898,23 +895,27 @@ class diagnostics:
             self.calcKD02_N2O2()
         if self.mds['KD02_N2O2'] == None or sum(np.isnan(self.mds['KD02_N2O2']))==self.nm:
             print "WARNING: without KD02_N2O2 cannot calculate KK04_N2Ha properly, but we will do our best..."
-            #return -1
-            Z_new_N2Ha=np.zeros(self.nm)
+            Z_new_N2Ha=np.zeros(self.nm)+8.6
         else:
             Z_new_N2Ha=self.mds['KD02_N2O2'].copy()  # was 8.6
+            
         if self.hasN2 and self.hasHa:
             logq_save=np.zeros(self.nm)
             convergence,tol,ii=100,1.0e-3,0
             if self.hasO3O2 :        
                 # calculating logq using the [N2]/[O2] 
                 # metallicities for comparison
-                while convergence>tol and ii<10:
+                while convergence>tol and ii<100:
                     ii+=1
                     self.logq=self.calclogq(Z_new_N2Ha)
                     Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
                     convergence=np.abs(self.logq-logq_save).mean()
                     logq_save=self.logq.copy()
-            else:        
+                if ii >=100:
+                    print "loop did not converge" 
+                    Z_new_N2Ha=np.zeros(self.nm)+float('NaN')
+            else:     
+                print "noO3O2"
                 self.logq=7.37177*np.ones(self.nm)
                 Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
             self.mds['KK04_N2Ha']=Z_new_N2Ha
@@ -938,10 +939,8 @@ class diagnostics:
         #if self.hasN2 and self.hasHa:
             #logq_lims=[6.9,8.38]
             #logN2Ha=np.log10(self.N26584/self.Ha) CHECK!! why remove dust correction??
-            #Z_new_N2Ha_lims= np.atleast_2d([1.0,1.0]).T*nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-np.atleast_2d( logq_lims).T*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,0.128])+np.atleast_2d(logq_lims).T*(10**(self.logN2Ha-0.2)*(-3.16+4.65*self.logN2Ha))
- 
-            # #### New ionization parameter and metallicity diagnostics #######
-            # NEW R23 diagnostics from Kobulnicky & Kewley 
+            #Z_new_N2Ha_lims= np.atleast_2d([1.0,1.0]).T*nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-np.atleast_2d( logq_lims).T*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,0.128])+np.atleast_2d(logq_lims).T*(10**(self.logN2Ha-0.2)*(-3.16+4.65*self.logN2Ha)) 
+            # R23 diagnostics from Kobulnicky & Kewley 2004
 
         Zmax=np.zeros(self.nm)
 
@@ -961,7 +960,7 @@ class diagnostics:
                 logqold,convergence,ii=np.zeros(self.nm)+100,100,0
                 tol=1e-4
                 #3 iterations are typically enought to achieve convergence KE08 A2.3
-                while convergence>tol and ii<10:
+                while convergence>tol and ii<100:
                     Zmax=Zmax*0.0
                     ii+=1
                     logq=self.calclogq(Z_new)
@@ -972,9 +971,10 @@ class diagnostics:
                     Z_new[indx]=nppoly.polyval(self.logR23[indx], [9.40 ,4.65,-3.17])-logq[indx]*nppoly.polyval(self.logR23[indx],[0.272,+0.547,-0.513])
                     convergence=np.abs((logqold-logq).mean())
                     logqold=logq.copy()
-                    
-                #if (self.hasHb):
-                    #2014 FED: changed moc value to None, not 0! and removed the if Hb
+                if ii>=100:
+                    print "loop did not converge" 
+                    Z_new=np.zeros(self.nm)+float('NaN')
+
                 Z_new_lims=[nppoly.polyval(self.logR23,[9.40, 4.65,-3.17])-logq*nppoly.polyval(self.logR23,[0.272,0.547,-0.513]),
                             nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])]
 
@@ -1006,8 +1006,8 @@ class diagnostics:
             print "WARNING:  Must first calculate Z94"
             self.calcZ94()
         if self.mds['KK04_R23'] == None :
+            print "WARNING:  Must first calculate KK04_R23"
             self.calcKK04_R23()
-            print "here"
         if not self.hasHa and not self.hasHb:
             print "WARNING: need Halpha and Hbeta for this. did you run setHab()?"        
 
@@ -1052,7 +1052,6 @@ class diagnostics:
         n_ite=3                          # number of iteations for abundance determination
         tol=1.0e-2                       # tolerance for convergance 
         
-        R23_roots=np.zeros((4,self.nm),dtype=complex)   # all possible roots of R23 diagnostic
         q_roots=np.zeros((3,self.nm),dtype=complex)     # possible roots of q diagnostic
         q=np.zeros((self.nm,n_ite+1))        # actual q value
         R23_Z=np.zeros((self.nm,n_ite+1))    # Z value for each iteation
@@ -1083,22 +1082,16 @@ class diagnostics:
         # uses KD02 [NII]/[OII] method if [NII]/[OII] gives 8.6 < log(O/H)+12
         # uses average of M91 and Z94 if 8.5 < log(O/H)+12 < 8.6
         # uses average of C01 and KD02 if  log(O/H)+12 < 8.5
-        # Also calculates comparison average
 
-        #if KD02_R23_Z == None or self.mds['Z94']==None or self.mds['M91']==None:
         if self.mds['KK04_R23'] == None or self.mds['M91']==None:
             print "WARNING:  cannot calculate KK04comb because  KK04_R23, or M91 failed"
             
         else:
             self.mds['KK04comb']=np.zeros(self.nm)+float('NaN')
             #KD02 averaged with M91 and Z94            
-            #indx=self.mds['Z94']>=9.0
-            #average of M91 KK04_R23 for Z>9
             indx=self.mds['KK04_R23']>9.0
             self.mds['KK04comb'][indx]=0.5*(self.mds['KK04_R23'][indx].copy()+self.mds['M91'][indx].copy())  
            
-            #self.mds['KDcomb_R23'][indx]=(KD02_R23_Z[indx]+self.mds['M91'][indx]+self.mds['Z94'][indx])/3.  
-            
             # average of M91 and Z94 for 8.5<Z<9
             indx= (self.mds['KK04_R23'] <= 9.0) * (self.mds['KK04_R23'] >= 8.5)
             self.mds['KK04comb'][indx]=0.5*(self.mds['M91'][indx].copy()+self.mds['Z94'][indx].copy())        
@@ -1113,11 +1106,11 @@ class diagnostics:
         indx_ig=self.Z_init_guess > 8.4
         if not self.mds['KD02_N2O2']==None:
             self.mds['KD02comb_update'][indx_ig]=self.mds['KD02_N2O2'][indx_ig].copy()
-            # if [NII]/[OII] abundance available
-            # and [NII]/Ha abundance < 8.4, then use R23. 
         if not self.mds['KK04_N2Ha']==None:
             self.mds['KD02comb_update'][~indx_ig]=self.mds['KK04_N2Ha'][~indx_ig].copy()
         if not  self.mds['KK04_R23']==None and not self.mds['M91']==None:
+            # if [NII]/[OII] abundance available
+            # and [NII]/Ha abundance < 8.4, then use R23. 
             indx=(~np.isnan(self.mds['KK04_R23'])) * (~np.isnan(self.mds['M91']) ) * (~indx_ig)
             self.mds['KD02comb_update'][indx]=0.5*(self.mds['KK04_R23'][indx].copy()+self.mds['M91'][indx].copy())
 
@@ -1129,355 +1122,3 @@ class diagnostics:
 
 
 
-
-
-'''
-    #@profile
-    def calcKDcombined(self):
-        # KD02comb_new  Kewley, L. J., & Dopita, M. A., 2002, ApJ, submitted '
-        # ### KD02 [NII]/[OII] estimate ###
-        # (can be used for for log(O/H)+12 > 8.6 only)
-        # uses equation (5) from paper, this should be identical 
-        # to the estimate above for abundances log(O/H)+12 > 8.6
-
-        print "calculating KD_combined"
-        if not self.hasN2O2:
-            self.calcNIIOII()
-        if self.mds['KK04_N2Ha']==None:
-            self.calcKK04_N2Ha()
-
-        #alternative way to calculate KD02_N2O2, stated in the paper KD02,
-        #valid in high Z regimes (Z>8.4)
-        #but we forego it for now
-        #if not self.logN2O2==None:
-        #    self.mds['KD02_N2O2']=np.log10(8.511e-4*(1.54020+1.26602*self.logN2O2+0.167977*self.logN2O2**2))+12.
-        #else: self.mds['KD02_N2O2']=np.zeros(self.nm)+float('NaN')
-
-        # ionization parameter        
-        logq=np.zeros(self.nm)
-        if self.hasN2 and self.hasO2 and self.hasHb and self.hasHa and self.hasO3O2:
-            logq=self.calclogq(self.mds['KD02_N2O2'])
-            #(32.81 + 0.0*self.logO3O2-1.153*self.logO3O2**2 +self.mds['KD02_N2O2']*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2**2))/(4.603  -0.3119*self.logO3O2 -0.163*self.logO3O2**2+self.mds['KD02_N2O2']*(-0.48 +0.0271*self.logO3O2+ 0.02037*self.logO3O2**2))
-            logq[self.mds['KD02_N2O2']<=8.4]=self.logq[self.mds['KD02_N2O2']<=8.4]
-        else:
-            if self.Z_init_guess==None:
-                self.initialguess()
-            logq=self.calclogq(self.Z_init_guess)
-
-
-        #FED: CHECK: the paragraph below makes sense in words but i dont see whereit ie enforced.
-
-        # if log([NII]/[OII]) after extinction correction is <-1.5, then check the data.
-        # if it is only slightly less than 1.5, then this can be a result of either noisy
-        # data, inaccurate fluxes or extinction correction, or a higher ionization parameter
-        # than modelled.  
-        # For these cases, the average of the M91,Z94 and C01 should be used.
-        
-        # KD02 R23 estimate (not reliable for  8.4 < log(O/H)+12 < 8.8)
-        # uses [NII]/[OII] estimate as initial guess - this can be changed below
-        
-        # initializing:
-        Zi=np.array([0.05,0.1,0.2,0.5,1.0,1.5,2.0,3.0])      # model grid abundances in solar units
-        ZiOH=np.log10(Zi*8.511e-4)+12    # log(O/H)+12 units
-        Zstep=np.array([0.025,0.075,0.15,0.35,0.75,1.25,1.75,2.5,3.5]) #middle of model grid abundances
-        ZstepOH=np.log10(Zstep*8.511e-4)+12
-        qstep=np.log10([3.5e6,7.5e6,1.5e7,3e7,6e7,1.16e8,2.25e8,3.25e8]) # model grid ionization parameters
-        n_ite=3                          # number of iteations for abundance determination
-        
-        tol=1.0e-2                       # tolerance for convergance 
-        
-        R23_roots=np.zeros((4,self.nm),dtype=complex)   # all possible roots of R23 diagnostic
-        q_roots=np.zeros((3,self.nm),dtype=complex)     # possible roots of q diagnostic
-        q=np.zeros((self.nm,n_ite+1))        # actual q value
-
-        R23_Z=np.zeros((self.nm,n_ite+1))    # Z value for each iteation
-        if not self.mds['KD02_N2O2'] ==None:  R23_Z[:,0]=self.mds['KD02_N2O2'].copy()  # use NIIOII abundance as initial estimate
-
-        # occasionally, for noisy data or badly fluxed [OII].[OIII] or Hb, 
-        # or for high ionization parameter galaxies, R23 is slightly higher
-        # thn the curves in our models - this will result in all complex roots of
-        # the R23 curve unless a slightly lower R23 is used.  These should
-        # be checked individually to make sure that it is just noise etc in the
-        # data that is causing the problem, rather than wrong fluxes input.
-        # the R23 ratio should be close to 0.95, not much more than 1.0 for the
-        # data to be physical.
-
-
-        if self.logR23 == None:
-            self.calcR23()
-        if not self.hasO3 or not self.hasO2 or self.logR23==None:            
-            print "WARNING:  Must first calculate R23 and set O lines with setOlines()"
-            
-        else:
-            R23_coefi =np.zeros((self.nm,5,7))+R23_coef
-            O3O2_coefi=np.zeros((self.nm,4,8))+O3O2_coef
-
-            # coefficients from KD02 paper:
-            R23_coefi[:,0,:]= (np.ones((self.nm,1))*R23c0)- (np.ones((7,1))*self.logR23).T
-            O3O2_coefi[:,0,:]=(np.ones((self.nm,1))*O3O2c0)-(np.ones((8,1))*self.logO35007O2).T
-
-         ' ''
-            indx=( abs(R23_Z[:,ite]-R23_Z[:,ite-1]) > tol)
-            # coefficients from KD02 paper:            
-            for ite in range(1,n_ite+1) : 
-                # iteate if tolerance level not met
-                #   calculate ionization parameter using [OIII]/[OII] with
-                #   [NII]/[OII] abundance for the first iteation, and the R23
-                #   abundance in consecutive iteations
-                for j in range(8):  
-                    indx1=( R23_Z[:,ite-1] > ZstepOH[j] )*(R23_Z[:,ite-1] <= ZstepOH[j+1] )*indx
-                    #                                indx2= R23_Z[i,ite-1] <= ZstepOH[j+1] :
-                    q_roots[:,indx1]=self.fz_roots(O3O2_coefi[indx1,:,j]).T  
-
-                    #q must be between 3.5e6 and 3.5e8 cm/s 
-                    #because that is the range it
-                    #is defined over by the model grids, and it must be real.
-
-                for k in range(3) :
-                    indx1=(q_roots[k][indx].imag==0.0)*(q_roots[k][indx].real>=6.54407)*(q_roots[k][indx].real <= 8.30103)
-                    q[indx1,ite]=(q_roots[k,indx1].real)
-                                        
-                    #   calculate abundance using ionization parameter:
-                R23_qstepno=np.zeros(len(q[indx,ite]))
-                        
-                for jj in range(7) :   
-                    indx1=(q[indx,ite] > qstep[jj])*(q[indx,ite] <= qstep[jj+1])
-                    if sum(indx1)>0:
-                        R23_roots[:,index1]=self.fz_roots(R23_coefi[index1,:,jj]).T
-                        R23_qstepno[indx1]=jj
-     
-                        #   There will be four roots, two complex ones, 
-                        #   and two real ones.
-                        #   use previous R23 value 
-                        #   (or [NII]/[OII] if first iteation) 
-                        #   and q to find which real root to use 
-                        #   (ie. which side of R23 curve to use).  
-                        #   Rmax=[1.04967,1.06497,1.06684,1.06329,1.03844,0.991261,0.91655]
-                    Smax=np.array([8.69020,8.65819,8.61317,8.58916,8.49012,8.44109,8.35907])
-                            
-                    for k in range(4) :
-                         indx1=(R23_roots[k,indx].imag == 0.0)*(R23_Z[indx,ite-1] >= Smax[R23_qstepno[indx]])*(R23_roots[k,indx].real >= Smax[R23_qstepno[indx]])+R23_roots[k,indx].imag == 0.0)*(R23_Z[indx,ite-1] <= Smax[R23_qstepno[indx]])*(R23_roots[k,indx].real <= Smax[R23_qstepno[indx]])
-
-                         R23_Z[indx1,ite]=R23_roots[k,indx1].real
-                                   
-                         # around maximum of R23 sometimes the R23 ratio 
-                         # will be slightly higher than
-                         # that available for the closest q value.  
-                         # This will depend on noise addded to data.  
-                         # If this happens, step up in ionization parameter 
-                         # to find abundance using that one instead. 
-                         # Around local maximum, the actual ionization parameter
-                         # used is not significant compared to the errors 
-                         # associated with the lack of
-                         # abundance sensitivity of the R23 ratio in this region.
-
-                        while R23_Z[i,ite] == 0.0 and R23_qstepno <= 5 :
-                            R23_roots[:,i]=self.fz_roots(R23_coef[:,R23_qstepno+1])
-                            for k in range(4):
-                                if (R23_roots[k,i].imag) == 0.0 :
-                                    if (R23_Z[i,ite-1] >= Smax[R23_qstepno] and R23_roots[k,i].real >= Smax[R23_qstepno]) or (R23_Z[i,ite-1] <= Smax[R23_qstepno] and R23_roots[k,i].real <= Smax[R23_qstepno]):
-                                        R23_Z[i,ite]=R23_roots[k,i].real
-                            R23_qstepno+=1
-                            
-                            
-                R23_Z[indx*(-1),ite]=R23_Z[indx*(-1),ite-1]  
-                q[indx*(-1),ite]=q[indx*(-1),ite-1]
-
-
-        KD02_R23_Z=R23_Z[:,n_ite]
-        ' ''          
-        #  ### Combined \R23\ method outlined in KD02 paper Section 7. ###
-        #  ie for objects with only [OII], [OIII], Hb available
-        if not self.hasHa and not self.hasHb:
-            print "WARNING: need Halpha and Hbeta for this. did you run setHab()?"
-        # KD01 combined method (uses [NII], [OII], [OIII], [SII]):
-        # uses KD02 [NII]/[OII] method if [NII]/[OII] gives 8.6 < log(O/H)+12
-        # uses average of M91 and Z94 if 8.5 < log(O/H)+12 < 8.6
-        # uses average of C01 and KD02 if  log(O/H)+12 < 8.5
-        # Also calculates comparison average
-
-        #KD02C01_ave=np.zeros(self.nm)+float('NaN')
-        #M91Z94C01_ave=np.zeros(self.nm)+float('NaN')
-        #M91Z94_ave=np.zeros(self.nm)+float('NaN')
-        
-        if self.mds['M91'] == None:
-            print "WARNING:  Must first calculate M91"
-            self.calcM91()
-        if self.mds['Z94'] == None:
-            print "WARNING:  Must first calculate Z94"
-            self.calcZ94()
-
-        #if KD02_R23_Z == None or self.mds['Z94']==None or self.mds['M91']==None:
-        if self.mds['KK04_R23'] == None or self.mds['M91']==None:
-            print "WARNING:  cannot calculate KK04comb because  KK04_R23, M91 failed"
-        else:
-            self.mds['KK04comb']=np.zeros(self.nm)+float('NaN')
-
-            # LK02 averaged with M91 and Z94            
-            #indx=self.mds['Z94']>=9.0
-            print self.mds['KK04_R23']
-            indx=self.mds['KK04_R23']>=9.0
-            print "1",indx
-            #self.mds['KDcomb_R23'][indx]=(KD02_R23_Z[indx]+self.mds['M91'][indx]+self.mds['Z94'][indx])/3.  
-            self.mds['KK04comb'][indx]=(self.mds['KK04_R23'][indx]+self.mds['M91'][indx])/2.  
-            
-            # average of M91 and Z94
-            indx= (self.mds['KK04_R23'] <= 9.0) * (self.mds['KK04comb'] >= 8.5)
-            print "2",indx
-            self.mds['KK04comb'][indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])                  
-       
-            #FED WHY???
-            # average of M91 and Z94
-            #indx=(self.mds['Z94'] <= 9.0) * (self.mds['Z94'] >= 8.5)
-            #self.mds['KDcomb_R23'][indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])                 
-            
-            indx= self.mds['KK04_R23'] <= 8.5 
-            print "3",indx
-            self.mds['KK04comb'][indx]=self.mds['KK04_R23'][indx]#KD02_R23_Z[indx]                 
-            
-            #FED WHY???
-            #indx= self.mds['Z94'] <= 8.5 
-            #self.mds['KK04comb'][indx]=self.mds['KK04_R23'][indx]#KD02_R23_Z[indx]                        
-
-            #FED WHY???
-            #indx=(np.abs(self.mds['M91'])>0) * (np.abs(self.mds['Z94'])>0)
-            #M91Z94_ave[indx]=0.5*(self.mds['M91'][indx]+self.mds['Z94'][indx])
-            
-            #indx =(np.abs(self.mds['C01'])>0) *( np.abs(self.mds['M91'])>0) * (np.abs(self.mds['Z94'])>0)
-            #M91Z94C01_ave[indx]=(self.mds['M91'][indx]+self.mds['Z94'][indx]+self.mds['C01'][indx])/3.
-            #if self.mds['C01_N2S2']==None:            
-                #self.calcC01_ZR23()
-            #if not self.mds['C01_N2S2']==None:            
-                #indx=(np.abs(KD02_R23_Z)> 0.0) * (np.abs(self.mds['C01_N2S2'])>0)
-                #indx=(np.abs(self.mds['KK04_R23'])> 0.0) * (np.abs(self.mds['C01_N2S2'])>0)
-                #KD02C01_ave[indx]=0.5*(KD02_R23_Z[indx]+self.mds['C01_N2S2'][indx])
-                #KD02C01_ave[indx]=0.5*(self.mds['KK04_R23'][indx]+self.mds['C01_N2S2'][indx])
-
-                
-        
-        ' ''
-        # ### [NII]/[SII] method outlined in D02 paper ###
-        # this method produces a systematic shift of 0.2 dex in log(O/H)+12
-        # compared with the average of M91, Z94, and C01.  We believe this
-        # is a result of inaccurate abundances or depletion factors, which are known 
-        # problems in sulfur modelling.  Initial guess of [NII]/[OII] used
-        # can be changed.  Initial guess is not critical except for high
-        # ionization parameters.  ionization parameter diagnostic is [OIII]/[OII]
-        
-        self.mds['KD02_N2S2']=np.zeros(self.nm)+float('NaN')
-        
-        
-        N2S2_roots=np.zeros((4,self.nm),dtype=complex)   # all possible roots of NIISII diagnostic
-        q_roots=np.zeros((3,self.nm),dtype=complex)     # possible roots of q diagnostic
-        q=np.zeros((self.nm,n_ite+1))        # actual q value
-
-        N2S2_Z=np.zeros((self.nm,n_ite+1))    # Z value for each iteation
-        
-        # initializing:
-        if not self.mds['KD02_N2O2'] == None:
-            N2S2_Z[:,0]=self.mds['KD02_N2O2'].copy()  # use [NII]/[OII] abundance as initial estimate
-
-        if self.hasO3 and self.hasO2 and self.hasN2S2:
-            # coefficients from KD02 paper:
-            indx = (abs(N2S2_Z[:,1]-N2S2_Z[:,0]) >= tol )
-            N2S2_coefi =np.zeros((self.nm,5,7))+N2S2_coef
-            N2S2_coefi[:,0,:]=(np.ones((self.nm,1))*N2S2c0)-(np.ones((7,1))*self.logN2S2).T
-
-            for ite in range(1, n_ite+1):                 
-                # iteate where tolerance level not met (indx)
-                #   calculate ionization parameter using [OIII]/[OII] with
-                #   [NII]/[OII] abundance for the first iteation, 
-                #   and the [NII]/[SII] abundance in consecutive iteations
-                indx1=[]
-                for j in range(8) :   
-                    indx1=(N2S2_Z[:,ite-1]>ZstepOH[j] )*(N2S2_Z[:,ite-1]<=ZstepOH[j+1] )*indx
-                    #   q must be between 3.5e6 and 3.5e8 cm/s 
-                    #   because that is the range it
-                    #   is defined over by the model grids, and it must be real.
-                    #if sum(indx1)<=1: continue
-                    q_roots[:,indx1]=self.fz_roots(O3O2_coefi[indx1,:,j]).T  
-                for k in range(3) :
-                        indx1=(q_roots[k][indx].imag==0.0)*(q_roots[k][indx].real>=6.54407)*(q_roots[k][indx].real <= 8.30103)
-                        #if (q_roots[k,i].imag) == 0.0 :
-                            #if (q_roots[k,i].real) >= 6.54407:   #log units (q>=1e6cm/s) 
-                                #if (q_roots[k,i].real) <= 8.30103:#log units (q<=2e8cm/s)
-                                    #print i
-                        q[indx1,ite]=(q_roots[k,indx1].real)                    
-                        #   calculate abundance using ionization parameter:
-                N2S2_qstepno=np.zeros(len(q[indx,ite]))
-                for jj in range(7) :   
-                    indx1=(q[indx,ite] > qstep[jj])*(q[indx,ite] <= qstep[jj+1])
-                    #if q[i,ite] > qstep[jj] and q[i,ite] <= qstep[jj+1] :
-                    if sum(indx1)>0:
-                        N2S2_roots[:,indx1]=self.fz_roots(N2S2_coefi[indx1,:,jj]).T
-                        N2S2_qstepno[indx1]=jj
-                    #   There will be four roots, two complex ones, 
-                    #   and two real ones. Use previous NIISII value 
-                    #   (or [NII]/[OII] if first iteation) 
-                    #   and q to find which real root to use 
-                    #   (ie. which side of R23 curve to use).  
-                #for i,ii in enumerate(indx) :
-                for k in range(4) :
-                    indx1=(N2S2_roots[k,indx].imag == 0.0)*(N2S2_roots[k,indx].real >= 8.0)*(N2S2_roots[k,indx].real <= 9.35)
-                    #if (N2S2_roots[k,i].imag) == 0.0 and (N2S2_roots[k,i].real) >= 8.0 and (N2S2_roots[k,i].real) <= 9.35 :
-                    N2S2_Z[indx1,ite]=(N2S2_roots[k,indx1].real)
-                    for i in indx1:
-                        if N2S2_Z[indx1[i],ite] == 0.0 :
-                            #print "indx1[indx2]",indx1[indx2]
-                            #if sum(indx1[indx2])>0:
-                            N2S2_roots[:,indx1[i]]=self.fz_roots(N2S2_coef[:, N2S2_qstepno[i]+1])
-                    for k in range(4) :
-                        indx1=(N2S2_roots[k,indx].imag == 0.0)*(N2S2_roots[k,indx].real >= 8.0)*(N2S2_roots[k,indx].real <= 9.35)
-                        #if (N2S2_roots[k,i].imag) == 0.0 and ((N2S2_roots[k,i].real) >= 8.0) and ((N2S2_roots[k,i].real) <= 9.35) :
-                        N2S2_Z[indx1,ite]=(N2S2_roots[k,indx1].real).T
-                N2S2_Z[~indx,ite]=N2S2_Z[~indx,ite-1]  
-                q[~indx,ite]=q[~indx,ite-1]
-                if ite<n_ite:
-                    indx = (abs(N2S2_Z[:,ite+1]-N2S2_Z[:,ite]) >= tol ) 
-
-        N2S2_Z[:,n_ite][(N2S2_Z[:,n_ite]==0)]=float('NaN')
-        self.mds['KD02_N2S2']=N2S2_Z[:,n_ite]
-        ' ''
-
-        #FED: DROPIT
-        #if not self.mds['KD02_N2O2']==None:
-        #    self.mds['KD02comb']=self.mds['KD02_N2O2'].copy()
-        #else:
-        #    self.mds['KD02comb']=np.zeros(self.nm)+float('NaN')
-        #self.mds['KD02comb'][self.mds['KD02comb']==0.0]=float('NaN')
-
-        self.mds['KD02comb_update']=np.zeros(self.nm)+float('NaN')
-
-        #if not KD02_R23_Z == None and not  self.mds['Z94']==None and not self.mds['M91']==None:
-        if not self.mds['KK04_R23'] == None and not  self.mds['Z94']==None and not self.mds['M91']==None:
-            if not self.mds['KD02_N2O2']==None:
-                #indx= (self.mds['KD02_N2O2'] <= 8.6 ) * (M91Z94_ave >= 8.5 )
-                #self.mds['KD02comb'][indx]=M91Z94_ave[indx]   # average of M91 and Z94
-                #indx= (self.mds['KD02_N2O2'] <= 8.6 ) * (M91Z94_ave < 8.5 )
-                #FED: DROPIT
-                #self.mds['KD02comb'][indx]=KD02C01_ave[indx]
-                #pl.hist(self.mds['KD02comb'])
-                #pl.show()
-                #-----------------------------------------
-                # ### combined method ###
-                #-----------------------------------------
-                
-                # if [NII]/[OII] abundance available and [NII]/Ha abundance < 8.4, then 
-                # use R23. 
-                
-                indx=self.Z_init_guess > 8.4
-                #self.mds['KK04_R23']=KK04_R23_Z#np.zeros(self.nm)+float('NaN')
-                self.mds['KD02comb_update'][indx]=self.mds['KD02_N2O2'][indx].copy()
-            else:
-                indx=(self.mds['KK04_R23'] > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
-                #indx=(KD02_R23_Z > 0.0) * (self.mds['M91'] > 0.0 ) * (self.Z_init_guess <= 8.4)
-                
-                #FED CHECK: why are we switching from self.mds['KK04_R23'] to KK04_R23_Z??
-                self.mds['KD02comb_update'][indx]=0.5*(self.mds['KK04_R23'][indx].copy()+self.mds['M91'][indx].copy())
-                #self.mds['KD02comb_update'][indx]=0.5*(KD02_R23_Z[indx].copy()+self.mds['M91'][indx].copy())
-                indx=(self.mds['KK04_R23'] <= 0.0) * (self.mds['M91'] <= 0.0 ) * (self.Z_init_guess <= 8.4)
-                if not self.mds['KK04_N2Ha']==None:
-                    self.mds['KD02comb_update'][indx]=self.mds['KK04_N2Ha'][indx].copy()
-        else:
-            print "WARNING:  cannot calculate KK04comb because  KK04_R23, M91, or Z94 failed"            
-'''
