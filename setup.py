@@ -1,10 +1,10 @@
 from distutils.core import setup
 
-setup(name='MCZ',
+setup(name='mcz',
       version='1.0',
-      author='Seung Man Oh',
-      author_email='smo304@nyu.edu',
-      description='MC simulation for getting metallicity confidence region',
-      url='https://github.com/smanoh/MC_Metalicity',
-      packages=['MCZ'],
+      author='Federica Bianco',
+      author_email='fb55@nyu.edu',
+      description='MC simulation for getting metallicity and confidence regions from line flux values',
+      url='https://github.com/nyusngroup/MC_Metalicity',
+      packages=['mcz'],
      )
