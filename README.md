@@ -1,7 +1,8 @@
-MC Metalicity
+MC Metallicity
 ====================
 
-Monte Carlo method to calculate metalicity uncertainty from flux data.
+This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, please cite <b>OUR PAPER HERE!!</b>
+This code is released under MIT licence: see LICENSE.txt
 
 ====================
 Usage:
@@ -11,7 +12,7 @@ Place the  _meas and _err  files in the "input" directory (example files are pro
 
 From the commandline simply use as:
 ```
-python fedMCZ_err.py <filename> nsample --path PATH --clobber --delog --verbose
+python mcz.py <filename> nsample --path PATH --clobber --delog --verbose
 ```
 \<filename\>: the SN name which should be the common name of the _meas and _err files (e.g. testdata for testdata_meas.txt and testdata_err.txt)
 
