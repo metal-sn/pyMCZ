@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from distutils.core import setup
 
 setup(name='mcz',
@@ -7,4 +8,5 @@ setup(name='mcz',
       description='MC simulation for getting metallicity and confidence regions from line flux values',
       url='https://github.com/nyusngroup/MC_Metalicity',
       packages=['MCZ'],
+      scripts=['MCZ/mcz.py']
      )
