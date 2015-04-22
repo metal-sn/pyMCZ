@@ -57,9 +57,6 @@ O3O2_coef[:,7]=[49.4728,-27.4711,4.50304,-0.232228]    # z=3.0
 '''
      
 M08_coefs={'R23' : [  0.7462, -0.7149, -0.9401, -0.6154, -0.2524   ],
-           #[-0.2524, -0.6154, -0.9401, -0.7149,  0.7462],
-           
-           #'N2Ha': [-0.3330, -0.7201, -0.2811,  1.2357, -0.7732],
            'N2Ha': [ -0.7732,  1.2357, -0.2811, -0.7201, -0.3330],
            'O3Hb': [  0.1549, -1.5031, -0.9790, -0.0297],
            'O3O2': [ -0.2839, -1.3881, -0.3172],
@@ -349,14 +346,14 @@ class diagnostics:
                 self.OIII_SII=np.log10(self.O35007/(self.S26717+self.S26731)+self.dustcorrect(k_O3,k_S2,flux=True) )
 
 
-    #@profile
+    @profile
     def calcEB_V(self):
         print >> self.logf, "calculating E(B-V)"
         self.mds['E(B-V)']=np.log10(2.86/(self.Ha/self.Hb))/(0.4*(k_Ha-k_Hb)) # E(B-V)
         self.mds['E(B-V)'][self.mds['E(B-V)']<=0]=0.00001
         
 
-    #@profile
+    @profile
     def calcNIISII(self):
         if self.hasS2 and self.hasN2:
             self.N2S2=self.N26584/self.S26717+self.dustcorrect(k_N2,k_S2,flux=True)#0.4*self.mds['E(B-V)']*(k_N2-k_S2) 
@@ -365,7 +362,7 @@ class diagnostics:
         else: 
             print >> self.logf, "WARNING: needs SII6717 and NII6584 to calculate NIISII: did you run setN2() and setS?"
 
-    #@profile
+    @profile
     def calcNIIOII(self):
         if self.hasN2 and self.hasO2:
             self.logN2O2=np.log10(self.N26584/self.O23727)+self.dustcorrect(k_N2,k_O2) 
@@ -385,7 +382,7 @@ class diagnostics:
             N2O2_coef=N2O2_coef.T
             # finding roots for == (4)
             self.N2O2_roots=np.array([self.fz_roots(N2O2_coef)])[0]          
-    #@profile
+    @profile
     def calcR23(self):
         print >> self.logf, "calculating R23"
 
@@ -402,7 +399,7 @@ class diagnostics:
         else:
             print >> self.logf, "WARNING: need O3, O2, Hb"
             
-    #@profile
+    @profile
     def calcS23(self):
         print >> self.logf,  "calculating S23"
         #the original code here uses S267176731, 
@@ -413,7 +410,7 @@ class diagnostics:
                 self.logS23=np.log10((self.S26717/self.Hb)*self.dustcorrect(k_S2,k_Hb,flux=True) + (self.S39069/self.Hb)*self.dustcorrect(k_S3,k_Hb,flux=True))                                 
             #self.logS3S2=np.log10(S39069/self.S26717)+self.dustcorrect(k_S3,k_S2)
 
-    ##@profile
+    #@profile
     def calclogq(self,Z):
         if not self.hasO3O2:
             print >> self.logf,  "WARNING: needs O3,O2,Hb to calculate logq properly."
@@ -422,7 +419,7 @@ class diagnostics:
             self.logO3O2sq=self.logO3O2**2
         return (32.81 -1.153*self.logO3O2sq + Z*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2sq))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2sq+ Z*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2sq)) 
 
-    ##@profile        
+    #@profile        
     def initialguess(self):
         # Initial Guess - appearing in LK code as of Nov 2006
         # upper branch: if no lines are available, metallicity is set to 8.7        
@@ -447,7 +444,7 @@ class diagnostics:
             # at logN2O2>-1.2  using HII regions
 
 #######################these are the metallicity diagnostics##################
-    #@profile
+    @profile
     def calcpyqz(self, plot=False, allD13=False):
         print >> self.logf,  "calculating D13"
                 
@@ -478,7 +475,7 @@ class diagnostics:
 
 
         
-    #@profile
+    @profile
     def calcDP00(self):
         # Diaz, A. I., & Perez-Montero, E. 2000, MNRAS, 312, 130 
         # As per KD02: DP00 diagnostic systematically underestimates the
@@ -496,7 +493,7 @@ class diagnostics:
 
 
 
-    #@profile
+    @profile
     def calcD02(self):
         # [NII]/Ha Denicolo, Terlevich & Terlevich (2002), MNRAS, 330, 69
         #FED:added uncertainties
@@ -509,7 +506,7 @@ class diagnostics:
         else:
             print >> self.logf,  "WARNING: need N2Ha to do this. did you run setHab and setNII"
         
-    #@profile
+    @profile
     def calcPP04(self):
         ### PP04_N2_Z, PP04_O3N2_Z Pettini & Pagel diagnostics - 
         ### Pettini & Pagel (2004), MNRAS, 348, L59
@@ -532,7 +529,7 @@ class diagnostics:
             print >> self.logf,  "WARNING: need N2Ha to do this. did you run setHab and setNII"
 
 
-    #@profile
+    @profile
     def calcZ94(self):
         ### calculating z from Kobulnicky,Kennicutt,Pizagno (1998)
         ### parameterization of Zaritzky et al. (1994) 
@@ -566,7 +563,7 @@ class diagnostics:
             #P = R3/(R2+R3)
             self.P=self.R3/self.R23
         
-    #@profile
+    @profile
     def calcP05(self):
         # #### P-method #####
         ##Pilyugin+ 2005 method.  Based on [OIII],[OII], Hbeta 
@@ -589,7 +586,7 @@ class diagnostics:
 
 
 
-    #@profile
+    @profile
     def calcP10(self):
         # #### P-method #####
         ##Pilyugin+ 2010 method. 
@@ -665,7 +662,7 @@ class diagnostics:
         self.mds['P10_ON'][indx] = float('NaN')
         
         
-    #@profile
+    @profile
     def calcP01(self):
         # P-method 2001 upper branch (derecated and commented out)
         # Pilyugin 2001
@@ -689,7 +686,7 @@ class diagnostics:
         else:
             print >> self.logf,  "WARNING: need OIIIOII to calculate P01, did you set them up with  setOlines()?"
         
-    #@profile
+    @profile
     def calcC01_ZR23(self):
         # C01 = Charlot, S., & Longhetti, M., 2001, MNRAS, 323, 887
         # Charlot 01 R23 calibration: (case F) ##        
@@ -717,7 +714,7 @@ class diagnostics:
             print >> self.logf,  "WARNING: needs [NII]6584, [SII]6717, [OIII]5700, [OII]3727, and Ha to calculate calcC01_ZR23, did you set them up with  setOlines() and ?"        
 
 
-    #@profile
+    @profile
     def calcM91(self):
         # ## calculating McGaugh (1991)
         # McGaugh, S.S., 1991, ApJ, 380, 140'
@@ -757,7 +754,7 @@ class diagnostics:
         self.mds['M91'][indx]=M91_Z_up[indx]
         self.mds['M91'][(M91_Z_up < M91_Z_low)]=float('NaN')
 
-    #@profile
+    @profile
     def calcM13(self):
         #Marino+ 2013
         print >> self.logf,  "calculating M13"
@@ -776,7 +773,7 @@ class diagnostics:
                 self.mds["M13_O3N2"] = 8.533+e1 - (0.214+e1)*O3N2
 
 
-    #@profile
+    @profile
     def calcM08(self, allM08=False):
         #Maiolino+ 2008
         #Astronomy and Astrophysics, Volume 488, Issue 2, 2008, pp.463-479
@@ -857,7 +854,7 @@ class diagnostics:
             self.mds['M08_O3N2'][(indx.sum(1))==True]=sols[indx]
 
 
-    #@profile
+    @profile
     def calcKD02_N2O2(self):
         ##  Kewley & Dopita (2002) estimates of abundance 
         ##  KD02
@@ -890,7 +887,7 @@ class diagnostics:
 
 
 
-    #@profile
+    @profile
     def calcKK04_N2Ha(self):
         # calculating [N2]/Ha abundance estimates using [O3]/[O2] also
         print >> self.logf,  "calculating KK04_N2Ha"
@@ -930,7 +927,7 @@ class diagnostics:
 
 
 
-    #@profile
+    @profile
     def calcKK04_R23(self):
         # Kobulnicky & Kewley 2004
         # calculating upper and lower metallicities for objects without
@@ -981,7 +978,7 @@ class diagnostics:
                 Z_new[(Z_new_lims[0]>Z_new_lims[1])]=None
                 self.mds['KK04_R23']=Z_new
                 
-    #@profile
+    @profile
     def calcKDcombined(self):
         # KD02comb  Kewley, L. J., & Dopita, M. A., 2002, ApJ
         # updated in KE08

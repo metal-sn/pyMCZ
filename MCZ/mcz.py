@@ -199,7 +199,7 @@ def checkhist(snname,Zs,nsample,i,path):
 ##############################################################################
 ##Save the result as histogram as name
 ##############################################################################
-#@profile
+@profile
 def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
     global BINMODE
     global NOPLOT
@@ -270,7 +270,6 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
                 norm=countsnorm.sum()*(bins[1]-bins[0])/dens.sum()/(kdebins[1]-kdebins[0])
                 plt.fill(kdebins[:,0], dens*norm, fc='#7570b3', alpha=0.8)
                 alpha=0.5
-                print kde
 
         ###find appropriate bin size###
         else:
@@ -383,7 +382,7 @@ def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, 
 ##      mode 's' calculates this based on sqrt of number of data
 ##      mode 't' calculates this based on 2*n**1/3
 ##############################################################################
-#@profile
+@profile
 def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickle=False, dust_corr=True,verbose=False, fs=24):
     global RUNSIM,BINMODE,NOPLOT
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
@@ -522,7 +521,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                     boxlabels.append(key.replace('_',' '))
                     datas.append(data)
                 if BINMODE == 'kd' and  not NOPICKLE:
-                    pickleKDEfile=os.path.join(binp+'n%d_%s_KDE.pkl'%(nsample,key))
+                    pickleKDEfile=os.path.join(binp+'/%s_n%d_%s_KDE.pkl'%(name,nsample,key))
                     if VERBOSE: print "KDE files will be stored in ",pickleKDEfile
                     pickle.dump(kde,open(pickleKDEfile,'wb'))
 
