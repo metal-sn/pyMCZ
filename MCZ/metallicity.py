@@ -55,7 +55,7 @@ def get_keys():
 ##fz_roots function as used in the IDL code  FED:reference the code here!
 ##############################################################################
 
-@profile
+#@profile
 def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,disp=False,saveres=False, verbose=False, scales=None): 
     global IGNOREDUST
     mscales.setdustcorrect()
