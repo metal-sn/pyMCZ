@@ -38,13 +38,13 @@ def fitdistrib(picklefile):
     pklfile = open(picklefile, 'rb')
     res=pickle.load(pklfile)
 
-    testingdiags=['E(B-V)','D02','PP04_O3N2','KK04comb']
+    testingdiags=['E(B-V)','D02','M13_N2','KD02comb']
     ebvs=res['E(B-V)'].T
     nm=len(ebvs)
     Ndata= len(ebvs[0])
     assert( Ndata>0), "something is wrong with your distribution"
 
-    invalids=[sum(np.isnan(res['D02'].T[i]))+sum(np.isnan(res['KK04comb'].T[i]))+sum(np.isnan(res['Z94'].T[i])) for i in range(nm)]
+    invalids=[sum(np.isnan(res['D02'].T[i]))+sum(np.isnan(res['KD02comb'].T[i]))+sum(np.isnan(res['Z94'].T[i])) for i in range(nm)]
     myi, = np.where(invalids==min(invalids))
     
     try: myi=myi[1] #in case there are more than one solutions
@@ -91,28 +91,27 @@ def fitdistrib(picklefile):
             ax.plot(x[indices], Px_cuml[indices], 'o', lw=0, label="%d"%n0)
             ax.plot(x, Px_cuml, '-k')
             maxleft,maxright=min(x),max(x)
-            lims=ax.set_xlim((maxleft,maxright))            
-            axratio=(lims[1]-lims[0])/1.05
-            ax.set_aspect(aspect=axratio)
-            xticks=ax.get_xticks()
-            dx=xticks[-1]-xticks[-2]
-            xticks=xticks[(xticks<maxright)*(xticks>maxleft)]
-            '''if (maxright-xticks[-1])<0.25*dx:
-                maxright=maxright+0.25*dx
-                maxleft =maxleft -0.25*dx
-            pl.xticks(xticks, ['%.2f'%s for s in xticks])           
-            '''
-            ax.set_title('%s Cumulative Distribution'%d.replace('_',' '), fontsize=fs)
-            ax.set_xlabel('$x$')
-            ax.set_ylabel('$p(<x)$')
-            ax.xaxis.set_major_formatter(majorFormatter)
-
             D, p = stats.ks_2samp(x, xold)
             print "KS test for %s n = %d D = %.2g; p = %.2g" % (d,n0,D, p)
             xold=x.copy()
+            lims=ax.set_xlim((maxleft,maxright))            
+        axratio=(lims[1]-lims[0])/1.05
+        ax.set_aspect(aspect=axratio)
+            
+        ax.set_title('%s Cumulative Distribution'%d.replace('_',' '), fontsize=fs)
+        ax.set_xlabel('$x$')
+        ax.set_ylabel('$p(<x)$')
+        ax.xaxis.set_major_formatter(majorFormatter)
+
 
 
         ax.legend(scatterpoints=1,loc=2)
+        xticks=ax.get_xticks()
+        dx=xticks[-1]-xticks[-2]
+        xticks=xticks[(xticks<maxright)*(xticks>maxleft)]
+        while (maxright-xticks[-1])<0.25*dx:
+            xticks=xticks[:-1]
+    pl.xticks(xticks, ['%.2f'%s for s in xticks])           
     pl.savefig(picklefile.replace('.pkl','_testcomplete.pdf'))
     pl.show()
     
