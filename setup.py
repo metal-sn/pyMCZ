@@ -7,6 +7,6 @@ setup(name='mcz',
       author_email='fb55@nyu.edu',
       description='MC simulation for getting metallicity and confidence regions from line flux values',
       url='https://github.com/nyusngroup/MC_Metalicity',
-      packages=['MCZ'],
-      scripts=['MCZ/mcz.py']
+      packages=['pyMCZ'],
+      scripts=['pyMCZ/mcz.py', 'pyMCZ/metallicity.py','pyMCZ/metscales.py','pyMCZ/pylabsetup.py']
      )
