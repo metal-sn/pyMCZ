@@ -50,7 +50,14 @@ Zs=["E(B-V)", #Halpha, Hbeta
 def get_keys():
     return Zs
  
-
+def printsafemulti(string,logf, nps):
+    #this is needed because dealing with a log output with multiprocessing 
+    #is painful. but it introduces a bunch of if checks. 
+    #if anyone has a better solution please let me know!
+    if nps==1:
+        print >>logf,string
+    else:
+        print string
 ##############################################################################
 ##fz_roots function as used in the IDL code  FED:reference the code here!
 ##############################################################################
@@ -67,7 +74,6 @@ def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,
         measured[k][~(np.isfinite(measured[k][:]))]=0.0 
         raw_lines[k]=measured[k]
 
-
     ######we trust QM better than we trust the measurement of the [OIII]4959 
     ######which is typical low S/N so we set it to [OIII]5007/3. 
     ######change this only if youre spectra are very high SNR
@@ -79,11 +85,15 @@ def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,
     if dust_corr and mscales.hasHa and mscales.hasHb:
         with np.errstate(invalid='ignore'):
             mscales.calcEB_V()
+
     elif dust_corr and not IGNOREDUST:
+
         if nps>1:
+            print "WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!!"
+    
+        else: 
             response=raw_input("WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!! Continuing without reddening correction? [Y/n]\n").lower()
             assert(not (response.startswith('n'))),"please fix the input file to include Halpha and Hbeta measurements"
-        else: print >>logf, "WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!!"
 
         IGNOREDUST=True
         dust_corr=False
@@ -126,9 +136,9 @@ def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,
               import pyqz
               mscales.calcpyqz()
          else:
-              print >>logf, '''set path to pyqz as environmental variable :
-export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want this scale. '''
-
+              printsafemulti('''set path to pyqz as environmental variable :
+              export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want this scale. ''', logf, nps)
+              
 
          mscales.calcZ94()
          mscales.calcM91()
@@ -166,8 +176,8 @@ export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want
               #using the commented line below instead
               mscales.calcpyqz(plot=False)
          else:
-              print >>logf, '''set path to pyqz as environmental variable 
-PYQZ_DIR if you want this scale. '''
+              printsafemulti('''set path to pyqz as environmental variable 
+PYQZ_DIR if you want this scale. ''',logf,nps)
 
     if 'D13all' in mds:
          if   os.getenv("PYQZ_DIR"):
@@ -181,8 +191,8 @@ PYQZ_DIR if you want this scale. '''
               #using the commented line below instead
               mscales.calcpyqz(plot=False, allD13=True)
          else:
-              print >>logf, '''set path to pyqz as environmental variable 
-PYQZ_DIR if you want this scale. '''
+              printsafemulti( '''set path to pyqz as environmental variable 
+PYQZ_DIR if you want this scale. ''',logf,nps)
 
     if 'PP04' in mds:
         mscales.calcPP04()
