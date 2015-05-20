@@ -19,18 +19,18 @@ nsample: the number of MC samples desired
 
 additional command line arguments
 
- <b> --path PATH  <b>         the directory in which subdirectory "input" is located. If not provided, will default
+ <b> --path PATH  <\b>         the directory in which subdirectory "input" is located. If not provided, will default
                         environmental variable MCMetdata that should be set to point to that directory. 
                         _err.txt _meas.txt must live in \<path\>/input
                         
- <b> --md MD      <b>         metallicity scales to calculate. default is 'all',
+ <b> --md MD      <\b>         metallicity scales to calculate. default is 'all',
                         options are: D02, Z94, M91, M08, P05,P10, PP04, M13, D13, KD02,
                         KD02comb, DP00 (deprecated), P01 (deprecated), C01 (deprecated)
                         
-<b>  --unpickle    <b>        if it exists, a pickle files generated in a previous run for this \<filename\> and this 
+<b>  --unpickle    <\b>        if it exists, a pickle files generated in a previous run for this \<filename\> and this 
                         number of samples is read in instead of recalculating the metalicity
 
-<b>  --binmode  BM  <b>         how to choose the number of bins for plotting the histogram:
+<b>  --binmode  BM  <\b>         how to choose the number of bins for plotting the histogram:
                             'd' is based on Doane's formula (wilipedia's version),  
                             's' is the sqrt of number of data,        
                             't' is on 2*n**1/3 , 
@@ -38,24 +38,24 @@ additional command line arguments
                             'bb' uses bayesian blocks (must have astroML installed or it defaults to 'kb')
                             'kd' is the kernel density, which requires sklearn installed and additioinally plots the                             histogram with 'kb' mode
 
-<b>  --clobber   <b>          If set to true, will overwrite existing output files without asking. Default False.
+<b>  --clobber   <\b>          If set to true, will overwrite existing output files without asking. Default False.
 
-<b>  --verbose   <b>          verbose mode. Default False.
+<b>  --verbose   <\b>          verbose mode. Default False.
 
-<b>  --nodust    <b>          don't do dust corrections (default is to do it)
+<b>  --nodust    <\b>          don't do dust corrections (default is to do it)
 
-<b>  --noplot    <b>          don't plot individual distributions (default is to
+<b>  --noplot    <\b>          don't plot individual distributions (default is to
                         plot all distributions)
 
-<b>  --asciiout   <b>         write distribution medians and 66% inclusion regions in an ascii output (default is not
+<b>  --asciiout   <\b>         write distribution medians and 66% inclusion regions in an ascii output (default is not
                         to)
                         
-<b>  --asciidistrib  <b>       write the entire distribution for every scale in an ascii file output (default is not to)
+<b>  --asciidistrib  <\b>       write the entire distribution for every scale in an ascii file output (default is not to)
                         
                         
-<b>  --multiproc (--multi)  <b>         multiprocess, with number of threads nps=max(available cores-1, MAXPROCESSES)
+<b>  --multiproc (--multi)  <\b>         multiprocess, with number of threads nps=max(available cores-1, MAXPROCESSES)
 
-<b>  --log LOGFILE  <b>       outputting messages to a log file instead of standard output. disabled when multiprocessing
+<b>  --log LOGFILE  <\b>       outputting messages to a log file instead of standard output. disabled when multiprocessing
 
 
 ====================
