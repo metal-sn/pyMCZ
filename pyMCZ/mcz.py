@@ -39,6 +39,7 @@ CLOBBER=False
 VERBOSE=False
 UNPICKLE=False
 ASCIIOUTPUT=False
+ASCIIDISTRIB=False
 RUNSIM=True
 BINMODE='k'
 binning={'bb':'Bayesian blocks','k':"Knuth's rule",'d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2 N^{1/3}$', 'kd':'Kernel Density'}
@@ -207,8 +208,9 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
     outfile=os.path.join(outdir,name+".pdf")
-    fig=plt.figure(figsize=(11,8))
-    plt.clf()
+    if not NOPLOT: 
+        fig=plt.figure(figsize=(11,8))
+        plt.clf()
         
     ####kill outliers, infinities, and bad distributions###
     data=data[np.isfinite(data)]
@@ -268,7 +270,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
                 log_dens = kde.score_samples(kdebins)
                 dens=np.exp(log_dens)
                 norm=countsnorm.sum()*(bins[1]-bins[0])/dens.sum()/(kdebins[1]-kdebins[0])
-                plt.fill(kdebins[:,0], dens*norm, fc='#7570b3', alpha=0.8)
+                if not NOPLOT: plt.fill(kdebins[:,0], dens*norm, fc='#7570b3', alpha=0.8)
                 alpha=0.5
 
         ###find appropriate bin size###
@@ -279,7 +281,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
                     from astroML.plotting import hist as amlhist
                     if BINMODE=='bb':
                         distrib=amlhist(data, bins='blocks', normed=True)
-                    plt.clf()
+                    if not NOPLOT: plt.clf()
                 except:
                     print "bayesian blocks for histogram requires astroML to be installed"
                     print "defaulting to Knuth's rule "
@@ -294,7 +296,10 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
             counts, bins=distrib[0],distrib[1]
             widths=np.diff(bins)
             countsnorm=counts/np.max(counts)
+
         ###plot hist###
+        if NOPLOT: return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3)), data,kde
+       
         plt.bar(bins[:-1],countsnorm,widths,color=['gray'], alpha=alpha)
         plt.minorticks_on()
         plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
@@ -353,6 +358,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
 
 
 def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, logf))):
+    logf=sys.stdout
     print >>logf,"\n\nreading in measurements ",i+1
     fluxi={}#np.zeros((len(bss[0]),nm),float)
     for j,k in enumerate(bss[0].iterkeys()):
@@ -361,8 +367,8 @@ def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, 
         fluxi[k]=flux[k][i]*np.ones(len(sample[i]))+err[k][i]*sample[i]
         warnings.filterwarnings("ignore")
     success=metallicity.calculation(scales,fluxi,nm,bss,mds,nps,logf,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
-    if success==-1:
-        print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
+    #if success==-1:
+    #    print >>logf, "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
         
     for key in scales.mds.iterkeys():
         res[key][i]=scales.mds[key]
@@ -388,7 +394,10 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
     assert(len(err['galnum'])== nm), "flux and err must be same dimensions" 
+    
 
+
+    #increasing sample by 10% to assure robustness against rejected samples
     newnsample=nsample
     if nsample>1: newnsample=int(nsample+0.1*nsample)
     
@@ -422,7 +431,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         ###Sample 'nsample' points from a gaussian centered on 0 with std 1
         mu=0
         sigma=1
-        if nsample==1: sample=[np.array([mu]) for i in range(NM0,nm)]
+        if nsample==1 : sample=[np.array([mu]) for i in range(NM0,nm)]
 
         else: sample=[np.random.normal(mu,sigma,newnsample) for i in range(NM0,nm)]
         
@@ -436,26 +445,30 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         res={}
         for key in Zs:
             res[key]=[[] for i in range(NM0,nm)]
-
-        #do the iterations
+            
+        #use only valid inputs
         temp={}
         delkeys=[]
         for k in bss[0].iterkeys():
             if k=='flag' or k=='galnum' or bss[0][k][1]==0 :#or bss[1][k][1]==bss[0][k][1]:
                 delkeys.append(k)
         for k in delkeys:
-                del bss[0][k]
-                del bss[1][k]
+            del bss[0][k]
+            del bss[1][k]
+        
 
         import metscales as ms
         nps = min (mpc.cpu_count()-1 or 1, MAXPROCESSES)
+        scales=ms.diagnostics(newnsample, logf,nps)
+
         if multiproc and nps>1:
             print >>logf, "\n\n\nrunning on %d threads\n\n\n"%nps
-
-            scales=ms.diagnostics(newnsample, logf)
             second_args=[sample,flux,err,nm,bss,mds,VERBOSE, dust_corr,VERBOSE,res,scales,nps, logf]
             pool = mpc.Pool(processes=nps) # depends on available cores
             rr = pool.map(calc, itertools.izip(range(NM0,nm), itertools.repeat(second_args))) # for i in range(nm): result[i] = f(i, second_args)
+            for ri,r  in enumerate(rr):
+                for kk in r.iterkeys(): res[kk][ri]=r[kk][ri]
+
             for ri,r  in enumerate(rr):
                 for kk in r.iterkeys(): res[kk][ri]=r[kk][ri]
             pool.close() # not optimal! but easy
@@ -463,7 +476,6 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         else: 
             #looping over nm spectra
             for i in range(NM0,nm):
-                scales=ms.diagnostics(newnsample, logf)
                 print >>logf, "\n\n measurements ",i+1
                 fluxi={}
                 for j,k in enumerate(bss[0].iterkeys()):
@@ -502,6 +514,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
     
 
     ###Bin the results and save###
+    print "\n\n"
     print '{0:15} {1:20} {2:>13}   -{3:>5}     +{4:>5}  {5:11} {6:>7}'.format("SN","diagnostic", "metallicity","34%", "34%", "(sample size:",'%d)'%nsample)
     for i in range(NM0,nm):
         if ASCIIOUTPUT:
@@ -510,21 +523,33 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         
         boxlabels=[]
         datas=[]
-        print "\n\n\n\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
+        print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
         for key in Zs:
-            if sum(~np.isnan(res[key][:,i]))>0:
-                sh,data,kde=savehist(res[key][:,i],name,key,nsample,i,binp,nm,verbose=verbose, fs=fs)
-                s=key+"\t "+sh+'\n'
-                if ASCIIOUTPUT:
-                    fi.write(s)
-                if not key in ["E(B-V)" ,"logR23"]:
-                    boxlabels.append(key.replace('_',' '))
-                    datas.append(data)
-                if BINMODE == 'kd' and  not NOPICKLE:
-                    pickleKDEfile=os.path.join(binp+'/%s_n%d_%s_KDE.pkl'%(name,nsample,key))
-                    if VERBOSE: print "KDE files will be stored in ",pickleKDEfile
-                    pickle.dump(kde,open(pickleKDEfile,'wb'))
-
+            if nsample==-1:
+                try:
+                    if ~np.isnan(res[key][i][0]):
+                        print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(name+ ' %d'%(i+1),key,res[key][i][0],0,0 )
+                except:pass
+            else:
+                if 1:
+                #try:
+                    if sum(~np.isnan(res[key][:,i]))>0:
+                        if ASCIIDISTRIB:
+                            with open(os.path.join(binp,'%s_n%d_%s_%d.csv'%(name,nsample,key,i+1)), "wb") as fidist:
+                                writer = csv.writer(fidist)
+                                writer.writerow(res[key][:,i])
+                        sh,data,kde=savehist(res[key][:,i],name,key,nsample,i,binp,nm,verbose=verbose, fs=fs)
+                        s=key+"\t "+sh+'\n'
+                        if ASCIIOUTPUT:
+                            fi.write(s)
+                        if not key in ["E(B-V)" ,"logR23"]:
+                            boxlabels.append(key.replace('_',' '))
+                            datas.append(data)
+                        if BINMODE == 'kd' and  not NOPICKLE:
+                            pickleKDEfile=os.path.join(binp+'/%s_n%d_%s_%d_KDE.pkl'%(name,nsample,key,i+1))
+                            if VERBOSE: print "KDE files will be stored in ",pickleKDEfile
+                            pickle.dump(kde,open(pickleKDEfile,'wb'))
+                #except:pass
         #make box_and_whiskers plot
         fig= plt.figure(figsize=(8,15))
         fig.subplots_adjust(bottom=0.18,left=0.18)
@@ -551,7 +576,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         plt.text(1.2, 8.705,"Solar Oxygen Abundance", alpha=0.7)
         plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.ylabel('12+log(O/H)', fontsize=fs)
-        plt.savefig(binp+"/"+name+"_boxplot%d_m%d.pdf"%(nsample,i+1),format='pdf')
+        plt.savefig(binp+"/"+name+"_boxplot_n%d_%d.pdf"%(nsample,i+1),format='pdf')
         if ASCIIOUTPUT:
             fi.close()
         if VERBOSE: print "uncertainty calculation complete"
@@ -571,7 +596,8 @@ def main():
     parser.add_argument('--nodust',default=False, action='store_true', help=" don't do dust corrections (default is to do it)")
     parser.add_argument('--noplot',default=False, action='store_true', help=" don't plot individual distributions (default is to plot all distributions)")
     parser.add_argument('--asciiout',default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
-    parser.add_argument('--md',default='all', type =str, help=" metallivity diagnostic to calculate. default is 'all', options are: D02, Z94, M91, C01, P05, M08, M08all, M13, PP04, D13, KD02, DP00 (deprecated), P01")
+    parser.add_argument('--asciidistrib',default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
+    parser.add_argument('--md',default='all', type =str, help=" metallicity diagnostic to calculate. default is 'all', options are: D02, Z94, M91, C01, P05, M08, M08all, M13, PP04, D13, KD02, DP00 (deprecated), P01")
     parser.add_argument('--multiproc',default=False, action='store_true', help=" multiprocess, with number of threads max(available cores-1, MAXPROCESSES)")
     args=parser.parse_args()
 
@@ -579,12 +605,20 @@ def main():
     global VERBOSE
     global BINMODE
     global ASCIIOUTPUT
+    global ASCIIDISTRIB
     global NOPLOT
     CLOBBER=args.clobber
     VERBOSE=args.verbose
     BINMODE=args.binmode
     NOPLOT=args.noplot
     ASCIIOUTPUT=args.asciiout
+    ASCIIDISTRIB=args.asciidistrib
+
+    if ASCIIDISTRIB:
+        try: import csv
+        except ImportError: 
+            raw_input("you must import the csv package to output the distribution. press return to continue")
+            ASCIIDISTRIB=False
 
     if args.unpickle and NOPICKLE:
         args.unpickle = False
@@ -596,14 +630,9 @@ def main():
         assert (os.getenv("MCMetdata"))," the _max, _min (and _med) data must live in a folder named sn_data. pass a path to the sn_data folder, or set up the environmental variable MCMetdata pointing to the path where sn_data lives "
         path=os.getenv("MCMetdata")
     assert(os.path.isdir(path)),"pass a path or set up the environmental variable MCMetdata pointing to the path where the _min _max _med files live"
-    if args.nsample==0:
+    if args.nsample==1:
         print "CALCULATING METALLICITY WITHOUT GENERATING MC DISTRIBUTIONS"
-        fi=input_data(args.name, path=path)
-        if fi!=-1:
-            logf=smart_open(args.log)
-            run(fi,1,args.md,args.multiproc, logf, unpickle=args.unpickle, dust_corr=(not args.nodust), verbose=VERBOSE)
-            if args.log: logf.close()
-    elif args.nsample>=100 :
+    if args.nsample==1 or args.nsample>=100 :
         fi=input_data(args.name, path=path)
         if fi!=-1:
             logf=smart_open(args.log)
