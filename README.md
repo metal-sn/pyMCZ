@@ -21,7 +21,7 @@ additional command line arguments
 
   --path PATH           the directory in which subdirectory "input" is located. If not provided, will default
                         environmental variable MCMetdata that should be set to point to that directory. 
-                        _err.txt _meas.txt must live in <path>/input
+                        _err.txt _meas.txt must live in \<path\>/input
                         
   --md MD               metallicity scales to calculate. default is 'all',
                         options are: D02, Z94, M91, M08, P05,P10, PP04, M13, D13, KD02,
@@ -61,7 +61,7 @@ additional command line arguments
 ====================
 Input file format
 ====================
-each flux data should be stored in the directory <input> that exists in the directory provided by the --path arg or by the environmental variable MCMetdata. 
+each flux data should be stored in the directory \<input\> that exists in the directory provided by the --path arg or by the environmental variable MCMetdata. 
 
 with common filename \<filename\>:
 
