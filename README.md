@@ -74,7 +74,7 @@ The format for each of the txt files should be as follows:
        
 galnum is the index used for matching the flux with the corresponding radius for calculating the gradient.
 
-The first row is optional - if can contain more keys than column, as long as the columns are listed in the same order as specified above, up to whichever line is of interest. Missing data should be filled in with 0s.
+The first row is optional - if can contain more keys than column, as long as the columns are listed in the same order as specified above, up to whichever line is of interest. Missing data should be filled in with 'nan's.
 
 the data should be in the above order, separated by any number of white spaces.
 
