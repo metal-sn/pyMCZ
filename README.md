@@ -13,9 +13,9 @@ From the commandline simply use as:
 ```
 python mcz.py <filename> nsample --path PATH 
 ```
-\<filename\>: \<filename\> is the root name for the input as well as all the output files: it could be for example the name of the supernova at the location of which HII regions have been measured ('exampledata' in our examples)
+<b>\<filename\></b>: \<filename\> is the root name for the input as well as all the output files: it could be for example the name of the supernova at the location of which HII regions have been measured ('exampledata' in our examples)
 
-nsample: the number of MC samples desired 
+<b>nsample</b>: the number of MC samples desired 
 
 additional command line arguments
 
