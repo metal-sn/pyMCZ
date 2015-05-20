@@ -1,4 +1,4 @@
-MC Metalicity Output
+MC Metallicity Output
 ====================
 
 Monte Carlo sampling to calculate metallicity uncertainty from strong line flux data.
