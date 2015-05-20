@@ -14,7 +14,7 @@ For a given file <fname> and nsample, the following output files are generated:
 
 \<fname\>\_boxplot\_n\<nsample\>\_\<measurement\>.pdf": (e.g. exampledata\_boxplot\_n2000\_1.pdf, exampledata_boxplot2000_m2.pdf) box and whiskers plot showing all metallicities and their uncertainties in a single plot, one plot (and one PDF file) for each measurement in input 
 
-"hist" folder, containing all the histograms generated. For each scale calculated, scale <scale_name>, and each input set of lines, or measurement, the distribution histogram is saved in a PDF file \<fname\>\_\<nsample\>\_\<scale_name\>\_\<measurement\>.pdf (e.g. exampledata\_n2000\_KD02\_N2O2\_1.pdf for scale KD02_N2O2, measurement 1)
+"hist" folder, containing all the histograms generated. For each scale calculated, scale <scale_name>, and each input set of lines, or measurement, the distribution histogram is saved in a PDF file \<fname\>\_\<nsample\>\_\<scale\>\_\<measurement\>.pdf (e.g. exampledata\_n2000\_KD02\_N2O2\_1.pdf for scale KD02_N2O2, measurement 1)
 
 if the keyword --asciiout is given a text file \<fname\>\_n\<nsample\>\_\<measurement\>.txt (e.g. exampledata\_n2000\_1.txt) stores the distribution 50th, 16th and 84th percentiles in the format: 
 E(B-V)	 0.121000	 0.014000	 0.019000
