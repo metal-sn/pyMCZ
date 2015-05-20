@@ -7,7 +7,7 @@ This code is released under MIT licence: see LICENSE.txt
 ====================
 Usage:
 ====================
-Place the  _meas and _err  files in the "input" directory (example files are provded in the directory).
+Place the  _meas and _err  files in the "input" directory (example files are provded in the \<input\> directory in of package).
 
 
 From the commandline simply use as:
