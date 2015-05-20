@@ -33,4 +33,4 @@ Interpret the Output Values
  
 '-1' means: the emissions lines don't satisfy some sort of minimum criteria to derive metallicity  
 
-0.000 (no distribution) means: no distribution for some reason: you may have selected nsample=0, or have errors = 0.0. otherwise  the distribution may be really screwed up and take a single value, or a shape such that the 16th and 84th percentiles cannot be calculated (e.g. two values), thus don't trust the output vaue 
+0.000 (no distribution) means no distribution was generated for some reason: you may have selected nsample=0, or have errors = 0.0, and that is the appropriate behavor in this case. otherwise the distribution may be really screwed up and take a single value, or a shape such that the 16th and 84th percentiles cannot be calculated (e.g. two values), and you should definitely don't trust the output  
