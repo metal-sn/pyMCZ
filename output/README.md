@@ -10,9 +10,9 @@ All the results will be saved in this direcoty by the name of the input file (e.
 
 For a given file <fname> and nsample, the following output files are generated:
 
-\<fname\>_n\<nsample\>.pkl": (e.g. exampledata_n2000.pkl) the metallicities calculated and its uncertainties stored in binary (pickled) format in a python dictionary
+\<fname\>\_n\<nsample\>.pkl": (e.g. exampledata_n2000.pkl) the metallicities calculated and its uncertainties stored in binary (pickled) format in a python dictionary
 
-\<fname\>\_boxplotn\<nsample\>_\<measurement\>.pdf": (e.g. exampledata_boxplot2000_1.pdf, exampledata_boxplot2000_m2.pdf) box and whiskers plot showing all metallicities and their uncertainties in a single plot, one plot (and one PDF file) for each measurement in input 
+\<fname\>\_boxplot\_n\<nsample\>\_\<measurement\>.pdf": (e.g. exampledata\_boxplot2000\_1.pdf, exampledata_boxplot2000_m2.pdf) box and whiskers plot showing all metallicities and their uncertainties in a single plot, one plot (and one PDF file) for each measurement in input 
 
 "hist" folder, containing all the histograms generated. For each scale calculated, scale <scale_name>, and each input set of lines, or measurement, the distribution histogram is saved in a PDF file \<fname\>_\<nsample\>_\<scale_name\>_\<measurement\>.pdf (e.g. exampledata_n2000_KD02_N2O2_1.pdf for scale KD02_N2O2, measurement 1)
 
