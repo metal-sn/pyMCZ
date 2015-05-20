@@ -113,12 +113,14 @@ The cumulative distribution for 1/10, 1/4, 1/2, 3/4 and the full sample generate
 
 If the number of samples is sufficient, you should expect the probability of the 3/4 sample and full sample to come from the same parent distribution to be close to 1, and generally the KD p-value to increse with the sample fraction (but not always it turns out...). More importantly though this can be used visually: the cumulative distribution should be nearly identical (and smooth). If all distributions overlap, then you are sure that you are well above the critical sample size that achieve smoothness (by a factor 10).
 
-The figures below show an undersampled realization and a well- (possibly over-) sampled realization.
+The figures below show an undersampled realization and a well- (possibly) over-sampled realization.
 
 
 
 
 ![alt tag](https://github.com/fedhere/MC_Metalicity/blob/master/output/exampledata/exampledata_n200_testcomplete.png)
+
+
 ![alt tag](https://github.com/fedhere/MC_Metalicity/blob/master/output/exampledata/exampledata_n2000_testcomplete.png)
 
 
