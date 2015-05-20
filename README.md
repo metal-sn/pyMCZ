@@ -7,13 +7,13 @@ This code is released under MIT licence: see LICENSE.txt
 ====================
 Usage:
 ====================
-This code required ascii input files, their format is described below and examples are provided in the \<input\> directory in this package.  in our example 'exampledata_meas.txt' and 'exampledata_err.txt' are the input files. 
+This code requires ascii input files, their format is described below and examples are provided in the \<input\> directory in this package. In our example 'exampledata_meas.txt' and 'exampledata_err.txt' are the input files. 
 
 From the commandline simply use as:
 ```
 python mcz.py <filename> nsample --path PATH 
 ```
-<b>\<filename\></b>: \<filename\> is the root name for the input as well as all the output files: it could be for example the name of the supernova at the location of which HII regions have been measured ('exampledata' in our examples)
+<b>\<filename\></b>: \<filename\> is the root name for the input as well as for all the output files: it could be for example the name of the supernova at the location of which HII regions have been measured ('exampledata' in our examples)
 
 <b>nsample</b>: the number of MC samples desired 
 
@@ -27,11 +27,11 @@ additional command line arguments
                         options are: D02, Z94, M91, M08, P05,P10, PP04, M13, D13, KD02,
                         KD02comb, DP00 (deprecated), P01 (deprecated), C01 (deprecated)
                         
-<b>  --unpickle    </b>        if it exists, a pickle files generated in a previous run for this \<filename\> and this 
+<b>  --unpickle    </b>        if it exists, a pickle file generated in a previous run for this \<filename\> and this 
                         number of samples is read in instead of recalculating the metalicity
 
 <b>  --binmode  BM  </b>         how to choose the number of bins for plotting the histogram:
-                            'd' is based on Doane's formula (wilipedia's version),  
+                            'd' is based on Doane's formula (wikipedia's version),  
                             's' is the sqrt of number of data,        
                             't' is on 2*n**1/3 , 
                             'kb' uses Knuth's block rule (default), 
@@ -47,7 +47,7 @@ additional command line arguments
 <b>  --noplot    </b>          don't plot individual distributions (default is to
                         plot all distributions)
 
-<b>  --asciiout   </b>         write distribution medians and 66% inclusion regions in an ascii output (default is not
+<b>  --asciiout   </b>         write distribution medians and 68% inclusion regions in an ascii output (default is not
                         to)
                         
 <b>  --asciidistrib  </b>       write the entire distribution for every scale in an ascii file output (default is not to)
@@ -61,7 +61,7 @@ additional command line arguments
 ====================
 Input file format
 ====================
-each flux data should be stored in the directory \<input\> that exists in the directory provided by the --path arg or by the environmental variable MCMetdata. 
+Flux data for each object should be stored in the directory \<input\> that exists in the directory provided by the --path arg or by the environmental variable MCMetdata. 
 
 with common filename \<filename\>:
 
@@ -69,10 +69,10 @@ with common filename \<filename\>:
 
 \<filename\>_meas.txt 
 
-The format for each of the txt files should be as follows:
+The format for each of the txt files should be as follows, e.g.,
 
 
-;# galnum,[OII]3727,Hb,[OIII]4959,[OIII]5007,[OI]6300,Ha,[NII]6584,[SII]6717,[SII]6731,[SIII]9069,[SIII]9532,E(B-V),dE(B-V)
+;# galnum,[OII]3727,Hb,[OIII]4959,[OIII]5007,[OI]6300,Ha,[NII]6584,[SII]6717,[SII]6731,[SIII]9069,[SIII]9532
        1     0.0     0.0     0.0     0.0     0.0   5.117   0.998     0.0     0.0     0.0     0.0
        2     0.0     0.0     0.0     0.0     0.0   5.031   1.012     0.0     0.0     0.0     0.0
        
@@ -80,7 +80,7 @@ The format for each of the txt files should be as follows:
 galnum is a sequential index
 
 
-The first row is optional - if can contain more keys than column, as long as the columns are listed in the same order as specified above, up to whichever line is of interest. Missing data should be filled in with 'nan's.
+The first row is optional - it can contain more keys than columns, as long as the columns are listed in the same order as specified above, up to whichever line is of interest. Missing data should be filled in with 'NaN's.
 
 The data should be in the above order, separated by any number of white spaces.
 
@@ -98,7 +98,7 @@ Tests implemented
 ====================
 
 A few tests are implemented to make sure your inputs are valid, and your outputs are robust. 
-In order to assess if the number of samples requested is sufficiently large, we provide the modeul testcompleteness.py. 
+In order to assess if the number of samples requested is sufficiently large, we provide the module testcompleteness.py. 
 
 Use as, for example: 
 
@@ -107,11 +107,11 @@ import testcompleteness as tc
 tc.fitdistrib(\<path to pickle file\>)
 
 
-This reads in the pickle file generated by the code, and compares the cumulative distributions for 4 diagnostics: E(B-V), D02, Z94 and KD02comb_updated (the user can choose to use whichever scale of course!) (choosing subsets with minimal invalid outpus for each subset).  
+This reads in the pickle file generated by the code, and compares the cumulative distributions for 4 parameters: E(B-V), D02, Z94 and KD02comb_updated (the user can choose to use whichever scale of course!) (choosing subsets with minimal invalid outpus for each subset).  
 
 The cumulative distribution for 1/10, 1/4, 1/2, 3/4 and the full sample generated by the code are compared with a KS tests and plotted. 
 
-If the number of samples is sufficient, you should expect the probability of the 3/4 sample and full sample to come from the same parent distribution to be close to 1, and generally the KD p-value to increse with the sample fraction (but not always it turns out...). More importantly though this can be used visually: the cumulative distribution should be nearly identical (and smooth). If all distributions overlap, then you are sure that you are well above the critical sample size that achieve smoothness (by a factor 10).
+If the number of samples is sufficient, you should expect the probability of the 3/4 sample and full sample to come from the same parent distribution to be close to 1, and generally the KD p-value to increase with the sample fraction (but not always it turns out...). More importantly though this can be used visually: the cumulative distribution should be nearly identical (and smooth). If all distributions overlap, then you are sure that you are well above the critical sample size that achieves smoothness (by a factor 10).
 
 The figures below show an undersampled realization and a well- (possibly) over-sampled realization.
 
@@ -132,7 +132,7 @@ The figures below show an undersampled realization and a well- (possibly) over-s
 Known Issues and TODO
 ====================
 
-Plot formatting is designed for a platform using latex and with Times New Roman serif font available to matplotlib. The module pylabsetup loaded early on assures the matplotlib rcparameters are set up appropriately, including font choice, and in case of missing fonts an error message is streamed (but not paused upon). If your plots don't look good change the necessary parameters in pylabsetup.py. This is an unfortunately common occurrence when not running on a Mac.
+Plot formatting is designed for a platform using latex and with Times New Roman serif font available to matplotlib. The module pylabsetup loaded early on assures that the matplotlib rcparameters are set up appropriately, including font choice, and in case of missing fonts an error message is streamed (but not paused upon). If your plots don't look good, change the necessary parameters in pylabsetup.py. This is an unfortunately common occurrence when not running on a Mac.
 
 
 ====================
