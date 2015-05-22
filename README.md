@@ -132,6 +132,8 @@ The figures below show an undersampled realization and a well- (possibly) over-s
 Known Issues and TODO
 ====================
 
+THE M08 SCALES CRASH WITH numpy version 1.9. This bug will be fixed soon. However, the code works fine with numpy version 1.8 .
+
 Plot formatting is designed for a platform using latex and with Times New Roman serif font available to matplotlib. The module pylabsetup loaded early on assures that the matplotlib rcparameters are set up appropriately, including font choice, and in case of missing fonts an error message is streamed (but not paused upon). If your plots don't look good, change the necessary parameters in pylabsetup.py. This is an unfortunately common occurrence when not running on a Mac.
 
 
