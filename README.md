@@ -1,4 +1,4 @@
-[![Code Health](https://landscape.io/github/fedhere/pyMCZ/master/landscape.svg?style=flat)](https://landscape.io/github/fedhere/pyMCZ/master)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.17880.svg)](http://dx.doi.org/10.5281/zenodo.17880) [![Code Health](https://landscape.io/github/fedhere/pyMCZ/master/landscape.svg?style=flat)](https://landscape.io/github/fedhere/pyMCZ/master)
 
 MC Metallicity
 ====================
@@ -149,4 +149,5 @@ numpy,pylab,matplotlib,scipy
 
 desirable packages:
 
-pickle,pprint,multiprocessing,itertools,csv,cProfile,pyqz,
+pickle,multiprocessing,itertools,csv,cProfile,pyqz
+
