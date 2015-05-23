@@ -17,7 +17,9 @@ import metallicity as metallicity
 
 import itertools
 import multiprocessing as mpc
-NM0=0# setting this to say N>0 starts the calculation at measurement N. this is only for exploratory purposes as the code bugs out before plotting and printing the results
+NM0=0# setting this to say N>0 starts the calculation at measurement N. 
+#this is only for exploratory purposes as the code bugs out before 
+#plotting and printing the results
 
 PROFILING = True
 PROFILING = False
@@ -72,11 +74,7 @@ def getknuth(m,data,N):
     bins=np.linspace(min(data),max(data), int(m) + 1)
     try:
         nk,bins=np.histogram(data,bins)
-        return -(N*np.log(m) 
-                 + gammaln(0.5*m) 
-                 - m*gammaln(0.5) 
-                 - gammaln(N + 0.5*m)
-                 + np.sum(gammaln(nk+0.5)))
+        return -(N*np.log(m) + gammaln(0.5*m) - m*gammaln(0.5) - gammaln(N + 0.5*m)+ np.sum(gammaln(nk+0.5)))
     except:
         return [-1]
 
@@ -147,7 +145,10 @@ def ingest_data(filename,path):
     err, nn, bserr =readfile(errfile)
     try:
         snr=(meas.view(np.float32).reshape(meas.shape + (-1,))[:,1:])/(err.view(np.float32).reshape(err.shape + (-1,))[:,1:])
-#        if snr[~np.isnan(snr)].any()<3:  raw_input("WARNING: signal to noise ratio smaller than 3 for at least some lines! You should only use SNR>3 measurements (return to proceed)")
+#        if snr[~np.isnan(snr)].any()<3:  
+#             raw_input('''WARNING: signal to noise ratio smaller than 3 
+#for at least some lines! You should only use SNR>3 
+#measurements (return to proceed)''')
     except:
         pass
     return (filename, meas, err, nm, path, (bsmeas,bserr))
@@ -533,8 +534,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                         print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(name+ ' %d'%(i+1),key,res[key][i][0],0,0 )
                 except:pass
             else:
-                if 1:
-                #try:
+                try:
                     if sum(~np.isnan(res[key][:,i]))>0:
                         if ASCIIDISTRIB:
                             with open(os.path.join(binp,'%s_n%d_%s_%d.csv'%(name,nsample,key,i+1)), "wb") as fidist:
@@ -544,14 +544,14 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                         s=key+"\t "+sh+'\n'
                         if ASCIIOUTPUT:
                             fi.write(s)
-                        if not key in ["E(B-V)" ,"logR23"]:
+                        if key not in ["E(B-V)" ,"logR23"]:
                             boxlabels.append(key.replace('_',' '))
                             datas.append(data)
                         if BINMODE == 'kd' and  not NOPICKLE:
                             pickleKDEfile=os.path.join(binp+'/%s_n%d_%s_%d_KDE.pkl'%(name,nsample,key,i+1))
                             if VERBOSE: print "KDE files will be stored in ",pickleKDEfile
                             pickle.dump(kde,open(pickleKDEfile,'wb'))
-                #except:pass
+                except:pass
         #make box_and_whiskers plot
         fig= plt.figure(figsize=(8,15))
         fig.subplots_adjust(bottom=0.18,left=0.18)
@@ -589,8 +589,11 @@ def main():
     parser.add_argument('name', metavar='<name>', type=str, help="the SN file name (root of the _min,_max file names")
     parser.add_argument('nsample', metavar='N', type=int, help="number of iterations, minimum 100 (or 0 for no MC sampling)")
     parser.add_argument('--clobber',default=False, action='store_true', help="replace existing output")
-    parser.add_argument('--binmode', default='k', type=str, choices=['d','s','k','t','bb','kd'], help="method to determine bin size {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), k: Knuth's rule, bb: Bayesian blocks, kd: Kernel Density}")
-    parser.add_argument('--path',   default=None, type=str, help="input/output path (must contain the input _max.txt and _min.txt files in a subdirectory sn_data)")
+    parser.add_argument('--binmode', default='k', type=str, choices=['d','s','k','t','bb','kd'], help='''method to determine bin size 
+    {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), k: Knuth's rule, 
+    bb: Bayesian blocks, kd: Kernel Density}''')
+    parser.add_argument('--path',   default=None, type=str, help='''input/output path (must contain the input _max.txt and 
+    _min.txt files  in a subdirectory sn_data)''')
     parser.add_argument('--unpickle',   default=False, action='store_true', help="read the pickled realization instead of making a new one")
 
     parser.add_argument('--verbose',default=False, action='store_true', help="verbose mode")
@@ -599,7 +602,9 @@ def main():
     parser.add_argument('--noplot',default=False, action='store_true', help=" don't plot individual distributions (default is to plot all distributions)")
     parser.add_argument('--asciiout',default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
     parser.add_argument('--asciidistrib',default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
-    parser.add_argument('--md',default='all', type =str, help=" metallicity diagnostic to calculate. default is 'all', options are: D02, Z94, M91, C01, P05, M08, M08all, M13, PP04, D13, KD02, DP00 (deprecated), P01")
+    parser.add_argument('--md',default='all', type =str, help= '''metallicity diagnostic to calculate. 
+    default is 'all', options are: 
+    D02, Z94, M91, C01, P05, M08, M08all, M13, PP04, D13, KD02, DP00 (deprecated), P01''')
     parser.add_argument('--multiproc',default=False, action='store_true', help=" multiprocess, with number of threads max(available cores-1, MAXPROCESSES)")
     args=parser.parse_args()
 
@@ -629,7 +634,9 @@ def main():
     if args.path:
         path=args.path
     else:
-        assert (os.getenv("MCMetdata"))," the _max, _min (and _med) data must live in a folder named sn_data. pass a path to the sn_data folder, or set up the environmental variable MCMetdata pointing to the path where sn_data lives "
+        assert (os.getenv("MCMetdata")),''' the _max, _min (and _med) data must live in a folder named sn_data. 
+        pass a path to the sn_data folder, or set up the environmental variable 
+        MCMetdata pointing to the path where sn_data lives '''
         path=os.getenv("MCMetdata")
     assert(os.path.isdir(path)),"pass a path or set up the environmental variable MCMetdata pointing to the path where the _min _max _med files live"
     if args.nsample==1:

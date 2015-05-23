@@ -38,7 +38,10 @@ Zs=["E(B-V)", #Halpha, Hbeta
     "P10_ONS","P10_ON",
     "M08_R23","M08_N2Ha","M08_O3Hb","M08_O2Hb","M08_O3O2","M08_O3N2",
     "M13_O3N2","M13_N2",
-    "D13_N2S2_O3S2",    "D13_N2S2_O3Hb",    "D13_N2S2_O3O2",    "D13_N2O2_O3S2",    "D13_N2O2_O3Hb",    "D13_N2O2_O3O2",    "D13_N2Ha_O3Hb",    "D13_N2Ha_O3O2",
+    "D13_N2S2_O3S2",    "D13_N2S2_O3Hb",    
+    "D13_N2S2_O3O2",    "D13_N2O2_O3S2",    
+    "D13_N2O2_O3Hb",    "D13_N2O2_O3O2",    
+    "D13_N2Ha_O3Hb",    "D13_N2Ha_O3O2",
     "KD02_N2O2",   #Halpha, Hbeta,  [OII]3727, [NII]6584
     "KD02_N2S2",
     "KK04_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
@@ -128,34 +131,34 @@ def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,
     #mscales.printme()
     if verbose: print "calculating metallicity diagnostic scales: ",mds
     if 'all' in mds:
-         mscales.calcD02()
-         if   os.getenv("PYQZ_DIR"):
-              cmd_folder = os.getenv("PYQZ_DIR")+'/'
-              if cmd_folder not in sys.path:
-                   sys.path.insert(0, cmd_folder)
-              import pyqz
-              mscales.calcpyqz()
-         else:
-              printsafemulti('''set path to pyqz as environmental variable :
-              export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want this scale. ''', logf, nps)
+        mscales.calcD02()
+        if   os.getenv("PYQZ_DIR"):
+            cmd_folder = os.getenv("PYQZ_DIR")+'/'
+            if cmd_folder not in sys.path:
+                sys.path.insert(0, cmd_folder)
+            import pyqz
+            mscales.calcpyqz()
+        else:
+            printsafemulti('''set path to pyqz as environmental variable :
+            export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want this scale. ''', logf, nps)
               
 
-         mscales.calcZ94()
-         mscales.calcM91()
-
-         mscales.calcPP04()
-
-         #mscales.calcP05()
-         mscales.calcP10()
-
-         mscales.calcM08()
-         mscales.calcM13()
-
-         mscales.calcKD02_N2O2()
-         mscales.calcKK04_N2Ha()
-         
-         mscales.calcKK04_R23()
-         mscales.calcKDcombined()
+        mscales.calcZ94()
+        mscales.calcM91()
+        
+        mscales.calcPP04()
+        
+        #mscales.calcP05()
+        mscales.calcP10()
+        
+        mscales.calcM08()
+        mscales.calcM13()
+        
+        mscales.calcKD02_N2O2()
+        mscales.calcKK04_N2Ha()
+        
+        mscales.calcKK04_R23()
+        mscales.calcKDcombined()
 
     if 'DP00' in mds:
         mscales.calcDP00()
@@ -165,33 +168,33 @@ def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,
     if 'D02' in mds:
          mscales.calcD02()
     if 'D13' in mds:
-         if   os.getenv("PYQZ_DIR"):
-              cmd_folder = os.getenv("PYQZ_DIR")
-              if cmd_folder not in sys.path:
-                   sys.path.insert(0, cmd_folder)
-              import pyqz
-              #mscales.calcpyqz()
-              #in order to see the original pyqz plots
-              #call pyqz with option plot=True by
-              #using the commented line below instead
-              mscales.calcpyqz(plot=False)
-         else:
-              printsafemulti('''set path to pyqz as environmental variable 
+        if   os.getenv("PYQZ_DIR"):
+            cmd_folder = os.getenv("PYQZ_DIR")
+            if cmd_folder not in sys.path:
+                sys.path.insert(0, cmd_folder)
+            import pyqz
+            #mscales.calcpyqz()
+            #in order to see the original pyqz plots
+            #call pyqz with option plot=True by
+            #using the commented line below instead
+            mscales.calcpyqz(plot=False)
+        else:
+            printsafemulti('''set path to pyqz as environmental variable 
 PYQZ_DIR if you want this scale. ''',logf,nps)
 
     if 'D13all' in mds:
-         if   os.getenv("PYQZ_DIR"):
-              cmd_folder = os.getenv("PYQZ_DIR")
-              if cmd_folder not in sys.path:
-                   sys.path.insert(0, cmd_folder)
-              import pyqz
-              #mscales.calcpyqz()
-              #in order to see the original pyqz plots
-              #call pyqz with option plot=True by
-              #using the commented line below instead
-              mscales.calcpyqz(plot=False, allD13=True)
+        if   os.getenv("PYQZ_DIR"):
+            cmd_folder = os.getenv("PYQZ_DIR")
+            if cmd_folder not in sys.path:
+                sys.path.insert(0, cmd_folder)
+            import pyqz
+            #mscales.calcpyqz()
+            #in order to see the original pyqz plots
+            #call pyqz with option plot=True by
+            #using the commented line below instead
+            mscales.calcpyqz(plot=False, allD13=True)
          else:
-              printsafemulti( '''set path to pyqz as environmental variable 
+             printsafemulti( '''set path to pyqz as environmental variable 
 PYQZ_DIR if you want this scale. ''',logf,nps)
 
     if 'PP04' in mds:

@@ -297,10 +297,10 @@ class diagnostics:
         if self.hasO2 and self.hasO3:
             self.OIII_OII=np.log10(self.O35007/self.O23727+self.dustcorrect(k_O35007,k_O2,flux=True))
             if not O34959 == None and sum(O34959>0)>0:
-                    self.O34959p5007=(O34959 + self.O35007)
-                    self.logO3O2=np.log10((self.O34959p5007)/self.O23727)+self.dustcorrect(k_O3,k_O2)
-                    #this is useful when we get logq
-                    self.hasO3O2=True
+                self.O34959p5007=(O34959 + self.O35007)
+                self.logO3O2=np.log10((self.O34959p5007)/self.O23727)+self.dustcorrect(k_O3,k_O2)
+                #this is useful when we get logq
+                self.hasO3O2=True
         if self.hasHb:
             self.OIII_Hb=np.log10(self.O35007/self.Hb+self.dustcorrect(k_O35007,k_Hb, flux=True))
 
@@ -371,7 +371,8 @@ class diagnostics:
         if not self.hasN2O2 or np.mean(self.logN2O2) <1.2 :
 
             try: 
-                printsafemulti( '''WARNING: the KD02 and KK04 (+M08) methods should only be used for  log([NII]6564/[OII]3727) >1.2, here the mean log([NII]6564/[OII]3727)=here %f'''%np.mean(self.logN2O2),self.logf,self.nps)
+                printsafemulti( '''WARNING: the KD02 and KK04 (+M08) methods should only be used for  log([NII]6564/[OII]3727) >1.2, 
+                here the mean log([NII]6564/[OII]3727)=here %f'''%np.mean(self.logN2O2),self.logf,self.nps)
             except : 
                 printsafemulti( '''WARNING: the KD02 and KK04 (+M08) methods s
                 hould only be used for  log([NII]6564/[OII]3727) >1.2, 
@@ -554,13 +555,13 @@ class diagnostics:
 
 
     def calcP(self):
-       if self.P==None:
+        if self.P==None:
             if self.logR23==None:
-               printsafemulti(  "WARNING: Must first calculate R23",self.logf,self.nps)
-               self.calcR23()
-               if self.logR23==None:
-                   printsafemulti(  "WARNING: Cannot compute this without R23",self.logf,self.nps)
-                   return -1
+                printsafemulti(  "WARNING: Must first calculate R23",self.logf,self.nps)
+                self.calcR23()
+                if self.logR23==None:
+                    printsafemulti(  "WARNING: Cannot compute this without R23",self.logf,self.nps)
+                    return -1
             #R3=10**self.logO349595007Hb
             #R2=10**self.logO2Hb
             #P = R3/(R2+R3)
@@ -704,7 +705,8 @@ class diagnostics:
          
             self.mds['C01_R23'][ self.O2O35007 >= 0.8]=np.log10(3.96e-4 * x3[self.O2O35007 >= 0.8]**(-0.46))+12.0   
         else:
-            printsafemulti(  "WARNING: need [OIII]5700, [OII]3727, and Ha to calculate calcC01_ZR23, did you set them up with  setOlines()?"        ,self.logf,self.nps)
+            printsafemulti('''WARNING: need [OIII]5700, [OII]3727, and Ha to calculate calcC01_ZR23, 
+did you set them up with  setOlines()?'''        ,self.logf,self.nps)
 
         # Charlot 01 calibration: (case A) based on [N2]/[SII]##
         # available but deprecated
@@ -714,7 +716,8 @@ class diagnostics:
         if self.hasN2S2 and self.hasO3 and self.hasO2 and self.hasO3Hb:
             self.mds['C01_N2S2']=np.log10(5.09e-4*(x2**0.17)*((self.N2S2/0.85)**1.17))+12
         else:
-            printsafemulti(  "WARNING: needs [NII]6584, [SII]6717, [OIII]5700, [OII]3727, and Ha to calculate calcC01_ZR23, did you set them up with  setOlines() and ?",self.logf,self.nps)        
+            printsafemulti('''WARNING: needs [NII]6584, [SII]6717, [OIII]5700, [OII]3727, and Ha to calculate calcC01_ZR23, 
+did you set them up with  setOlines() and ?''',self.logf,self.nps)        
 
 
     #@profile
@@ -813,10 +816,10 @@ class diagnostics:
             coefs=np.array([M08_coefs['R23']]*self.nm).T
             coefs[0]=coefs[0]-self.logR23
             sols=np.array([self.fz_roots(coefs.T)])[0]+8.69            
-            if highZ==True:
+            if highZ is True:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real>=8.0)).cumsum(1).cumsum(1)==1
                 self.mds['M08_R23'][(indx.sum(1))==True]=sols[indx]
-            elif highZ==False:
+            elif highZ is False:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=8.0)).cumsum(1).cumsum(1)==1
                 self.mds['M08_R23'][(indx.sum(1))==True]=sols[indx]
         if not allM08: return
@@ -826,10 +829,10 @@ class diagnostics:
             coefs=np.array([M08_coefs['O3Hb']]*self.nm).T
             coefs[0]=coefs[0]-self.logO3Hb
             sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
-            if highZ==True:
+            if highZ is True:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real>=7.9)).cumsum(1).cumsum(1)==1
                 self.mds['M08_O3Hb'][(indx.sum(1))==True]=sols[indx]
-            elif highZ==False:
+            elif highZ is False:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=7.9)).cumsum(1).cumsum(1)==1
                 self.mds['M08_O3Hb'][(indx.sum(1))==True]=sols[indx]
 
@@ -839,10 +842,10 @@ class diagnostics:
             coefs=np.array([M08_coefs['O2Hb']]*self.nm).T
             coefs[0]=coefs[0]-self.logO2Hb
             sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
-            if highZ==True:
+            if highZ is True:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real>=8.7)).cumsum(1).cumsum(1)==1
                 self.mds['M08_O2Hb'][(indx.sum(1))==True]=sols[indx]
-            elif highZ==False:
+            elif highZ is False:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=8.7)).cumsum(1).cumsum(1)==1
                 self.mds['M08_O2Hb'][(indx.sum(1))==True]=sols[indx]
 
@@ -940,10 +943,10 @@ class diagnostics:
 
         #this is in the original code but not used :( 
         #if self.hasN2 and self.hasHa:
-            #logq_lims=[6.9,8.38]
-            #logN2Ha=np.log10(self.N26584/self.Ha) CHECK!! why remove dust correction??
-            #Z_new_N2Ha_lims= np.atleast_2d([1.0,1.0]).T*nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-np.atleast_2d( logq_lims).T*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,0.128])+np.atleast_2d(logq_lims).T*(10**(self.logN2Ha-0.2)*(-3.16+4.65*self.logN2Ha)) 
-            # R23 diagnostics from Kobulnicky & Kewley 2004
+        #logq_lims=[6.9,8.38]
+        #logN2Ha=np.log10(self.N26584/self.Ha) CHECK!! why remove dust correction??
+        #Z_new_N2Ha_lims= np.atleast_2d([1.0,1.0]).T*nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-np.atleast_2d( logq_lims).T*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,0.128])+np.atleast_2d(logq_lims).T*(10**(self.logN2Ha-0.2)*(-3.16+4.65*self.logN2Ha)) 
+        # R23 diagnostics from Kobulnicky & Kewley 2004
 
         Zmax=np.zeros(self.nm)
         # ionization parameter form logR23
