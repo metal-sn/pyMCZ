@@ -1,3 +1,4 @@
+
 ##############################################################################
 ##Calculate metalicity, code originally in IDL written by Lisa
 ##new calculation based on the most recent version of the .pro file.
@@ -12,6 +13,7 @@
 ## disp - if True prints the results, default False
 ## saveres - if True appends the results onto outfilename, True by default
 ##############################################################################
+
 import sys,os
 import numpy as np
 from pylab import hist,show
@@ -193,8 +195,8 @@ PYQZ_DIR if you want this scale. ''',logf,nps)
             #call pyqz with option plot=True by
             #using the commented line below instead
             mscales.calcpyqz(plot=False, allD13=True)
-         else:
-             printsafemulti( '''set path to pyqz as environmental variable 
+        else:
+            printsafemulti( '''set path to pyqz as environmental variable 
 PYQZ_DIR if you want this scale. ''',logf,nps)
 
     if 'PP04' in mds:
