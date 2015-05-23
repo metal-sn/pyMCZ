@@ -1,7 +1,7 @@
 import numpy as np
 import pylab as pl
 import sys
-import scipy.stats as stats
+import scipy.stats as  stats
 import numpy.polynomial.polynomial as nppoly
 from metallicity import get_keys,printsafemulti
 
@@ -193,11 +193,11 @@ class diagnostics:
             if verbose: print self.logR23
         except:pass 
         try:        
-            print  "\nlog([NII][OII])",stat.nanmean(self.logN2O2)
+            print  "\nlog([NII][OII])",stats.nanmean(self.logN2O2)
             if verbose: print self.logN2O2
         except:pass
         try:        
-            print  "\nlog([OIII][OII])",stat.nanmean(self.logO3O2)
+            print  "\nlog([OIII][OII])",stats.nanmean(self.logO3O2)
             if verbose: 
                 print self.logO3O2
         except:pass
@@ -440,7 +440,7 @@ class diagnostics:
                 N2O2=self.N26584*self.Ha*self.Hb*self.O23727
             if not self.hasN2O2:
                 printsafemulti(  "WARNING: must calculate logN2O2 first",self.logf,self.nps)
-                calcNIIOII()
+                self.calcNIIOII()
             self.Z_init_guess[(self.logN2O2 < -1.2)&(N2O2 != 0.0)]=8.2  
             # at logN2O2<-1.2 using low-Z gals, A1 KE08
             self.Z_init_guess[(self.logN2O2 >=-1.2)&(N2O2 != 0.0)]=8.7  
