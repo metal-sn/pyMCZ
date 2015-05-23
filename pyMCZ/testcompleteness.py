@@ -8,8 +8,8 @@ import pylabsetup
 #pickle may not be installed
 NOPICKLE=False
 try:
-    import pprint, pickle
-except:
+    import pickle
+except ImportError:
     NOPICKLE=True
 
 def fitdistrib(picklefile):
@@ -63,7 +63,7 @@ def fitdistrib(picklefile):
     nc   = 2    # number of col plots
 
     fig,axx =  pl.subplots(nr,nc,figsize=(fwid,fwid/rat))
-
+    
 
     for i,d in enumerate(testingdiags):
         ii,jj=int(i/2),int((i+1)/2)-int(i/2)
