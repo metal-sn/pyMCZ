@@ -34,7 +34,7 @@ MAXPROCESSES=10
 NOPICKLE=False
 try:
     import pprint, pickle
-except:
+except ImportError: :
     NOPICKLE=True
 
 
@@ -252,7 +252,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
             ##if sklearn is available use it to get Kernel Density
             try:
                 from sklearn.neighbors import KernelDensity
-            except:
+            except ImportError:
                 print '''sklearn is not available, 
                 thus we cannot compute kernel density. 
                 switching to bayesian blocks'''
@@ -532,7 +532,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                 try:
                     if ~np.isnan(res[key][i][0]):
                         print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(name+ ' %d'%(i+1),key,res[key][i][0],0,0 )
-                except:pass
+                except: pass
             else:
                 try:
                     if sum(~np.isnan(res[key][:,i]))>0:
