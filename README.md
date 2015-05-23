@@ -122,13 +122,13 @@ The figures below show an undersampled realization and a well- (possibly) over-s
 
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/paper/exampledata_n200_testcomplete.png)
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n200_testcomplete.png)
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/paper/exampledata_n2000_testcomplete.png)
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n2000_testcomplete.png)
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/paper/exampledata_n20000_testcomplete.png)
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n20000_testcomplete.png)
 
 
  
