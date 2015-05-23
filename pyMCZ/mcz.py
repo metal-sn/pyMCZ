@@ -67,7 +67,7 @@ def smart_open(logfile=None):
 def getknuth(m,data,N):
     m=int(m)
     if m > N:
-        return (-1)
+        return [-1]
     bins=np.linspace(min(data),max(data), int(m) + 1)
     try:
         nk,bins=np.histogram(data,bins)
@@ -87,7 +87,7 @@ def knuthn(data, maxM=None):
     m0=2.0*N**(1./3.)
     gk=getknuth
     if gk == [-1]:
-        return mk, 't'
+        return m0, 't'
     mkall= optimize.fmin(gk,m0, args=(data,N), disp=VERBOSE, maxiter=30)#, maxfun=1000)#[0]
     mk=mkall[0]
     if mk>maxM or mk<0.3*np.sqrt(N):
