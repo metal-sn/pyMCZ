@@ -6,7 +6,7 @@ import scipy.stats as stats
 from scipy.special import gammaln
 from scipy import optimize
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+from matplotlib.ticker import FormatStrFormatter
 
 
 #modules of this package
@@ -33,8 +33,8 @@ MAXPROCESSES=10
 #pickle may not be installed
 NOPICKLE=False
 try:
-    import pprint, pickle
-except:
+    import pickle
+except ImportError: 
     NOPICKLE=True
 
 
@@ -53,9 +53,9 @@ MP=False
 def is_number(s):
     if not type(s) is np.string_:
         try:
-            tmp=float(s)
+            float(s)
             return True
-        except :
+        except ValueError:
             return False
     return False
         
@@ -141,14 +141,14 @@ def ingest_data(filename,path):
     errfile =os.path.join(path,filename+"_err.txt")
     
     ###read the max, meas, min flux files###    
+    err, nm, bserr =readfile(errfile)
     meas,nm, bsmeas=readfile(measfile)
-    err, nn, bserr =readfile(errfile)
     try:
         snr=(meas.view(np.float32).reshape(meas.shape + (-1,))[:,1:])/(err.view(np.float32).reshape(err.shape + (-1,))[:,1:])
-#        if snr[~np.isnan(snr)].any()<3:  
-#             raw_input('''WARNING: signal to noise ratio smaller than 3 
-#for at least some lines! You should only use SNR>3 
-#measurements (return to proceed)''')
+        if snr[~np.isnan(snr)].any()<3:  
+             raw_input('''WARNING: signal to noise ratio smaller than 3 
+for at least some lines! You should only use SNR>3 
+measurements (return to proceed)''')
     except:
         pass
     return (filename, meas, err, nm, path, (bsmeas,bserr))
@@ -223,14 +223,14 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
 
     if not n>0:
         if verbose:print "data must be an actual distribution (n>0 elements!, %s)"%Zs
-        return "-1,-1,_1",[]
+        return "-1,-1,_1",[], kde
 
     if data.shape[0]<=0 or np.sum(data)<=0:
         print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(snname,Zs,-1,-1,-1)
-        return "-1, -1, -1",[]  ,kde
+        return "-1, -1, -1",[], kde
     try:
         ###find C.I.###
-        median,m5sig,pc16,pc84,p5sig=np.percentile(data,[50,0.0000003,16,84,100-0.0000003])
+        median,pc16,pc84=np.percentile(data,[50,16,84])
         std=np.std(data)
         left=pc16
         right=pc84
@@ -252,7 +252,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
             ##if sklearn is available use it to get Kernel Density
             try:
                 from sklearn.neighbors import KernelDensity
-            except:
+            except ImportError:
                 print '''sklearn is not available, 
                 thus we cannot compute kernel density. 
                 switching to bayesian blocks'''
@@ -285,7 +285,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
                     if BINMODE=='bb':
                         distrib=amlhist(data, bins='blocks', normed=True)
                     if not NOPLOT: plt.clf()
-                except:
+                except ImportError:
                     print "bayesian blocks for histogram requires astroML to be installed"
                     print "defaulting to Knuth's rule "
                     ##otherwise 
@@ -364,18 +364,18 @@ def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, 
     logf=sys.stdout
     print >>logf,"\n\nreading in measurements ",i+1
     fluxi={}#np.zeros((len(bss[0]),nm),float)
-    for j,k in enumerate(bss[0].iterkeys()):
+    for k in bss[0].iterkeys():
         print >>logf,'{0:15} '.format(k),
         print >>logf,'{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
         fluxi[k]=flux[k][i]*np.ones(len(sample[i]))+err[k][i]*sample[i]
         warnings.filterwarnings("ignore")
-    success=metallicity.calculation(scales,fluxi,nm,bss,mds,nps,logf,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
-    #if success==-1:
-    #    print >>logf, "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
+    success=metallicity.calculation(scales,fluxi,nm,bss,mds,nps,logf,disp=disp, dust_corr=dust_corr,verbose=verbose)
+    if success==-1:
+        print >>logf, "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
         
     for key in scales.mds.iterkeys():
         res[key][i]=scales.mds[key]
-        if res[key][i]==None:
+        if res[key][i] is None:
             res[key][i]=[float('NaN')]*len(sample)
     return res
 
@@ -450,7 +450,6 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
             res[key]=[[] for i in range(NM0,nm)]
             
         #use only valid inputs
-        temp={}
         delkeys=[]
         for k in bss[0].iterkeys():
             if k=='flag' or k=='galnum' or bss[0][k][1]==0 :#or bss[1][k][1]==bss[0][k][1]:
@@ -481,7 +480,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
             for i in range(NM0,nm):
                 print >>logf, "\n\n measurements ",i+1
                 fluxi={}
-                for j,k in enumerate(bss[0].iterkeys()):
+                for k in bss[0].iterkeys():
                     print >>logf, '{0:15} '.format(k),
                     print >>logf, '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
                     fluxi[k]=flux[k][i]*np.ones(len(sample[i]))+err[k][i]*sample[i]
@@ -495,7 +494,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                 
                 for key in scales.mds.iterkeys():
                     res[key][i]=scales.mds[key]
-                    if res[key][i]==None:
+                    if res[key][i] is None:
                         res[key][i]=[float('NaN')]*newnsample
                     elif len(res[key][i])<newnsample:
                         res[key][i]=res[key][i]+[float('NaN')]*(newnsample-len(res[key][i]))
@@ -532,7 +531,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                 try:
                     if ~np.isnan(res[key][i][0]):
                         print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(name+ ' %d'%(i+1),key,res[key][i][0],0,0 )
-                except:pass
+                except: pass
             else:
                 try:
                     if sum(~np.isnan(res[key][:,i]))>0:
