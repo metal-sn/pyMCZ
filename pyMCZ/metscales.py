@@ -283,7 +283,8 @@ class diagnostics:
             #self.logO2O35007Hb=np.log10((self.O23727+self.O35007)/self.Hb)
             # ratios for other diagnostics - slightly different ratios needed
             if self.hasHb:
-                self.logO2O35007Hb=np.log10((self.O23727/self.Hb)* self.dustcorrect(k_O2,k_Hb,flux=True))+ (self.O35007/self.Hb)*self.dustcorrect(k_O35007,k_Hb,flux=True)
+                self.logO2O35007Hb=np.log10((self.O23727/self.Hb)* self.dustcorrect(k_O2,k_Hb,flux=True))+ 
+                (self.O35007/self.Hb)*self.dustcorrect(k_O35007,k_Hb,flux=True)
 
         else: 
             printsafemulti( "WARNING: needs O lines and  and Ha/b: did you run setHab()?",self.logf,self.nps)
