@@ -34,7 +34,7 @@ MAXPROCESSES=10
 NOPICKLE=False
 try:
     import pprint, pickle
-except ImportError: :
+except ImportError: 
     NOPICKLE=True
 
 

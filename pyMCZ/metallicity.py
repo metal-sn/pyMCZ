@@ -94,7 +94,8 @@ def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,
     elif dust_corr and not IGNOREDUST:
 
         if nps>1:
-            print "WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!!"
+            print '''WARNING: reddening correction cannot be done 
+            without both H_alpha and H_beta measurement!!'''
     
         else: 
             response=raw_input("WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!! Continuing without reddening correction? [Y/n]\n").lower()
@@ -168,7 +169,7 @@ def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,
         mscales.calcP01()
          
     if 'D02' in mds:
-         mscales.calcD02()
+        mscales.calcD02()
     if 'D13' in mds:
         if   os.getenv("PYQZ_DIR"):
             cmd_folder = os.getenv("PYQZ_DIR")

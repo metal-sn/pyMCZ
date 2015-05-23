@@ -296,7 +296,7 @@ class diagnostics:
 
         if self.hasO2 and self.hasO3:
             self.OIII_OII=np.log10(self.O35007/self.O23727+self.dustcorrect(k_O35007,k_O2,flux=True))
-            if not O34959  is None and sum(O34959>0)>0:
+            if O34959  is not None and sum(O34959>0)>0:
                 self.O34959p5007=(O34959 + self.O35007)
                 self.logO3O2=np.log10((self.O34959p5007)/self.O23727)+self.dustcorrect(k_O3,k_O2)
                 #this is useful when we get logq
@@ -305,7 +305,7 @@ class diagnostics:
             self.OIII_Hb=np.log10(self.O35007/self.Hb+self.dustcorrect(k_O35007,k_Hb, flux=True))
 
     def setNII(self,N26584):
-        if not N26584 is None and sum(N26584>0):
+        if N26584 is not None and sum(N26584>0):
             self.N26584=N26584
             self.hasN2=True
             if self.hasHa :
@@ -321,7 +321,7 @@ class diagnostics:
                 self.NII_OII=np.log10(self.N26584/self.O23727+self.dustcorrect(k_N2,k_O2,flux=True) )
 
     def setSII(self,S26717,S26731,S39069,S39532):
-        if not S26717 is None and sum(S26717>0)>0:
+        if S26717 is not None and sum(S26717>0)>0:
             self.S26717=S26717
             self.hasS2=True
 
@@ -329,13 +329,13 @@ class diagnostics:
                 self.logS2Ha=np.log10(self.S26717/self.Ha)+self.dustcorrect(k_S2,k_Ha)               
             else: 
                 printsafemulti( "WARNING: needs SII6717 and Ha to calculate SIIHa: did you run setHab() and setS()?",self.logf,self.nps)
-        if not S26731 is None and sum(S26731>1e-9)>0:
+        if S26731 is not None and sum(S26731>1e-9)>0:
             self.S26731=S26731
             self.hasS26731=True
-        if not S39069 is None and sum(S39069>1e-9)>0:
+        if S39069 is not None and sum(S39069>1e-9)>0:
             self.S39069=S39069
             self.hasS39069=True
-        if not S39532 is None and sum(S39532>1e-9)>0:
+        if S39532 is not None and sum(S39532>1e-9)>0:
             self.S39532=S39532
             self.hasS39532=True
         if self.hasS2 :
@@ -455,26 +455,26 @@ class diagnostics:
         import pyqz
         self.NII_SII=None
         self.OIII_SII =None
-        if not self.NII_SII is None  and allD13:
-            if not self.OIII_SII  is None:
+        if self.NII_SII is not None  and allD13:
+            if self.OIII_SII  is not None:
                 self.mds['D13_N2S2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),np.atleast_1d([self.OIII_SII]),'NII/SII','OIII/SII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
-            if  not self.OIII_Hb  is None:
+            if  self.OIII_Hb  is not None:
                 self.mds['D13_N2S2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),np.atleast_1d([self.OIII_Hb]),'NII/SII','OIII/Hb', method='default', plot=plot, n_plot = False, savefig=False )[0].T
-            if  not self.OIII_OII  is None:
+            if  self.OIII_OII  is not None:
                 self.mds['D13_N2S2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),np.atleast_1d([self.OIII_OII]),'NII/SII','OIII/OII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
 
-        if not self.NII_OII is None  and allD13:
-            if not self.OIII_SII  is None:
+        if self.NII_OII is not None  and allD13:
+            if self.OIII_SII  is not None:
                 self.mds['D13_N2O2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),np.atleast_1d([self.OIII_SII]),'NII/OII','OIII/SII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
-            if  not self.OIII_Hb  is None:
+            if  self.OIII_Hb  is not None:
                 self.mds['D13_N2O2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),np.atleast_1d([self.OIII_Hb]),'NII/OII','OIII/Hb', method='default', plot=plot, n_plot = False, savefig=False )[0].T
-            if  not self.OIII_OII  is None:
+            if  self.OIII_OII  is not None:
                 self.mds['D13_N2O2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),np.atleast_1d([self.OIII_OII]),'NII/OII','OIII/OII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
 
-        if not self.logN2Ha is None :
-            if  not self.OIII_Hb  is None:
+        if self.logN2Ha is not None :
+            if  self.OIII_Hb  is not None:
                 self.mds['D13_N2Ha_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),np.atleast_1d([self.OIII_Hb]),'NII/Ha','OIII/Hb', method='default', plot=plot, n_plot = False, savefig=False )[0].T
-            if  not self.OIII_OII  is None:
+            if  self.OIII_OII  is not None:
                 self.mds['D13_N2Ha_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),np.atleast_1d([self.OIII_OII]),'NII/Ha','OIII/OII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
 
 
@@ -617,10 +617,10 @@ class diagnostics:
 
         self.calcP()
             
-        if not self.R2 is None:
+        if self.R2 is not None:
             P10logR2=np.log(self.R2)
 
-        if not self.R3 is None:
+        if self.R3 is not None:
             P10logR3=np.log(self.R3)
 
         if self.hasN2:
@@ -646,22 +646,22 @@ class diagnostics:
         vsON=np.array([np.ones(self.nm),P10logR3,P10logR2,P10logN2R2]).T
         
         indx=P10logN2 > -0.1
-        if not self.P is None:
+        if self.P is not None:
             self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS0)
         self.mds['P10_ON'][indx] = np.dot(vsON[indx],coefsON0)
 
         indx=(P10logN2 < -0.1)*(P10logN2S2 > -0.25)
-        if not self.P is None:
+        if self.P is not None:
             self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS1)
         self.mds['P10_ON'][indx] = np.dot(vsON[indx],coefsON1)
 
         indx=(P10logN2 < -0.1)*(P10logN2S2 < -0.25)
-        if not self.P is None:
+        if self.P is not None:
             self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS2)
         self.mds['P10_ON'][indx] = np.dot(vsON[indx],coefsON2)
         
         indx=~((self.mds['P10_ONS']>7.1) * (self.mds['P10_ON']>7.1)*(self.mds['P10_ONS']<9.4) * (self.mds['P10_ON']<9.4))
-        if not self.P is None:
+        if self.P is not None:
             self.mds['P10_ONS'][indx]= float('NaN')
         self.mds['P10_ON'][indx] = float('NaN')
         
@@ -787,7 +787,7 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
         import numpy.ma as ma
         printsafemulti(  "calculating M08",self.logf,self.nps)
         highZ=None
-        if not self.logO35007O2 is None:
+        if self.logO35007O2 is not None:
             self.mds['M08_O3O2']=np.zeros(self.nm)+float('NaN')
             coefs=np.array([M08_coefs['O3O2']]*self.nm).T
             coefs[0]=coefs[0]-self.logO35007O2
@@ -796,7 +796,7 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
             self.mds['M08_O3O2'][(indx.sum(1))==True]=sols[indx]
             highZ=np.median(self.logO35007O2)<0
 
-        if not self.logN2Ha is None:
+        if self.logN2Ha is not None:
             self.mds['M08_N2Ha']=np.zeros(self.nm)+float('NaN')
             coefs=np.array([M08_coefs['N2Ha']]*self.nm).T
             coefs[0]=coefs[0]-self.logN2Ha
@@ -824,7 +824,7 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
                 self.mds['M08_R23'][(indx.sum(1))==True]=sols[indx]
         if not allM08: return
 
-        if not self.logO3Hb is None:
+        if self.logO3Hb is not None:
             self.mds['M08_O3Hb']=np.zeros(self.nm)+float('NaN')
             coefs=np.array([M08_coefs['O3Hb']]*self.nm).T
             coefs[0]=coefs[0]-self.logO3Hb
@@ -837,7 +837,7 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
                 self.mds['M08_O3Hb'][(indx.sum(1))==True]=sols[indx]
 
 
-        if not self.logO2Hb is None:
+        if self.logO2Hb is not None:
             self.mds['M08_O2Hb']=np.zeros(self.nm)+float('NaN')
             coefs=np.array([M08_coefs['O2Hb']]*self.nm).T
             coefs[0]=coefs[0]-self.logO2Hb
@@ -1051,11 +1051,11 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
 
         
         indx_ig=self.Z_init_guess > 8.4
-        if not self.mds['KD02_N2O2'] is None:
+        if self.mds['KD02_N2O2'] is not None:
             self.mds['KD02comb'][indx_ig]=self.mds['KD02_N2O2'][indx_ig].copy()
-        if not self.mds['KK04_N2Ha'] is None:
+        if self.mds['KK04_N2Ha'] is not None:
             self.mds['KD02comb'][~indx_ig]=self.mds['KK04_N2Ha'][~indx_ig].copy()
-        if not  self.mds['KK04_R23'] is None and not self.mds['M91'] is None:
+        if self.mds['KK04_R23'] is not None and self.mds['M91'] is not None:
             # if [NII]/[OII] abundance available
             # and [NII]/Ha abundance < 8.4, then use R23. 
             indx=(~np.isnan(self.mds['KK04_R23'])) * (~np.isnan(self.mds['M91']) ) * (~indx_ig)
