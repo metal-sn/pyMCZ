@@ -164,48 +164,48 @@ class diagnostics:
         try: 
             print "\nHa", np.mean(self.Ha)
             if verbose: print self.Ha
-        except IndexError,TypeError:pass
+        except (IndexError, TypeError): pass
         try:
             print "\nHb", np.mean(self.Hb)
             if verbose: print self.Hb
-        except IndexError,TypeError:pass
+        except (IndexError, TypeError): pass
         try:
             print  "\nO2",np.mean(self.O23727)
             if verbose: print self.O23727
-        except IndexError,TypeError:pass 
+        except (IndexError, TypeError): pass 
         try:
             print  "\nO3",np.mean(self.O35007)
             if verbose: print self.O35007
-        except IndexError,TypeError:pass 
+        except (IndexError, TypeError): pass 
         try:
             print  "\nO34959",np.mean(self.O34959)
             if verbose: print self.O34959
-        except IndexError,TypeError:pass 
+        except (IndexError, TypeError): pass 
         try:       
             print  "\nZ94",np.mean(self.mds['Z94'])
             if verbose: print self.mds['Z94']
-        except IndexError,TypeError:pass 
+        except (IndexError, TypeError): pass 
         try:       
             print  "\nR23",np.mean(self.R23)
             if verbose: print self.R23
-        except IndexError,TypeError:pass 
+        except (IndexError, TypeError): pass 
         try:       
             print "\nlog(R23)", np.mean(self.logR23)
             if verbose: print self.logR23
-        except TypeError,IndexError:pass 
+        except (TypeError, IndexError): pass 
         try:        
             print  "\nlog([NII][OII])",stats.nanmean(self.logN2O2)
             if verbose: print self.logN2O2
-        except TypeError,IndexError:pass
+        except (TypeError, IndexError): pass
         try:        
             print  "\nlog([OIII][OII])",stats.nanmean(self.logO3O2)
             if verbose: 
                 print self.logO3O2
-        except TypeError,IndexError:pass
+        except (TypeError, IndexError): pass
         for k in self.mds.iterkeys():
             print "\n",k,
             try: print stats.nanmean(self.mds[k]), np.stdev(self.mds[k])
-            except IndexError,TypeError: 
+            except (IndexError,TypeError): 
                 if verbose: print self.mds[k]
                 
     
