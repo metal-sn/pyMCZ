@@ -7,20 +7,22 @@ This code is released under MIT licence: see LICENSE.txt
 ====================
 Usage:
 ====================
-This code requires ascii input files, their format is described below and examples are provided in the \<input\> directory in this package. In our example 'exampledata_meas.txt' and 'exampledata_err.txt' are the input files. 
+This code requires ascii input files, their format is described below and examples are provided in the \<input\> directory in this package. We provide an example dataset names 'exampledata', i.e. we provide input files 'exampledata_meas.txt' and 'exampledata_err.txt' are the input files. 
 
 From the commandline simply use as:
 ```
 python mcz.py <filename> nsample --path PATH 
 ```
-<b>\<filename\></b>: \<filename\> is the root name for the input as well as for all the output files: it could be for example the name of the supernova at the location of which HII regions have been measured ('exampledata' in our examples)
+<b>\<filename\></b>: \<filename\> is the root name for the input as well as for all the output files: it could be for example the name of the supernova at the location of which HII regions have been measured (\<filename\> is 'exampledata' in our examples)
 
-<b>nsample</b>: the number of MC samples desired 
+<b>nsample</b>: the number of MC samples desired (for exampledata 2000 is an appropriate sample size. 
+                       nsample must be >100 or it can be 0 to produce a single value, and no confidence region 
 
 additional command line arguments
 
  <b> --path PATH  </b>         the directory in which subdirectory "input" is located. If not provided, will default
                         environmental variable MCMetdata that should be set to point to that directory. 
+                        In our example the input directory is in pyMCZ (level 1).
                         _err.txt _meas.txt must live in \<path\>/input
                         
  <b> --md MD      </b>         metallicity scales to calculate. default is 'all',
