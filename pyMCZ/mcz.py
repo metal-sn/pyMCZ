@@ -360,7 +360,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
         return "-1, -1,-1",[],None
 
 
-def calc((i,(sample,flux,err,nm,mds,disp, dust_corr,verbose,res,scales,nps, logf))):
+def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, logf))):
     logf=sys.stdout
     print >>logf,"\n\nreading in measurements ",i+1
     fluxi={}#np.zeros((len(bss[0]),nm),float)
