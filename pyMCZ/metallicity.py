@@ -16,7 +16,7 @@
 
 import sys,os
 import numpy as np
-from pylab import hist,show
+from pylab import show
 
 
 IGNOREDUST=False
@@ -98,7 +98,8 @@ def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,
             without both H_alpha and H_beta measurement!!'''
     
         else: 
-            response=raw_input("WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!! Continuing without reddening correction? [Y/n]\n").lower()
+            response=raw_input('''WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!! 
+            Continuing without reddening correction? [Y/n]\n''').lower()
             assert(not (response.startswith('n'))),"please fix the input file to include Halpha and Hbeta measurements"
 
         IGNOREDUST=True
@@ -142,7 +143,8 @@ def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,
             import pyqz
             mscales.calcpyqz()
         else:
-            printsafemulti('''set path to pyqz as environmental variable :
+            printsafemulti('''WARNING: CANNOT CALCULATE pyqz: 
+            set path to pyqz as environmental variable :
             export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want this scale. ''', logf, nps)
               
 
@@ -180,10 +182,11 @@ def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,
             #in order to see the original pyqz plots
             #call pyqz with option plot=True by
             #using the commented line below instead
-            mscales.calcpyqz(plot=False)
+            mscales.calcpyqz(plot=disp)
         else:
-            printsafemulti('''set path to pyqz as environmental variable 
-PYQZ_DIR if you want this scale. ''',logf,nps)
+            printsafemulti('''WARNING: CANNOT CALCULATE pyqz: 
+            set path to pyqz as environmental variable 
+            PYQZ_DIR if you want this scale. ''',logf,nps)
 
     if 'D13all' in mds:
         if   os.getenv("PYQZ_DIR"):
@@ -195,7 +198,7 @@ PYQZ_DIR if you want this scale. ''',logf,nps)
             #in order to see the original pyqz plots
             #call pyqz with option plot=True by
             #using the commented line below instead
-            mscales.calcpyqz(plot=False, allD13=True)
+            mscales.calcpyqz(plot=disp, allD13=True)
         else:
             printsafemulti( '''set path to pyqz as environmental variable 
 PYQZ_DIR if you want this scale. ''',logf,nps)

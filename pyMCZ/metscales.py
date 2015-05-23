@@ -1,5 +1,4 @@
 import numpy as np
-import pylab as pl
 import sys
 import scipy.stats as  stats
 import numpy.polynomial.polynomial as nppoly
@@ -67,6 +66,8 @@ M08_coefs={'R23' : [  0.7462, -0.7149, -0.9401, -0.6154, -0.2524   ],
          
 #this is to check the Maiolino coefficients and find the split maximum of the cirves with degeneracy
 '''
+import pylab as pl
+
 x=np.arange(7.0,9.5,0.1)
 
 for k in M08_coefs.iterkeys():
@@ -163,50 +164,50 @@ class diagnostics:
         try: 
             print "\nHa", np.mean(self.Ha)
             if verbose: print self.Ha
-        except:pass
+        except IndexError,TypeError:pass
         try:
             print "\nHb", np.mean(self.Hb)
             if verbose: print self.Hb
-        except:pass
+        except IndexError,TypeError:pass
         try:
             print  "\nO2",np.mean(self.O23727)
             if verbose: print self.O23727
-        except:pass 
+        except IndexError,TypeError:pass 
         try:
             print  "\nO3",np.mean(self.O35007)
             if verbose: print self.O35007
-        except:pass 
+        except IndexError,TypeError:pass 
         try:
             print  "\nO34959",np.mean(self.O34959)
             if verbose: print self.O34959
-        except:pass 
+        except IndexError,TypeError:pass 
         try:       
             print  "\nZ94",np.mean(self.mds['Z94'])
             if verbose: print self.mds['Z94']
-        except:pass 
+        except IndexError,TypeError:pass 
         try:       
             print  "\nR23",np.mean(self.R23)
             if verbose: print self.R23
-        except:pass 
+        except IndexError,TypeError:pass 
         try:       
             print "\nlog(R23)", np.mean(self.logR23)
             if verbose: print self.logR23
-        except:pass 
+        except TypeError,IndexError:pass 
         try:        
             print  "\nlog([NII][OII])",stats.nanmean(self.logN2O2)
             if verbose: print self.logN2O2
-        except:pass
+        except TypeError,IndexError:pass
         try:        
             print  "\nlog([OIII][OII])",stats.nanmean(self.logO3O2)
             if verbose: 
                 print self.logO3O2
-        except:pass
+        except TypeError,IndexError:pass
         for k in self.mds.iterkeys():
             print "\n",k,
             try: print stats.nanmean(self.mds[k]), np.stdev(self.mds[k])
-            except: 
+            except IndexError,TypeError: 
                 if verbose: print self.mds[k]
-    
+                
     
     def checkminimumreq(self,red_corr,ignoredust):
         if red_corr and not ignoredust:
@@ -606,8 +607,8 @@ class diagnostics:
             return -1
         self.mds['P10_ONS']=np.zeros(self.nm)+float('NaN')
         self.mds['P10_ON']=np.zeros(self.nm)+float('NaN')
-        P10N2=np.zeros(self.nm)+float('NaN')
-        P10S2=np.zeros(self.nm)+float('NaN')
+        #P10N2=np.zeros(self.nm)+float('NaN')
+        #P10S2=np.zeros(self.nm)+float('NaN')
         P10logR3=np.zeros(self.nm)+float('NaN')
         P10logR2=np.zeros(self.nm)+float('NaN')
         P10logN2=np.zeros(self.nm)+float('NaN')
@@ -784,7 +785,6 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
         #Maiolino+ 2008
         #Astronomy and Astrophysics, Volume 488, Issue 2, 2008, pp.463-479
         #Published in Sep 2008
-        import numpy.ma as ma
         printsafemulti(  "calculating M08",self.logf,self.nps)
         highZ=None
         if self.logO35007O2 is not None:
@@ -945,7 +945,9 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
         #if self.hasN2 and self.hasHa:
         #logq_lims=[6.9,8.38]
         #logN2Ha=np.log10(self.N26584/self.Ha) CHECK!! why remove dust correction??
-        #Z_new_N2Ha_lims= np.atleast_2d([1.0,1.0]).T*nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-np.atleast_2d( logq_lims).T*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,0.128])+np.atleast_2d(logq_lims).T*(10**(self.logN2Ha-0.2)*(-3.16+4.65*self.logN2Ha)) 
+        #Z_new_N2Ha_lims= np.atleast_2d([1.0,1.0]).T*nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-
+        #np.atleast_2d( logq_lims).T*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,0.128])+
+        #np.atleast_2d(logq_lims).T*(10**(self.logN2Ha-0.2)*(-3.16+4.65*self.logN2Ha)) 
         # R23 diagnostics from Kobulnicky & Kewley 2004
 
         Zmax=np.zeros(self.nm)
