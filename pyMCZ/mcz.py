@@ -42,6 +42,7 @@ UNPICKLE=False
 ASCIIOUTPUT=False
 ASCIIDISTRIB=False
 RUNSIM=True
+NOPLOT=False
 BINMODE='k'
 binning={'bb':'Bayesian blocks','k':"Knuth's rule",'d':"Doane's formula",'s':r'$\sqrt{N}$','t':r'$2 N^{1/3}$', 'kd':'Kernel Density'}
 
