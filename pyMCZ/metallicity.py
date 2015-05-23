@@ -16,7 +16,6 @@
 
 import sys,os
 import numpy as np
-from pylab import show
 
 
 IGNOREDUST=False
