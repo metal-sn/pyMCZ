@@ -1,3 +1,5 @@
+[![Code Health](https://landscape.io/github/fedhere/pyMCZ/master/landscape.svg?style=flat)](https://landscape.io/github/fedhere/pyMCZ/master)
+
 MC Metallicity
 ====================
 
