@@ -793,16 +793,25 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
             coefs[0]=coefs[0]-self.logO35007O2
             sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
             indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)).cumsum(1).cumsum(1)==1
-            self.mds['M08_O3O2'][(indx.sum(1))==True]=sols[indx]
-            highZ=np.median(self.logO35007O2)<0
+            #the two cumsum assure that if the condition for the ith element 
+            #of indx is [False, False] then after the first cumsum(1) is [0,0] 
+            #[False, True] is [0,1]
+            #[True, True] is [1,2]
+            #but (here is the kicker) [True, False] is [1,1]. 
+            #Because i want only one solution 
+            #(i'll settle for the first one occurring) [1,1] is ambiguous. 
+            #The second cumsum(1) makes 
+            #[0,0]->[0,0], [0,1]->[0,1], [1,2]->[1,3] and finally [1,1]->[1,2]
 
+            self.mds['M08_O3O2'][(indx.sum(1))>0]=sols[indx].real
+            highZ=np.median(self.logO35007O2)<0
         if self.logN2Ha is not None:
             self.mds['M08_N2Ha']=np.zeros(self.nm)+float('NaN')
             coefs=np.array([M08_coefs['N2Ha']]*self.nm).T
             coefs[0]=coefs[0]-self.logN2Ha
             sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
             indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)).cumsum(1).cumsum(1)==1
-            self.mds['M08_N2Ha'][(indx.sum(1))==True]=sols[indx]
+            self.mds['M08_N2Ha'][(indx.sum(1))>0]=sols[indx].real
             if highZ is None:
                 highZ=np.median(self.logN2Ha)>-1.3
             
@@ -818,10 +827,10 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
             sols=np.array([self.fz_roots(coefs.T)])[0]+8.69            
             if highZ is True:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real>=8.0)).cumsum(1).cumsum(1)==1
-                self.mds['M08_R23'][(indx.sum(1))==True]=sols[indx]
+                self.mds['M08_R23'][(indx.sum(1))>0]=sols[indx].real
             elif highZ is False:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=8.0)).cumsum(1).cumsum(1)==1
-                self.mds['M08_R23'][(indx.sum(1))==True]=sols[indx]
+                self.mds['M08_R23'][(indx.sum(1))>0]=sols[indx].real
         if not allM08: return
 
         if self.logO3Hb is not None:
@@ -831,10 +840,10 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
             sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
             if highZ is True:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real>=7.9)).cumsum(1).cumsum(1)==1
-                self.mds['M08_O3Hb'][(indx.sum(1))==True]=sols[indx]
+                self.mds['M08_O3Hb'][(indx.sum(1))>0]=sols[indx].real
             elif highZ is False:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=7.9)).cumsum(1).cumsum(1)==1
-                self.mds['M08_O3Hb'][(indx.sum(1))==True]=sols[indx]
+                self.mds['M08_O3Hb'][(indx.sum(1))>0]=sols[indx].real
 
 
         if self.logO2Hb is not None:
@@ -844,10 +853,10 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
             sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
             if highZ is True:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real>=8.7)).cumsum(1).cumsum(1)==1
-                self.mds['M08_O2Hb'][(indx.sum(1))==True]=sols[indx]
+                self.mds['M08_O2Hb'][(indx.sum(1))>0]=sols[indx].real
             elif highZ is False:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=8.7)).cumsum(1).cumsum(1)==1
-                self.mds['M08_O2Hb'][(indx.sum(1))==True]=sols[indx]
+                self.mds['M08_O2Hb'][(indx.sum(1))>0]=sols[indx].real
 
 
 
@@ -857,7 +866,7 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
             coefs[0]=coefs[0]-np.log(self.O35007/self.N26584)*self.dustcorrect(k_O35007,k_N2)
             sols=np.array([self.fz_roots(coefs.T)])[0]+8.69
             indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)).cumsum(1).cumsum(1)==1
-            self.mds['M08_O3N2'][(indx.sum(1))==True]=sols[indx]
+            self.mds['M08_O3N2'][(indx.sum(1))>0]=sols[indx].real
 
 
     #@profile
