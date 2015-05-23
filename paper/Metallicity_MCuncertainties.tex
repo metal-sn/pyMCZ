@@ -5,7 +5,6 @@
 \usepackage{natbib}
 \usepackage{hyperref}
 
-%\usepackage{csvsimple}
 
 \newcommand{\kms}{\ensuremath{{\rm km~s}^{-1}}}
 \newcommand{\oxab}{\ensuremath{12 + \log_{10}(\frac{O}{H})}}
@@ -13,21 +12,6 @@
 \newcommand{\ha}{\ensuremath{\mathrm{H}\alpha}}
 \newcommand{\hb}{\ensuremath{\mathrm{H}\beta}}
 \newcommand{\ebmv}{\ensuremath{\mathrm{\emph{E(B-V)}}}}
-%\usepackage[toc\input{Metallicity_MCuncertainties.tex}
-%,page]{appendix}
-%\usepackage{amsmath}
-%\usepackage{amssymb}
-%\usepackage{verbatim}
-%\usepackage{graphicx}
-%\usepackage{epsfig}
-%\usepackage{morefloats}
-%\usepackage{float}
-%\usepackage{lipsum}
-%\usepackage{subfigure}
-%\usepackage{longtable}
-%\usepackage{lipsum} 
-%\usepackage{rotating}
-%\usepackage{wasysym}
 
 \begin{document}
 \title{Monte Carlo Method for Calculating Oxygen Abundances and Their Uncertainties from Strong-Line Flux Measurements}
@@ -42,22 +26,13 @@
  
 \begin{abstract}
 We present the open-source Python code \verb=pyMCZ= that determines oxygen abundance and its distribution from strong emission lines in the standard metallicity scales, based on the original IDL code of \citet{kewley02} with updates from \citet{kewley08}, and expanded to include more recently developed scales. 
-%MM: I changed the wording since it had passive voice and "determination of estimator of É" was a bit too windy.
 The standard strong-line diagnostics have been used to estimate the oxygen abundance in the interstellar medium through various emission line ratios in many areas of astrophysics, including galaxy evolution and supernova host galaxy studies.
-%MM: took this out :Oxygen abundance is considered a proxy for total metal abundance, since Oxygen is the most abundant metal, though .  since it would need more explanation...
-%FED: broken the sentence above in 2 cause it was windy
 We introduce a Python implementation of these methods that, through Monte Carlo (MC) sampling, better characterizes the statistical reddening-corrected oxygen abundance confidence region. Given line flux measurements and their uncertainties, our code produces synthetic distributions for the oxygen abundance in up to 13 metallicity scales simultaneously, 
-%(11 scales, as well as their sub-scales, as a default and 3 additional scales upon request)
-%FED: maybe  too much detail for the abstract: how about just 
-%in up to 14 scales, 
 as well as for \ebmv, 
-%when possible, 
 and estimates their median values and their 66\%  confidence regions. In addition, we provide the option of outputting the full MC distributions, and their kernel density estimates. 
 We test our code on emission line measurements from a sample of nearby supernova host galaxies ($z<0.15$) and compare our metallicity results with those from previous methods. We show that our metallicity estimates are consistent with previous methods but yield smaller uncertainties. 
 We also offer visualization tools to assess the spread of the oxygen abundance in the different scales, as well as the shape of the estimated oxygen abundance distribution in each scale, and develop robust metrics for determining the appropriate MC sample size. 
-%We furthermore perform benchmark calculations that includes computing the memory usage for different scales. 
 The code is open access and open source 
-%parallizable, 
 and can be found at \url{https://github.com/nyusngroup/pyMCZ}
 \end{abstract}
 \keywords{Galaxy: abundances  --- ISM: HII regions  --- supernovae: general}
@@ -66,10 +41,8 @@ and can be found at \url{https://github.com/nyusngroup/pyMCZ}
 Small amounts of carbon, oxygen, nitrogen, sulfur, iron and other elements provide a splash of color to the otherwise dominating grayscape of hydrogen and helium in the stars and gas of galaxies. Nevertheless, even this minute presence of heavy elements is important for many areas of astrophysics. For example, \citet{johnson12} suggest that if it was not for the relatively high metallicity level in our Solar System, planet formation may not have been possible. With $Z$ representing the mass fraction of metals, all elements heavier than He (also collectively called metallicity), for our own Sun the value is measured to be  $Z=0.0153$ \citep{chaffau11}, though there are suggestions of a lower Solar metallicity of $Z=0.0134$  \citep{asplund09_rev,grevesse10}. 
 Furthermore, when properly observed and estimated, metallicity measurements of galaxies can tightly constrain models of galaxy formation and evolution (e.g., \citealt{kewley08} and references therein), and shed light on the metallicity dependence and production conditions for different types of supernovae (SNe) and long-duration gamma-ray bursts (GRBs) (e.g., \citealt{modjaz08_Z,levesque10_grbhosts,anderson10,modjaz11,kelly12,sanders12,leloudas14,lunnan14,pan14}).
 
-%chaffau Z=0.0209 12+log=O/H) = 8.76\pm0.07 
 Metals are produced in the cores of massive stars during their fusion life cycle but also during the extreme conditions of stellar explosions. For example, the majority of iron is synthesized in thermonuclear explosions (SNe Ia) while nearly all oxygen and other $\alpha$-elements (element with even atomic number lower than 22, synthesized by $\alpha$-capture) are released in various kinds of core-collapse SNe (SNe II and stripped-envelope core-collapse SNe). Since new stars are born from the clouds enriched by these explosions, metallicity will increase with each generation of stars. 
 
-%Besides age, metallicity also influences stellar temperature. Metals are more effective at absorbing energy coming from the interior of the star in the stellar atmosphere so their presence increases the stellar opacity. With greater absorption and opacity the radius expands to a size larger than it would be without metals and this larger size results in a cooler effective temperature. While metallicity can help indicate age or activity it's temperature and density dependencies require parameterization to properly be estimated.
 
 However, for almost all astronomical objects, metallicity cannot be measured directly. The oxygen abundance in the gas-phase is the canonical choice of metallicity indicator for interstellar medium (ISM) studies, since oxygen is the most abundant metal and only weakly depleted onto dust grains (in contrast to refractory elements such as magnesium, silicon, iron, with iron being depleted by more than a factor of 10 in Orion; see \citealt{simondiaz11-orion}). The oxygen abundance\footnote{We note that while oxygen abundance is used to gauge metallicity, in many cases in the literature, including here, the terms metallicity and oxygen abundance are used interchangeably.} is expressed as  \oxabinline, where $O$ and $H$ represent the number of oxygen and hydrogen atoms, respectively. In particular, \citealt{chaffau11} measure a Solar oxygen abundance of \oxabinline = 8.76 $\pm$ 0.07, while \citet{asplund09_rev} suggest \oxabinline = 8.69.
 
@@ -77,7 +50,6 @@ Importantly, oxygen exhibits very strong nebular lines in the optical wavelength
 
 The purpose of this paper is to present a public code that computes the metallicity from strong emission line fluxes according to the many different abundance diagnostics as well as the associated statistical uncertainties due to the measured emission line flux uncertainties. Our open-source Python package is named \textbf{pyMCZ}.
 This Python code allows the user to quickly produce metallicity values with sensible confidence regions for several metallicity scales at once, given an input set of spectral line measurements and their errors, and  to obtain and visualize the distribution of metallicities.
-%, given input lines and their measurement errors
 Below we describe the different oxygen abundance diagnostics, and our Python module. While we do not mean to advocate for a particular metallicity scale to be adopted, the comparison of multiple scale outputs, and the shape of each metallicity distribution, can guide the user in understanding the reliability of a metallicity estimate, given a set of line fluxes. 
 
 \section{Oxygen abundance diagnostics}
@@ -105,8 +77,7 @@ As for empirical strong-line methods, the most commonly used ones are those by \
 
 As can be seen, each scale has different advantages and disadvantages and should be used in different metallicity regimes (see detailed discussion in, for example,  \citealt{kewley02,stasinska02,kewley08,moustakas10,lopezsanchez12,dopita13,blanc15}). Thus, \verb=pyMCZ= outputs the oxygen abundance in the main metallicity scales (13 as of version v1.0, Spring 2015, with the KD02 diagnostic having four outputs and the PP04, P10, M13 , M08, and D13 diagnostic having multiple outputs as well).
 
-While there is a long-standing debate about which diagnostic to use, as there are systematic metallicity offsets between different methods (recombination lines vs. strong-line method vs. the ``direct'' $T_e$ method, see the above sources), \emph{\bf the relative metallicity trends can be considered robust, if the analysis is performed self-consistently in the same scale, and trends are seen across different scales \citep{kewley08,moustakas10}}. Thus, it is necessary to obtain error bars for the relative comparisons to be meaningful. Note that while conversion values between different scales \citep{kewley08} have been estimated, they are derived as ensamble values from large data sets (tens of thousands of SDSS galaxies), and they should be used with caution, if at all, on individual metallicity measurements.
-%FED this is not strictly correct: you do want to derive conversions from large samples, but what you are saying is that you do not know about the spread of the conversion distribution, and thus you do not know how much individual data points could deviate. Is that not stated in the papers that derive the conversions??.
+While there is a long-standing debate about which diagnostic to use, as there are systematic metallicity offsets between different methods (recombination lines vs. strong-line method vs. the ``direct'' $T_e$ method, see the above sources), \emph{\bf the relative metallicity trends can be considered robust, if the analysis is performed self-consistently in the same scale, and trends are seen across different scales \citep{kewley08,moustakas10}}. Thus, it is necessary to obtain error bars for the relative comparisons to be meaningful. Note that while conversion values between different scales \citep{kewley08} have been estimated, they are derived as ensemble values from large data sets (tens of thousands of SDSS galaxies), and they should be used with caution, if at all, on individual metallicity measurements.
 In addition, one should note that on account of the ongoing debate about the value of the Solar oxygen abundance \citep{asplund09_rev,chaffau11}, that the absolute oxygen calibration is still uncertain.
 
 
@@ -114,53 +85,34 @@ In addition, one should note that on account of the ongoing debate about the val
 
 %In \S~\ref{method_sec} we describe our method, and the input and output values of the code. We furthermore develop robust metrics for determining the appropriate MC sample size and perform benchmark calculations that includes computing the computer memory usage for many different scales. In \S~\ref{comp_sec}, we compare our method of obtaining abundance uncertainties to previous methods in the literature and conclude with \S~\ref{conclusions_sec}. 
 
-%\begin{figure}[H]
-%\epsscale{1.0} 
-%\begin{center}
-%\includegraphics[width=0.89\columnwidth]{fig1.png} 
-%\caption{Example of a sampled Gaussian. 50,000 points from a Gaussian distribution were selected in this case}
-%\label{f1}
-%\end{center}
-%\end{figure}
-
 
 \section{pyMCZ: a python module for strong-line metallicity diagnostics}\label{method_sec}
 
 
 \begin{figure*}[!ht]
-%\epsscale{0.6}
 \centerline{
 \includegraphics[width=0.98\columnwidth]{exampledata_n2000_EB-V_1.pdf}
-%\includegraphics[width=0.98\columnwidth]{exampledata_n2000_M91_1.pdf}}
 \includegraphics[width=0.98\columnwidth]{exampledata_n2000_PP04_O3N2_1.pdf}}
-% exampledata_n50000_M91_1.ps}
-%\vspace{0.2in}
 \centerline{
 \includegraphics[width=0.98\columnwidth]{exampledata_n2000_KK04_R23_1.pdf}
 \includegraphics[width=0.98\columnwidth]{exampledata_n2000_KD02comb_1.pdf}}
 \caption{Metallicity and reddening \ebmv parameter distributions based on the example data shown in Table~\ref{tab:exampledata}: emission line data of the HII regions at the position of SN~2008D, published in \citet{modjaz11}. The distributions are generated from $N$=2,000 samples. The median values are shown with dashed white lines, while the confidence region, between the 16$^{th}$ and the 84$^{th}$ percentile is shaded in orange. We show the metallicity scales from \citet{pettini04}, using [OIII] and [NII]  (PP04\_O3N2), the $R_{23}$-based scale described in \citet{kobulnicky04} (KK04\_$R_{23}$), and the combined scale of \citet{kewley02} (KD02\_comb), updated as described in \citet{kewley08}. Similar plots are outputted by the code for all computed metallicity scales. Each plot indicates the scale, the sequential number of measurement in the input file (here ``measurement 1 of 2'', which corresponds to the first line of the input ASCII files), the median, 16$^{th}$  and 84$^{th}$ percentile values, the sample size (which is by default initially set to 10\% larger than the requested $N$ value, but can be smaller if some simulations lead to invalid metallicities), and, finally, the method used to choose the bin size for the histogram (Kuth's rule in this case, see Section~\ref{vizs}).}
  \label{metallicity_distribution}
-%\end{center}
-%\vspace{-0.5in}
 \end{figure*}
 
 
-%For computing oxygen abundances, w
 We developed a Python package, \verb=pyMCZ= for the simultaneous calculation of \oxabinline~ in various scales, and its confidence region.
 We started with the iterative IDL code by \citet{kewley02}, hereafter referred to as IDLKD02, which has been updated in \citet{kewley08} %\textbf{LISA: We checked for a number of scales with KE08 and mentioned it below - please re-check! }. 
-%This code was initially written in IDL. 
-We translated the code into Python and added new, more recent scales (see Section~\ref{sec:IO}) and new features, of which the most important is the capability of obtaining uncertainties on the metallicity outputs via MC sampling. %We release our open-source code on GitHub, as we explain below.
+We translated the code into Python and added new, more recent scales (see Section~\ref{sec:IO}) and new features, of which the most important is the capability of obtaining uncertainties on the metallicity outputs via MC sampling. 
 
 
 \subsection{Input and Output of code}\label{sec:IO}
 
 
 \begin{deluxetable*}{lccc} 
-%\setlength{\tabcolsep}{0.0001in} 
 \tabletypesize{\tiny}
 \setlength{\tabcolsep}{0.000000in} 
 \tablecolumns{10}
-%%\tablewidth{114.88pt}
 \tablecaption{scales and line ratios/parameters from which the scales are derived}
 \tablehead{   % column headings
   \colhead{Scale \tablenotemark{a}} &
@@ -211,7 +163,6 @@ We translated the code into Python and added new, more recent scales (see Sectio
 \end{deluxetable*}
 
 The input of the code is a set of spectral emission line fluxes. We assume that the observed emission lines 
-%to be used to indicate metallicity 
 originate in HII regions and are not due to non-thermal excitation by, for example, AGN, interstellar shocks from SNe, or stellar winds.  Tests to exclude data contaminated by such non-thermal sources should be executed \emph{prior to running this code} using the recommended line ratios by, e.g., \citet{baldwin81}, \citet{kauffmann03}, and \citet{kewley06_sdss}. Furthermore, these lines should have all the correct flux calibration (at least correct relative calibration) and \emph{should have a signal-to-noise ratio (S/N) of at least 3}. The latter requirement is important for the success of the sampling technique. In our code, synthetic line flux measurements are drawn within a Gaussian distribution with standard deviation equal to the measurement error, and centered on the measured flux value (Section~\ref{sec:uncert}). Thus, a $\mathrm{S/N} >= 3$ assures that fewer than $\sim1\%$ of the sampled fluxes fall below zero (and are thus invalid).
 The code checks if for any line the $\mathrm{S/N} >= 3$ condition is not satisfied, and issues a warning message.
 
@@ -236,15 +187,12 @@ We obtain \oxabinline~ values and their uncertainties in the metallicity scales 
 \item {\bf P10} \citep{pilyugin10}: This is the so-called ONS diagnostic (involving the [OII], [OIII], [NII] and [SII] lines) and is calibrated with HII regions that have $T_e$ based metallicities.
 \item {\bf M13} \citep{marino13}: Two scales: M13\_N2, which is a linear fit to the $\mathrm{[NII]}~\lambda6584/\mathrm{H}\alpha$, and  M13\_O3N2. This is an updated calibration of the PP04 $O3N2$ method, based on a large number of $T_e$-based metallicity measurements, including those from the Calar Alto Legacy Integral Field spectroscopy Area survey (CALIFA, \citealt{sanchez12}, almost three time larger than the sample used in PP04). This method derives a significantly shallower slope between the $O3N2$ index and the oxygen abundance than the PP04 calibration did.
 \item {\bf D13}: \citep{dopita13}. The photoionization models used in KD02 and in KK04 are updated by including new atomic data within a modified photoionization code and by assuming a $\kappa$ distribution for the energy of the electrons in the HII regions, rather than the simple Maxwell-Boltzmann distribution assumed in prior works. This distribution is more realistic, as observed in Solar plasma \citep{nicholls12}. If the user has installed the publicly available \verb=pyqz=\footnote{\url{https://datacommons.anu.edu.au:8443/DataCommons/item/anudc:5037}} Python module, [NII], [SII], [OIII], \ha, and \hb~ lines are fed to the \verb=pyqz= module, which produces up to eight emission line ratio diagnostics for \oxabinline, each using two of the line ratios [NII]/[SII], [NII]/\ha, [OIII]/[SII], and [OIII]/\hb. Our code sets the $\kappa$ parameter to 20, which is the value that \citet{dopita13} found best resolves the inconsistencies between oxygen abundance values derived from the strong-line methods and from the ``direct'' $T_e$ method\footnote{The user can modify the value of $\kappa$ by editing the code, if they wish.}.
-%%MM: we need to look at the D13 outputs since they are not necessarily a different "scale"
 \item{\bf DP00, P01 \& C01 (only upon request)}: (\citealt{diaz00}, \citealt{pilyugin01}, \citealt{charlot01}). DP00 is based on $S_{23}$, and is the only $S_{23}$ scale implemented in the current version of the code. P01 is superseded by P05. C01 produces a diagnostic based on $R_{23}$, C01\_$R_{23}$, and one based on [NII]/[SII], C01\_N2S2; C01\_$R_{23}$ was used to calculate the combined scale described in KK04, and included in the IDLKD02 code, but it is no longer used in the new combined scale KD02\_comb, which supersedes the old one. Thus, P01 and C01 are only included for historical reasons. These three scales are \emph{not} part of the default output of our code, however they are still available upon explicit user request via command line input.
 
 \end{itemize}
 
 The following diagnostics were calculated in the original IDLKD02 code, and are discussed in detail in \citet{kewley02} and \citet{kewley08}: C01, P01, M91, Z94, D02, PP04, P05, KD02, KK04, and KD02\_comb. We refer the reader to those papers for further details.
 
-% MM:  I would say too much detail about DP00 which we are only keeping b/c of historical reasons, so perhaps remove
-%FED: how about this?
 DP00 is the only diagnostic that relies on sulfur ratios $S_{23}$.
 The shortcomings of $S_{23}$ as a tool to measure abundances are discussed in \citet{kewley02}.
 %, and include the fact that it is double-valued for all metallicities, that it depends on the ionization parameter, and that the sulfur-to-oxygen ratio is poorly determined and difficult to model due to large ionization correction factors that are needed to account for the presence of unobserved ionization states. 
@@ -263,7 +211,6 @@ For each metallicity scale, and for each of the $N$ values chosen randomly withi
 By generating synthetic data, this method effectively simulates conducting multiple experiments when repeating observations is impractical or impossible, as is the case of the emission line flux data.
 
 The sample size $N$ is set by the user, and one should expect an appropriate value of $N$ to be a few 1000s, depending on the metallicity scale chosen and measurement errors (for example:  $N=2,000$ is determined to be sufficient for our example data, as shown in Section~\ref{sec:completeness}).
-%, and we provide a tool to assure the sample size is sufficiently large, which we describe in Section~\ref{sec:completeness}). 
 
 A distribution of parameter estimates for the oxygen abundance is generated, from which the median metallicity and its confidence region are calculated, and the results are binned and visualized in an outputted histogram (see Section~\ref{vizs}). This is done for each scale the user chooses to calculate. The fiftieth (50\%) percentile, i.e.  the median, is reported as the estimated metallicity value, and the 16$^{th}$ and 84$^{th}$ percentiles of the metallicity estimate distribution, as its confidence region. The user can also choose to output the full metallicity distribution as binary\footnote{using the \emph{pickle} Python module} or ASCII files
 
@@ -298,11 +245,9 @@ We note that our code does not output the \emph{systematic} uncertainty of each 
 
 
 \begin{deluxetable*}{lccccccccc} 
-%\setlength{\tabcolsep}{0.0001in} 
 \tabletypesize{\tiny}
 \setlength{\tabcolsep}{0.0000001in} 
 \tablecolumns{10}
-%%\tablewidth{114.88pt}
 \tablecaption{Example Data and their Uncertainties based on Data in \citet{modjaz11}}
 \tablehead{   % column headings
   \colhead{site\tablenotemark{a}} &
@@ -334,9 +279,8 @@ As mentioned, Knuth's method implies an optimization. In cases in which the conv
 Some methods may be computationally prohibitive with a very large sample size, or very little computational power, such as the Bayesian methods that rely on optimization (Knuth's method and the Bayesian Block method) in which case it may be convenient for a user to choose Doane's formula, Rice rule, or even the square root of the number of samples. 
 
 \begin{figure}[ht!]
-%  \includegraphics[trim = 10mm 0mm 10mm 0mm, clip]{abcomparison6.eps}
   \includegraphics[width=1.0\columnwidth]{exampledata_n2000_KD02comb_1KDE.pdf}
-   \caption{The Kernel Density for the distribution of values for the KD02comb scale for the first measurement of our example data (Table~\ref{tab:exampledata}). The Kernel density is displayed as a blue shaded region, and is calculated via \emph{KD Tree} with a gaussian kernel with bandwidth given by Silverman's rule , and normalized, as described in Section\ref{vizs}. The histogram of the distribution with bin size chosen according to Knuth's method is also plotted (gray bins) and the median and confidence intervals are shown as described in Figure~\ref{metallicity_distribution}.}\label{fig:KDE}
+   \caption{The Kernel Density for the distribution of values for the KD02comb scale for the first measurement of our example data (Table~\ref{tab:exampledata}). The Kernel density is displayed as a blue shaded region, and is calculated via \emph{KD Tree} with a Gaussian kernel with bandwidth given by Silverman's rule , and normalized, as described in Section\ref{vizs}. The histogram of the distribution with bin size chosen according to Knuth's method is also plotted (gray bins) and the median and confidence intervals are shown as described in Figure~\ref{metallicity_distribution}.}\label{fig:KDE}
 
 \end{figure}
 Lastly, the user can generate and visualize the metallicity distribution \emph{Kernel Density} if the \verb=sklearn=\footnote{\url{http://scikit-learn.org/stable/}} package is installed. Kernel Density Estimation (KDE) alleviates the problem of choosing the bin size, at the cost of specifying a convolution kernel. The Kernel Density of the distribution is here calculated via \emph{KD Tree} with a gaussian kernel, as explained in the \verb=sklearn= package documentation.\footnote{\url{http://scikit-learn.org/stable/modules/density.html}} The bandwidth of the kernel is chosen according to \emph{Silverman's rule} \citep{silverman86}.\footnote{By Silverman's rule the bandwidth for the KDE kernel is set to $w~=~1.06\sigma~N^{-0.2}$, where $\sigma$ is the sample standard deviation. Although the bandwidth chosen accordingly to Silverman's rule is only optimal in the case of a Gaussian basis and a Gaussian distribution, and our distributions are explicitly \emph{not} Gaussian, as explained earlier, this kernel parametrization generally provides good results for our metallicity distributions.} The results will then show both a histogram, with $N_\mathrm{bins}$ chosen via Knuth's method, as well as the distribution Kernel Density, as shown in Figure~\ref{fig:KDE}. The KDE is saved as a binary python object (an \verb=sklearn= \verb=KernelDensity= object), so that it can be recovered outside the code and used as a probability distribution for further inference.
@@ -345,7 +289,6 @@ The histograms are always normalized so that the highest bin value is 1, and the
 
 
 \begin{figure}[ht!]
-% \includegraphics[trim = 10mm 0mm 10mm 0mm, clip]{abcomparison6.eps}
   \includegraphics[width=0.95\columnwidth]{exampledata_boxplot2000_m1.pdf}
    \caption{A box-and-whiskers plot showing the comparison of the results of 10 metallicity calculations, corresponding to 5 scales as listed above, calculated from the same set of measured lines (Table~\ref{tab:exampledata}, host galaxy of SN~2008D). For each scale, the median of the resulting distribution is plotted as a horizontal line, the inter quartile range (IQR) is represented as an orange box, and the bars, joined to each end of the box by a dashed line, represent the minimum and maximum of the distribution \emph{excluding outliers}, where outliers are defined as any point farther than $1.5\times$ IQR from the edges for the IQR.}
  \label{boxplot}
@@ -354,8 +297,6 @@ The histograms are always normalized so that the highest bin value is 1, and the
 At each run the code also generates a boxplot (Figure~\ref{boxplot}) that summarizes the result from each scale the user chooses to calculate. For each scale the median of the \oxabinline~ distribution is plotted as a black horizontal line. The height of the corresponding box represents the $25^{th}$ percentile of the \oxabinline~ distribution, known as the \emph{interquartile range} (IQR). 
 The bars represent the maximum and minimum value of the distribution, excluding outliers. The outliers are plotted as circles, and are defined as all data points farther than $1.5\times\mathrm{IQR}$ from the $25^{th}$ percentile (i.e. from either end of the box). 
 
-%MM:  also do you have a reference for defining outliers this way?
-%%FED: no, it is how it is just the standard for boxplots,
 The Solar oxygen abundance is indicated in this plot for comparison: a gray box shows a range of estimated values for Solar oxygen abundances, from \oxabinline=8.69 \citep{asplund09_rev} to \oxabinline=8.76 \citep{chaffau11}.
 The diagnostics requested by the user have a slot in the plot (in the example in Figure~\ref{fig:KDE} the computed scales are  the PP04, the M13, and the KD02 scales), as do diagnostics that are computed in support of other requested diagnostics (M91 in this case, which is needed to calculate KD02\_comb). However a slot exists in the plot whether the diagnostic can be produced or not, i.e. if the set of input lines does not allow a requested scale to be calculated an empty column will be generated in this plot. 
 
@@ -365,17 +306,12 @@ With this plot the user can immediately check for consistency or scatter in the 
 \subsection{Visual diagnostic to assure completeness of the MC simulation}\label{sec:completeness}
 
 \begin{figure*}[!ht]
-%\epsscale{0.6}
 \centerline{
 \includegraphics[width=0.65\columnwidth]{exampledata_n200_testcomplete.pdf}
 \includegraphics[width=0.65\columnwidth]{exampledata_n2000_testcomplete.pdf}
 \includegraphics[width=0.65\columnwidth]{exampledata_n20000_testcomplete.pdf}}
-% exampledata_n50000_M91_1.ps}
-%\vspace{0.2in}
 \caption{Cumulative plots of the distribution of metallicity values for the D02 \citep{denicolo02} and KD02 scale (\citealt{kewley02}, updated by \citealt{kewley08}), chosen here just as examples, where $x$ refers to \oxabinline. The input used is example data 1, the emission line values for the host galaxy of SN~2008D from \citet{modjaz11}. In each plot the cumulative distribution is shown for a randomly chosen subsample of 10\% of the data in the sample, as well as a subsample of 25\%, 50\%, and 75\%, of the data, and for all data in the distribution. In the left plots the distributions are generated from $N=200$ samples, in the center top and bottom plots from $N=2,000$,  and in the right-most column from $N=20,000$ samples. The increasing overlap of the distributions reflects increasing completeness. In the left plots the distributions do not fully overlap, indicating that completeness is not achieved with the $N=200$ sample. On the other end, since all subsamples are indistinguishable in the top and bottom plots on the right, which are generated with $N=20,000$ samples, we conclude that completeness is already achieved at 10\% of the $N=20,000$ sample (the smallest sample in the plots on the right) for our example data, i.e. , at $N=2,000$ which we use for the rest of this work.}
  \label{cd}
-%\end{center}
-%\vspace{-0.5in}
 \end{figure*}
 
 The user chooses $N$, the number of samples to be generated. The sample size is  automatically increased by 10\% at the beginning of the run, in order to assure that even if during the calculations some of the output metallicities were to result in non-valid values (\emph{NaN}'s or infinities, for example, if division by very small numbers is required) the actual sample size is at least as large as the user intended. 
@@ -396,66 +332,20 @@ The code time was tested on sets of 1, 2, 5, 10, 25, 50, and 100 identical measu
 
 
 The time spent on plotting functions, which includes the calculation of the appropriate number of bins for each scale, is substantial: 1.67 seconds per distribution on average with 14 calls for this data set (one for each metallicity scale, \ebmv, and $R_{23}$). 
-%In Table~\ref{tab:time}  we summarize the time spent on each metallicity scale for SN~2008D, the first measurement of the sample dataset, for each metallicity scale, and 
 We summarize the run time spent on each metallicity scale and memory usage for the host galaxy of SN~2008D, the first measurement of the sample dataset, in Figure~\ref{fig:mem}. While the CPU usage is modest, the memory usage can be large, depending on the size of the sample.  The memory usage ramps up quickly, as soon as the $N$ line samples are created, 
 and remains fairly constant throughout the run.  Figure~\ref{fig:mem} shows the memory used by each function in the code as a function of time for a single set of input lines of our example data (the host galaxy of SN~2008D). The scales that take longer are those that require root finding (e.g. M08), or optimizations (which are done iteratively, e.g. KD02\_N2O2).
 
 \begin{figure}[ht!]
-%  \includegraphics[trim = 10mm 0mm 10mm 0mm, clip]{abcomparison6.eps}
   \includegraphics[width=1.0\columnwidth]{memusage.pdf}
    \caption{Memory usage: we plot the square root of the memory usage in Megabytes as a function of time for running our code (using $N$=2,000 and all default metallicity scales except the D13 \emph{pyqz} ones) on a single set of measured emission lines (Table~\ref{tab:exampledata}, host galaxy of SN~2008D). The square root is plotted, instead of the natural value, to enhance visibility.  
 Three inserts show the regions where most of the metallicity scales are calculated, zoomed in, since the run time of the code is dominated by plotting routines, including the calculation of the bin size with Knuth's rule. 
 Each function call is represented by an opening and closing bracket in the main plot, and by a shaded rectangle in the zoomed-in insets.
-%%MM: For the labeling: NIIOII NIISII and R23 - these are not specific scales but just ratios, right?
-%FED: that's correct, but i dont think i say they are strictly ``scales'' anywhere
 The calculation of $N2O2$, which requires 0.25 seconds, is split between two insets, as well as the calculation of the M08 scales (three scales) which require 0.65 seconds. Altogether, the calculation of metallicity in all scales, except those in the D13 \emph{pyqz} scales, takes $\sim1$ seconds. For technical details about the D13 \emph{pyqz} scales performance we refer the reader to the \emph{pyqz} package.}
  \label{fig:mem}
 \end{figure}
 
 
 
-%\begin{deluxetable}{lr} 
-%%\setlength{\tabcolsep}{0.0001in} 
-%\tabletypesize{\tiny}
-%\setlength{\tabcolsep}{0.001in} 
-%\tablecolumns{2}
-%%%\tablewidth{114.88pt}
-%\tablecaption{CPU usage by scale}
-%\tablehead{   % column headings
-%  \colhead{Scale} &
-%  \colhead{Time ($\times 10^{-6}$ sec)} 
-%}
-%\startdata
-%\ebmv    &   100.1     \\ 
-%$R_{23}$   &   599.9     \\ 
-%M91       &   600.1      \\ 
-%Z94       &   100.1       \\
-%%C01       &        \\ 
-%P05       &   399.8     \\ 
-%D02       &   300.2     \\ 
-%PP04      &   200.0     \\ 
-%M08       & 1.720$\times 10^6$ \\
-%P10       &  5300 \\
-%M13       &   500.0 \\
-%pyqz      &   1.127$\times 10^6$  \\ 
-%KK04 $R_{23}$   & 4500    \\ 
-%KD02 N2O2 &    500.2     \\ 
-%KD02 N2Ha &   3200    \\ 
-%KD02\_comb  &   2800 \\
-%%diags.initialguess()          &      118.0    \\ 
-%%   diags.calcNIISII()             &     254.0    \\ 
-%%8497.5        diags.setNII(raw_lines['[NII]6584'])
-%%  17077.5        diags.setHab(raw_lines['Ha'],raw_lines['Hb'])
-%%  25457.0        diags.setOlines(raw_lines['[OII]3727'], raw_lines['[OIII]5007%'], raw_lines['[OI]6300'], raw_lines['[OIII]4959'])
-%%  30478.5        diags.setSII(raw_lines['[SII]6717'],raw_lines['[SII]6731'],ra%w_lines['[SIII]9069'],raw_lines['[SIII]9532'])
-%% %378698.0        diags.calcNIIOII()
-%\enddata
-%\label{tab:time}
-%\end{deluxetable}
-
-
-
- 
 The code is trivially parallelizable, as each measurement can be computed on a different core. Multiprocessing is enabled via the \verb=multiprocessing= Python module, and, when enabled, it uses up to $n-1$ cores, where $n$ is the total number of available cores to the user (or less, if a smaller maximum number of cores is set by the user via the global variable MAXPROCESSES).
 
 
@@ -479,7 +369,6 @@ This figure  highlights a number of important points:
 
 \item
 The metallicity reported as the $50^{th}$ percentile of the metallicity parameter distribution from the MC sampling method is consistent with the analytically derived metallicity. The mean of the residuals is $\sim-2\times10^{-3}$, $\sim5\times10^{-3}$, and $~\sim5\times10^{-2}$,  for M91, PP04\_O3N2, and KD02\_comb respectively, for 20, 32, and 35 valid measurementd from the \citet{modjaz11} data; the standard deviation of the residuals is $\sim0.018,~ 0.005,~ 0.004$ respectively -  well within the respective error bars - and thus, the published results still stand (unsurprisingly, since our code, aside for the calculation of the confidence interval, uses the same algorithms developed for IDLKD02). 
-%FED: we need to state the differences here!!%%
 \item
 The MC sampling method has smaller error bars than the analytic method. This is easily understandable, since the analytic method assumes the worst-case-scenarios, as it basically yields two metallicity parameter draws (the ``minimum'' and ``maximum'') which are in the tail of the full metallicity probability distribution. The MC sampling method is a more correct method as it empirically characterizes the full parameter estimation distribution.
 
@@ -491,7 +380,7 @@ The (minimal and statistically not significant) differences between our and the 
 \begin{figure}[ht!]
   \includegraphics[width=1.0\columnwidth]{abcomparison6.pdf}
    \caption{Comparison of metallicity estimation between the analytic method and our MC sampling method (top) and their residuals (bottom) for three different metallicity scales. Flux measurements come from 19 galaxies previously measured in \citet{modjaz11}. 
-Note that for KD02\_comb and M91, andin most cases for PP04\_O3N2 as well, the MC sampling error bars are smaller than those of the analytic propagation, which assumes worst-case scenarios. The metallicity value derived by our code, which is the 50th percentile of the metallicity distribution from MC sampling, is consistent with the analytically derived metallicity in all scales, for all measurements.}
+Note that for KD02\_comb and M91, an din most cases for PP04\_O3N2 as well, the MC sampling error bars are smaller than those of the analytic propagation, which assumes worst-case scenarios. The metallicity value derived by our code, which is the 50th percentile of the metallicity distribution from MC sampling, is consistent with the analytically derived metallicity in all scales, for all measurements.}
  \label{comp_anal_MC}
 \end{figure}
 
@@ -502,16 +391,14 @@ Note that for KD02\_comb and M91, andin most cases for PP04\_O3N2 as well, the M
 
 \subsection{Comparison with other works}
 
-%Here we perform a literature review of both 
 
 
-The field of SN host metallicity studies is rapidly developing, and these studies are crucial avenues for constraining the progenitor systems of different kinds of explosions - however, a few of the works in this field do not compute errors and others do not show how they compute their statistical errors  (e.g., \citealt{anderson10,leloudas11,sanders12,leloudas14}). %While \citet{sanders12} compute the line flux errors from a Markov-Chain Monte Carlo fitting of a gaussian to the emission lines, they only mention in passing that they propagate the line flux uncertainties into the metallicity measurements, but do not describe how {\bf this is a little harsh, right? i think mentioning it without explaining is generally the standard for iid errors -> Maryam: " How would you rephrase it then? " }.
+The field of SN host metallicity studies is rapidly developing, and these studies are crucial avenues for constraining the progenitor systems of different kinds of explosions - however, a few of the works in this field do not compute errors and others do not show how they compute their statistical errors  (e.g., \citealt{anderson10,leloudas11,sanders12,leloudas14}). %While \citet{sanders12} compute the line flux errors from a Markov-Chain Monte Carlo fitting of a gaussian to the emission lines, they only mention in passing that they propagate the line flux uncertainties into the metallicity measurements, but do not describe how 
 
 In contrast, the general metallicity field has considered in detail how to estimate the uncertainties in measured metallicities. However, those codes are not open-source and many of them are for specific scales. For example: \citet{moustakas10} also use MC sampling to estimate the metallicity uncertainties (in their case using $N$=500 trials and assuming a Gaussian distribution for metallicity parameter distribution) but only do this for two scales, KK04 and P05. 
 
 Some strong line methods fit a set of stellar population synthesis and photoionization models directly to the spectra of HII regions by changing the model parameters. For computing the metallicities of the SDSS star forming galaxies, \citet{tremonti04} fit a combination of stellar population synthesis models and  photoionization models to the observed strong emission lines [OII], $H\beta$, [OIII], $H\alpha$, NII and SII and report the median of the metallicity likelihood distribution as the metallicity estimate, with the width of the distribution giving the 1-$\sigma$ (Gaussian) error.
  \citet{blanc15} 
-%employ Bayesian inference for doing something similar to \citet{tremonti04} - they 
 use Bayesian inference to derive the joint and marginalized posterior probability density functions for metallicity $Z$ and ionization parameter $q$ given a set of observed line fluxes and an input photoionization model. They provide a publicly available IDL implementation of their method named $IZI$ (inferring metallicities -- $Z$ -- and ionization parameters).
 
 
@@ -519,13 +406,11 @@ use Bayesian inference to derive the joint and marginalized posterior probabilit
 We have presented the open-source Python code \verb=pyMCZ= that determines oxygen abundance and its error distribution from strong emission lines in a total of up to 13 scales (10 default and 3 additional upon request), for a total of up to 32 different metallicity measurement outputs, since a number of scales produce different metallicity estimates based on different input line ratios. These estimates are based on the original KD02IDL code in \citet{kewley02} and expanded to include more recently developed scales, and to generate confidence intervals for each scale via MC sampling. We supply visualization tools that, as part of the default output of \verb=pyMCZ=, enable the user to assess the validity of each derived metallicity distribution and understand when line flux measurements may lead to misleading metallicity estimates, for example in proximity of the demarcation between the upper and lower branch for $R_{23}$-based methods. \verb=pyMCZ= outputs the full estimated metallicity distribution (on demand), and its Kernel Density, and it offers  visualization tools to assess the spread of the oxygen abundance in the different scales. 
 
 The validity of our metallicity measurements and of their confidence regions hinges upon generating probability distributions that properly sample the metallicity distribution, given the input parameters and the specific metallicity calculation algorithm. Thus, we have developed metrics that allow the user to ascertain that the sample drawn in the simulation is sufficiently large. However, we note that our code does not take into account systematic errors, but only computes statistical ones.
-%MM: added the last sentence
 
 This code is open access and we welcome input and further development from the community.
 Since the code is open-source, the users can include any new metallicity scales and modify any parts of the algorithms, or any assumption (e.g. that the line flux errors are Gaussian distributed). 
 
 We hope that this open-access code will be helpful for the many different fields where gas-phase metallicities are important, including in the emerging field of SN and GRB host galaxies.
-%, where either it is not described how they got uncertainties or no error bars are computed
 %However, we re-iterate that the tool we are providing here should be used responsibly - the user is responsible for understanding the strengths and caveats of the various diagnostics and in which ranges and conditions they may be used.
 
 
@@ -541,22 +426,10 @@ and Space Administration.
 
 
 
-%\epsscale{1.0}
-%\begin{center}
-%\csvautotabular{table1.csv}
-%\label{t1}
-%\caption{Comparison of M-M method with MC method}
-%\end{center}
-%\end{figure*}
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%\clearpage
 %%%%%%%%%%%%%%%% BIBLIOGRAPHY  %%%%%%%%%%%%%%%%%%%%%%%% 
 \bibliographystyle{apj}
 \bibliography{Metallicity_MCuncertainties.bib}
-%\bibliography{refs}
 
 \end{document}
 
