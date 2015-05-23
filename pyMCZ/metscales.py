@@ -283,7 +283,7 @@ class diagnostics:
             #self.logO2O35007Hb=np.log10((self.O23727+self.O35007)/self.Hb)
             # ratios for other diagnostics - slightly different ratios needed
             if self.hasHb:
-                self.logO2O35007Hb=np.log10((self.O23727/self.Hb)* self.dustcorrect(k_O2,k_Hb,flux=True))+ 
+                self.logO2O35007Hb=np.log10((self.O23727/self.Hb)* self.dustcorrect(k_O2,k_Hb,flux=True))+\
                 (self.O35007/self.Hb)*self.dustcorrect(k_O35007,k_Hb,flux=True)
 
         else: 
@@ -423,7 +423,8 @@ class diagnostics:
             return -1
         if self.logO3O2sq is None:
             self.logO3O2sq=self.logO3O2**2
-        return (32.81 -1.153*self.logO3O2sq + Z*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2sq))/(4.603-0.3119*self.logO3O2 -0.163*self.logO3O2sq+ Z*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2sq)) 
+        return (32.81 -1.153*self.logO3O2sq + Z*(-3.396 -0.025*self.logO3O2 + 0.1444*self.logO3O2sq))/(4.603-0.3119*self.logO3O2-\
+                0.163*self.logO3O2sq+ Z*(-0.48 + 0.0271*self.logO3O2+ 0.02037*self.logO3O2sq)) 
 
     ##@profile        
     def initialguess(self):
@@ -459,28 +460,43 @@ class diagnostics:
         self.OIII_SII =None
         if self.NII_SII is not None  and allD13:
             if self.OIII_SII  is not None:
-                self.mds['D13_N2S2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),np.atleast_1d([self.OIII_SII]),'NII/SII','OIII/SII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                self.mds['D13_N2S2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
+                                        np.atleast_1d([self.OIII_SII]),'NII/SII','OIII/SII',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
             if  self.OIII_Hb  is not None:
-                self.mds['D13_N2S2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),np.atleast_1d([self.OIII_Hb]),'NII/SII','OIII/Hb', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                self.mds['D13_N2S2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
+                                        np.atleast_1d([self.OIII_Hb]),'NII/SII','OIII/Hb', \
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
             if  self.OIII_OII  is not None:
-                self.mds['D13_N2S2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),np.atleast_1d([self.OIII_OII]),'NII/SII','OIII/OII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                self.mds['D13_N2S2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
+                                        np.atleast_1d([self.OIII_OII]),'NII/SII','OIII/OII',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
 
         if self.NII_OII is not None  and allD13:
             if self.OIII_SII  is not None:
-                self.mds['D13_N2O2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),np.atleast_1d([self.OIII_SII]),'NII/OII','OIII/SII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                self.mds['D13_N2O2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
+                                        np.atleast_1d([self.OIII_SII]),'NII/OII','OIII/SII',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
             if  self.OIII_Hb  is not None:
-                self.mds['D13_N2O2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),np.atleast_1d([self.OIII_Hb]),'NII/OII','OIII/Hb', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                self.mds['D13_N2O2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
+                                        np.atleast_1d([self.OIII_Hb]),'NII/OII','OIII/Hb', \
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
             if  self.OIII_OII  is not None:
-                self.mds['D13_N2O2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),np.atleast_1d([self.OIII_OII]),'NII/OII','OIII/OII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                self.mds['D13_N2O2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
+                                        np.atleast_1d([self.OIII_OII]),'NII/OII','OIII/OII',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
 
         if self.logN2Ha is not None :
             if  self.OIII_Hb  is not None:
-                self.mds['D13_N2Ha_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),np.atleast_1d([self.OIII_Hb]),'NII/Ha','OIII/Hb', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                self.mds['D13_N2Ha_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),\
+                                        np.atleast_1d([self.OIII_Hb]),'NII/Ha','OIII/Hb',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
             if  self.OIII_OII  is not None:
-                self.mds['D13_N2Ha_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),np.atleast_1d([self.OIII_OII]),'NII/Ha','OIII/OII', method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                self.mds['D13_N2Ha_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),\
+                                        np.atleast_1d([self.OIII_OII]),'NII/Ha','OIII/OII',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
 
 
-        
     #@profile
     def calcDP00(self):
         # Diaz, A. I., & Perez-Montero, E. 2000, MNRAS, 312, 130 
@@ -753,8 +769,10 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
         if self.Z_init_guess is None:
             self.initialguess()
                 
-        M91_Z_low=nppoly.polyval(self.logR23,[12.0-4.944,0.767,0.602])-self.logO3O2*nppoly.polyval(self.logR23,[0.29,0.332,-0.331])
-        M91_Z_up=nppoly.polyval(self.logR23,[12.0-2.939,-0.2,-0.237,-0.305,-0.0283])-self.logO3O2*nppoly.polyval(self.logR23,[0.0047,-0.0221,-0.102,-0.0817,-0.00717])
+        M91_Z_low=nppoly.polyval(self.logR23,[12.0-4.944,0.767,0.602])-\
+                   self.logO3O2*nppoly.polyval(self.logR23,[0.29,0.332,-0.331])
+        M91_Z_up =nppoly.polyval(self.logR23,[12.0-2.939,-0.2,-0.237,-0.305,-0.0283])-\
+                   self.logO3O2*nppoly.polyval(self.logR23,[0.0047,-0.0221,-0.102,-0.0817,-0.00717])
         
         indx=(np.abs(self.logO3O2)>0) * (np.abs(self.logR23)>0) * (self.Z_init_guess < 8.4)
         self.mds['M91'][indx]=M91_Z_low[indx]
@@ -925,7 +943,9 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
                 while convergence>tol and ii<100:
                     ii+=1
                     self.logq=self.calclogq(Z_new_N2Ha)
-                    Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
+                    Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-\
+                                self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+\
+                                10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
                     convergence=np.abs(self.logq-logq_save).mean()
                     logq_save=self.logq.copy()
                 if ii >=100:
@@ -933,7 +953,9 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
                     Z_new_N2Ha=np.zeros(self.nm)+float('NaN')
             else:     
                 self.logq=7.37177*np.ones(self.nm)
-                Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
+                Z_new_N2Ha=nppoly.polyval(self.logN2Ha,[7.04, 5.28,6.28,2.37])-\
+                            self.logq*nppoly.polyval(self.logN2Ha,[-2.44,-2.01,-0.325,+0.128])+\
+                            10**(self.logN2Ha-0.2)*self.logq*(-3.16+4.65*self.logN2Ha)
             self.mds['KK04_N2Ha']=Z_new_N2Ha
             indx=self.logN2Ha>0.8
             self.mds['KK04_N2Ha'][indx]=float('NaN')
@@ -983,16 +1005,20 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
                     logq=self.calclogq(Z_new)
                     Zmax[(logq >= 6.7) * (logq < 8.3)]=8.4
                     # maximum of R23 curve:               
-                    Z_new=nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])
+                    Z_new=nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-\
+                           logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])
                     indx=self.Z_init_guess<=Zmax
-                    Z_new[indx]=nppoly.polyval(self.logR23[indx], [9.40 ,4.65,-3.17])-logq[indx]*nppoly.polyval(self.logR23[indx],[0.272,0.547,-0.513])
+                    Z_new[indx]=nppoly.polyval(self.logR23[indx], [9.40 ,4.65,-3.17])-\
+                                 logq[indx]*nppoly.polyval(self.logR23[indx],[0.272,0.547,-0.513])
                     convergence=np.abs((logqold-logq).mean())
                     logqold=logq.copy()
                 if ii>=100:
                     printsafemulti(  "WARNING: loop did not converge" ,self.logf,self.nps)
                     Z_new=np.zeros(self.nm)+float('NaN')
-                Z_new_lims=[nppoly.polyval(self.logR23,[9.40, 4.65,-3.17])-logq*nppoly.polyval(self.logR23,[0.272,0.547,-0.513]),
-                            nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])]
+                Z_new_lims=[nppoly.polyval(self.logR23,[9.40, 4.65,-3.17])-\
+                            logq*nppoly.polyval(self.logR23,[0.272,0.547,-0.513]),
+                            nppoly.polyval(self.logR23,[9.72, -0.777,-0.951,-0.072,-0.811])-\
+                            logq*nppoly.polyval(self.logR23,[0.0737,  -0.0713, -0.141, 0.0373, -0.058])]
                 Z_new[(Z_new_lims[0]>Z_new_lims[1])]=None
                 self.mds['KK04_R23']=Z_new
                 
