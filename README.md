@@ -149,4 +149,4 @@ numpy,pylab,matplotlib,scipy
 
 desirable packages:
 
-pickle,pprint,multiprocessing,itertools,csv,cProfile,pyqz,
+pickle,multiprocessing,itertools,csv,cProfile,pyqz,
