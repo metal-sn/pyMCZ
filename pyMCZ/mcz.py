@@ -146,7 +146,7 @@ def ingest_data(filename,path):
     try:
         snr=(meas.view(np.float32).reshape(meas.shape + (-1,))[:,1:])/(err.view(np.float32).reshape(err.shape + (-1,))[:,1:])
         if snr[~np.isnan(snr)].any()<3:  
-             raw_input('''WARNING: signal to noise ratio smaller than 3 
+            raw_input('''WARNING: signal to noise ratio smaller than 3 
 for at least some lines! You should only use SNR>3 
 measurements (return to proceed)''')
     except:
@@ -369,7 +369,7 @@ def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, 
         print >>logf,'{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
         fluxi[k]=flux[k][i]*np.ones(len(sample[i]))+err[k][i]*sample[i]
         warnings.filterwarnings("ignore")
-    success=metallicity.calculation(scales,fluxi,nm,bss,mds,nps,logf,disp=disp, dust_corr=dust_corr,verbose=verbose)
+    success=metallicity.calculation(scales,fluxi,nm,mds,nps,logf,disp=disp, dust_corr=dust_corr,verbose=verbose)
     if success==-1:
         print >>logf, "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
         
@@ -486,7 +486,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                     fluxi[k]=flux[k][i]*np.ones(len(sample[i]))+err[k][i]*sample[i]
                     warnings.filterwarnings("ignore")
                 print >>logf,""
-                success=metallicity.calculation(scales,fluxi,nm,bss,mds,1,logf,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
+                success=metallicity.calculation(scales,fluxi,nm,mds,1,logf,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
                 if success==-1:
                     print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
                     continue

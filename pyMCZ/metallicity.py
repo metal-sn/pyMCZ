@@ -11,7 +11,6 @@
 ## outfilename - the name of the file the results will be appended to
 ## red_corr - True by default
 ## disp - if True prints the results, default False
-## saveres - if True appends the results onto outfilename, True by default
 ##############################################################################
 
 import sys,os
@@ -67,7 +66,7 @@ def printsafemulti(string,logf, nps):
 ##############################################################################
 
 #@profile
-def calculation(mscales,measured,num,(bsmeas,bserr),mds,nps,logf,dust_corr=True,disp=False,saveres=False, verbose=False, scales=None): 
+def calculation(mscales,measured,num,mds,nps,logf,dust_corr=True,disp=False, verbose=False): 
     global IGNOREDUST
     mscales.setdustcorrect()
     raw_lines={}

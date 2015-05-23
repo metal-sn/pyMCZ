@@ -122,13 +122,13 @@ The figures below show an undersampled realization and a well- (possibly) over-s
 
 
 
-![alt tag](https://github.com/fedhere/MC_Metalicity/blob/master/output/exampledata/exampledata_n200_testcomplete.png)
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n200_testcomplete.png)
 
 
-![alt tag](https://github.com/fedhere/MC_Metalicity/blob/master/output/exampledata/exampledata_n2000_testcomplete.png)
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n2000_testcomplete.png)
 
 
-![alt tag](https://github.com/fedhere/MC_Metalicity/blob/master/output/exampledata/exampledata_n20000_testcomplete.png)
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n20000_testcomplete.png)
 
 
  
@@ -150,4 +150,17 @@ numpy,pylab,matplotlib,scipy
 desirable packages:
 
 pickle,multiprocessing,itertools,csv,cProfile,pyqz
+
+===================
+Some figures from the paper as examples of code products
+===================
+
+
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_KD02distrib.png)
+
+
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_KD02distrib_KDE.png)
+
+
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_boxplot.png)
 
