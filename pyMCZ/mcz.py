@@ -375,7 +375,7 @@ def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, 
         
     for key in scales.mds.iterkeys():
         res[key][i]=scales.mds[key]
-        if res[key][i]==None:
+        if res[key][i] is None:
             res[key][i]=[float('NaN')]*len(sample)
     return res
 
@@ -495,7 +495,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                 
                 for key in scales.mds.iterkeys():
                     res[key][i]=scales.mds[key]
-                    if res[key][i]==None:
+                    if res[key][i] is None:
                         res[key][i]=[float('NaN')]*newnsample
                     elif len(res[key][i])<newnsample:
                         res[key][i]=res[key][i]+[float('NaN')]*(newnsample-len(res[key][i]))
