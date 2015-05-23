@@ -122,13 +122,13 @@ The figures below show an undersampled realization and a well- (possibly) over-s
 
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/paper/exampledata_n200_testcomplete.pdf)
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n200_testcomplete.png)
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/paper/exampledata_n2000_testcomplete.pdf)
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n2000_testcomplete.png)
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/paper/exampledata_n20000_testcomplete.pdf)
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n20000_testcomplete.png)
 
 
  
@@ -159,7 +159,7 @@ Some figures from the paper as examples of code products
 ![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_KD02distrib.png)
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_KD02distribKDE.png)
+![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_KD02distrib_KDE.png)
 
 
 ![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_boxplot.png)
