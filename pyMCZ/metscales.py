@@ -1,5 +1,5 @@
 import numpy as np
-import sys
+#import sys
 import scipy.stats as  stats
 import numpy.polynomial.polynomial as nppoly
 from metallicity import get_keys,printsafemulti
@@ -376,10 +376,10 @@ class diagnostics:
             try: 
                 printsafemulti( '''WARNING: the KD02 and KK04 (+M08) methods should only be used for  log([NII]6564/[OII]3727) >1.2, 
                 here the mean log([NII]6564/[OII]3727)=here %f'''%np.mean(self.logN2O2),self.logf,self.nps)
-            except : 
+            except TypeError: 
                 printsafemulti( '''WARNING: the KD02 and KK04 (+M08) methods s
                 hould only be used for  log([NII]6564/[OII]3727) >1.2, 
-                here the mean log([NII]6564/[OII]3727)=here %f'''%self.logN2O2,self.logf,self.nps)
+                here the mean log([NII]6564/[OII]3727)=here %s'''%self.logN2O2,self.logf,self.nps)
  
         if not self.hasN2O2:
             self.N2O2_roots=np.zeros(self.nm)+float('NaN')
