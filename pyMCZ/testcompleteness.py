@@ -2,7 +2,7 @@ import os,sys
 import numpy as np
 import pylab as pl
 
-from scipy import stats, interpolate
+from scipy import stats#, interpolate
 import pylabsetup
 
 #pickle may not be installed
@@ -78,14 +78,17 @@ def fitdistrib(picklefile):
             x.sort()
             #print x
             n=len(x)
+
             Px_cuml = np.linspace(0, 1, n)
             
             # set up an interpolation of the inverse cumulative distribution
-            tck = interpolate.splrep(Px_cuml, x)
+            #tck = interpolate.splrep(Px_cuml, x)
             
             # sample evenly along the cumulative distribution, and interpolate
-            Px_cuml_sample = np.linspace(0, 1, 10 * n)
+            #Px_cuml_sample = np.linspace(0, 1, 10 * n)
+
             #x_sample = interpolate.splev(Px_cuml_sample, tck)
+
             indices = np.linspace(0, n - 1, 20).astype(int)
             ax.set_ylim(0,1.05)
             ax.plot(x[indices], Px_cuml[indices], 'o', lw=0, label="%d"%n0)
