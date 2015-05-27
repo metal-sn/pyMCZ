@@ -149,7 +149,7 @@ def ingest_data(filename,path):
             raw_input('''WARNING: signal to noise ratio smaller than 3 
 for at least some lines! You should only use SNR>3 
 measurements (return to proceed)''')
-    except:
+    except (IndexError, TypeError):
         pass
     return (filename, meas, err, nm, path, (bsmeas,bserr))
 
@@ -550,7 +550,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                             pickleKDEfile=os.path.join(binp+'/%s_n%d_%s_%d_KDE.pkl'%(name,nsample,key,i+1))
                             if VERBOSE: print "KDE files will be stored in ",pickleKDEfile
                             pickle.dump(kde,open(pickleKDEfile,'wb'))
-                except:pass
+                except (IndexError,TypeError): pass
         #make box_and_whiskers plot
         fig= plt.figure(figsize=(8,15))
         fig.subplots_adjust(bottom=0.18,left=0.18)

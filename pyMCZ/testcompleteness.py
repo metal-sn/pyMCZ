@@ -2,7 +2,7 @@ import os,sys
 import numpy as np
 import pylab as pl
 
-from scipy import stats, interpolate
+from scipy import stats#, interpolate
 import pylabsetup
 
 #pickle may not be installed
