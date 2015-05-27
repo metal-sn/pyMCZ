@@ -20,6 +20,7 @@ k_S2=2.381 # CCM Rv=3.1
 
 k_S3=1 #guess for CCM Rv=3.1
 
+global DUSTCORRECT
 DUSTCORRECT=True
 
 '''
@@ -249,7 +250,7 @@ class diagnostics:
         DUSTCORRECT=False
 
     def dustcorrect(self,l1,l2,flux=False):
-        global DUSTCORRECT
+        #global DUSTCORRECT
         if DUSTCORRECT:
             if not flux:
                 return 0.4*self.mds['E(B-V)']*(l1-l2)
