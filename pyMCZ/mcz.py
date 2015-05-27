@@ -531,7 +531,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                 try:
                     if ~np.isnan(res[key][i][0]):
                         print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(name+ ' %d'%(i+1),key,res[key][i][0],0,0 )
-                except: pass
+                except IndexError: pass
             else:
                 try:
                     if sum(~np.isnan(res[key][:,i]))>0:

@@ -48,9 +48,9 @@ def fitdistrib(picklefile):
     myi, = np.where(invalids==min(invalids))
     
     try: myi=myi[1] #in case there are more than one solutions
-    except: 
+    except IndexError: 
         try:myi=myi[0]
-        except:pass
+        except IndexError:pass
     xold=np.zeros(10)
     assert( Ndata-invalids[myi]>0),  "something is wrong with your distribution"
     # -- plotting utils
@@ -63,7 +63,7 @@ def fitdistrib(picklefile):
     nc   = 2    # number of col plots
 
     fig,axx =  pl.subplots(nr,nc,figsize=(fwid,fwid/rat))
-    
+    print fig
 
     for i,d in enumerate(testingdiags):
         ii,jj=int(i/2),int((i+1)/2)-int(i/2)
@@ -85,7 +85,7 @@ def fitdistrib(picklefile):
             
             # sample evenly along the cumulative distribution, and interpolate
             Px_cuml_sample = np.linspace(0, 1, 10 * n)
-            x_sample = interpolate.splev(Px_cuml_sample, tck)
+            #x_sample = interpolate.splev(Px_cuml_sample, tck)
             indices = np.linspace(0, n - 1, 20).astype(int)
             ax.set_ylim(0,1.05)
             ax.plot(x[indices], Px_cuml[indices], 'o', lw=0, label="%d"%n0)
