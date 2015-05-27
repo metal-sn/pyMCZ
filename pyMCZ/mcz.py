@@ -206,7 +206,7 @@ def checkhist(snname,Zs,nsample,i,path):
 #@profile
 def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
     global BINMODE
-    global NOPLOT
+    #global NOPLOT
 
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
@@ -393,7 +393,7 @@ def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, 
 ##############################################################################
 #@profile
 def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickle=False, dust_corr=True,verbose=False, fs=24):
-    global RUNSIM,BINMODE,NOPLOT
+    global RUNSIM#,BINMODE#,NOPLOT
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
     assert(len(err['galnum'])== nm), "flux and err must be same dimensions" 
