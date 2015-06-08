@@ -12,7 +12,7 @@ try:
 except ImportError:
     NOPICKLE=True
 
-def fitdistrib(picklefile):
+def fitdistrib(picklefile, scales=None):
     from matplotlib.font_manager import findfont, FontProperties
     from matplotlib.ticker import FormatStrFormatter
     majorFormatter = FormatStrFormatter('%.2f')
@@ -37,22 +37,26 @@ def fitdistrib(picklefile):
     assert( os.path.isfile(picklefile)), "missing pickled file %s"%picklefile
     pklfile = open(picklefile, 'rb')
     res=pickle.load(pklfile)
+    print scales
+    if scales:
+        testingdiags=scales.split(',')
+    else:
+        testingdiags=['E(B-V)','D02','M13_N2','KD02comb']
 
-    testingdiags=['E(B-V)','D02','M13_N2','KD02comb']
+    print "\n\n###testing with scales: ",testingdiags,
+    print "###\n\n"
     ebvs=res['E(B-V)'].T
     nm=len(ebvs)
     Ndata= len(ebvs[0])
     assert( Ndata>0), "something is wrong with your distribution"
-
-    invalids=[sum(np.isnan(res['D02'].T[i]))+sum(np.isnan(res['KD02comb'].T[i]))+sum(np.isnan(res['Z94'].T[i])) for i in range(nm)]
+    invalids=[sum(np.isnan(res[testingdiags[1]].T[i]))+sum(np.isnan(res[testingdiags[2]].T[i]))+sum(np.isnan(res[testingdiags[3]].T[i])) for i in range(nm)]
     myi, = np.where(invalids==min(invalids))
-    
     try: myi=myi[1] #in case there are more than one solutions
     except IndexError: 
         try:myi=myi[0]
         except IndexError:pass
     xold=np.zeros(10)
-    assert( Ndata-invalids[myi]>0),  "something is wrong with your distribution"
+    assert( Ndata-invalids[myi]>0),  "something is wrong with your distribution. Perhaps one of the default scale has all invalid values? try select different scales"
     # -- plotting utils
     fwid = 10.  # fig width
     rat  = 1.   # fig aspect ratio
@@ -108,7 +112,7 @@ def fitdistrib(picklefile):
 
 
 
-        ax.legend(scatterpoints=1,loc=2)
+        ax.legend(scatterpoints=1,loc=4)
         xticks=ax.get_xticks()
         dx=xticks[-1]-xticks[-2]
         xticks=xticks[(xticks<maxright)*(xticks>maxleft)]
