@@ -792,7 +792,7 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
         else:
             e1=np.random.normal(0,0.027,self.nm)
             e2=np.random.normal(0,0.024,self.nm)
-            self.mds["M13_N2"] = 8.743+e1 - (0.462+e2)*self.logN2Ha
+            self.mds["M13_N2"] = 8.743+e1 + (0.462+e2)*self.logN2Ha
             if   self.hasHb and self.hasO3:
                 e1=np.random.normal(0,0.012,self.nm)
                 e2=np.random.normal(0,0.012,self.nm)
