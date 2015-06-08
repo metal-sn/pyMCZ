@@ -140,6 +140,8 @@ Known Issues and TODO
 Plot formatting is designed for a platform using latex and with Times New Roman serif font available to matplotlib. The module pylabsetup loaded early on assures that the matplotlib rcparameters are set up appropriately, including font choice, and in case of missing fonts an error message is streamed (but not paused upon). If your plots don't look good, change the necessary parameters in pylabsetup.py. This is an unfortunately common occurrence when not running on a Mac.
 
 
+Note that while a PDF version of our paper is included in the repository, the PDF does not render properly in github. To see the paper please go to the arxiv link (http://arxiv.org/abs/1505.06213) or compile it with pdflatex in the repo "paper" directory on your local machine.
+
 ====================
 Packages required
 ====================
