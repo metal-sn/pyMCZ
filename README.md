@@ -166,5 +166,5 @@ Some figures from the paper as examples of code products
 ![alt tag](https://github.com/nyusngroup/pyMCZ/blob/master/figures/pyMCZ_KD02distrib_KDE.png)
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_boxplot.png)
+![alt tag](https://github.com/nyusngroup/pyMCZ/blob/master/figures/pyMCZ_boxplot.png)
 
