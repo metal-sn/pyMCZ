@@ -64,7 +64,6 @@ def smart_open(logfile=None):
         fh = open(logfile, 'w')
     else:
         fh = sys.stdout
-
     return fh
 
 def getknuth(m,data,N):
@@ -116,7 +115,6 @@ def readfile(filename):
         header=['galnum']+alllines+['flag']+morelines
         header=header[:len(l1)]
 
-
     formats=['i']+['f']*(len(header)-1)
     if 'flag' in header:
         findex=header.index('flag')
@@ -141,14 +139,14 @@ def ingest_data(filename,path):
     errfile =os.path.join(path,filename+"_err.txt")
     
     ###read the max, meas, min flux files###    
-    err, nm, bserr =readfile(errfile)
     meas,nm, bsmeas=readfile(measfile)
+    err, nm, bserr =readfile(errfile)
     try:
         snr=(meas.view(np.float32).reshape(meas.shape + (-1,))[:,1:])/(err.view(np.float32).reshape(err.shape + (-1,))[:,1:])
         if snr[~np.isnan(snr)].any()<3:  
             raw_input('''WARNING: signal to noise ratio smaller than 3 
-for at least some lines! You should only use SNR>3 
-measurements (return to proceed)''')
+            for at least some lines! You should only use SNR>3 
+            measurements (return to proceed)''')
     except (IndexError, TypeError):
         pass
     return (filename, meas, err, nm, path, (bsmeas,bserr))
@@ -369,12 +367,12 @@ def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, 
         print >>logf,'{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
         fluxi[k]=flux[k][i]*np.ones(len(sample[i]))+err[k][i]*sample[i]
         warnings.filterwarnings("ignore")
-    success=metallicity.calculation(scales,fluxi,nm,mds,nps,logf,disp=disp, dust_corr=dust_corr,verbose=verbose)
+    success=metallicity.calculation(scales[i],fluxi,nm,mds,nps,logf,disp=disp, dust_corr=dust_corr,verbose=verbose)
     if success==-1:
         print >>logf, "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
         
-    for key in scales.mds.iterkeys():
-        res[key][i]=scales.mds[key]
+    for key in scales[i].mds.iterkeys():
+        res[key][i]=scales[i].mds[key]
         if res[key][i] is None:
             res[key][i]=[float('NaN')]*len(sample)
     return res
@@ -397,7 +395,6 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
     assert(len(flux[0])== len(err[0])), "flux and err must be same dimensions" 
     assert(len(flux['galnum'])== nm), "flux and err must be of declaired size" 
     assert(len(err['galnum'])== nm), "flux and err must be same dimensions" 
-    
 
 
     #increasing sample by 10% to assure robustness against rejected samples
@@ -452,7 +449,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         #use only valid inputs
         delkeys=[]
         for k in bss[0].iterkeys():
-            if k=='flag' or k=='galnum' or bss[0][k][1]==0 :#or bss[1][k][1]==bss[0][k][1]:
+            if k=='flag' or k=='galnum' or bss[0][k][1]==float('nan') :#or bss[1][k][1]==bss[0][k][1]:
                 delkeys.append(k)
         for k in delkeys:
             del bss[0][k]
@@ -461,9 +458,10 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
 
         import metscales as ms
         nps = min (mpc.cpu_count()-1 or 1, MAXPROCESSES)
-        scales=ms.diagnostics(newnsample, logf,nps)
 
         if multiproc and nps>1:
+            scales=[ms.diagnostics(newnsample, logf,nps) for i in range(nm)]
+            
             print >>logf, "\n\n\nrunning on %d threads\n\n\n"%nps
             second_args=[sample,flux,err,nm,bss,mds,VERBOSE, dust_corr,VERBOSE,res,scales,nps, logf]
             pool = mpc.Pool(processes=nps) # depends on available cores
@@ -475,17 +473,23 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                 for kk in r.iterkeys(): res[kk][ri]=r[kk][ri]
             pool.close() # not optimal! but easy
             pool.join()
+            for key in scales[i].mds.iterkeys():
+                res[key]=np.array(res[key]).T
+            if VERBOSE: print "Iteration Complete"
         else: 
             #looping over nm spectra
             for i in range(NM0,nm):
+                scales=ms.diagnostics(newnsample, logf,nps)
                 print >>logf, "\n\n measurements ",i+1
                 fluxi={}
+
                 for k in bss[0].iterkeys():
                     print >>logf, '{0:15} '.format(k),
                     print >>logf, '{0:0.2} +/- {1:0.2}'.format(flux[k][i],err[k][i])
                     fluxi[k]=flux[k][i]*np.ones(len(sample[i]))+err[k][i]*sample[i]
                     warnings.filterwarnings("ignore")
                 print >>logf,""
+
                 success=metallicity.calculation(scales,fluxi,nm,mds,1,logf,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
                 if success==-1:
                     print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
@@ -499,9 +503,9 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                     elif len(res[key][i])<newnsample:
                         res[key][i]=res[key][i]+[float('NaN')]*(newnsample-len(res[key][i]))
                 
-        for key in scales.mds.iterkeys():
-            res[key]=np.array(res[key]).T
-        if VERBOSE: print "Iteration Complete"
+            for key in scales.mds.iterkeys():
+                res[key]=np.array(res[key]).T
+            if VERBOSE: print "Iteration Complete"
     
         #"WE CAN PICKLE THIS!"
         #pickle this realization

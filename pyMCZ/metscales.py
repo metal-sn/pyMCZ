@@ -87,6 +87,7 @@ class diagnostics:
         self.nm=num
         self.Ha=None
         self.Hb=None
+ 
         self.hasHa,self.hasHb=False,False
         self.hasO2,self.hasO3=False,False
         self.hasS2,self.hasN2=False,False
@@ -375,11 +376,11 @@ class diagnostics:
 
             try: 
                 printsafemulti( '''WARNING: the KD02 and KK04 (+M08) methods should only be used for  log([NII]6564/[OII]3727) >1.2, 
-                here the mean log([NII]6564/[OII]3727)=here %f'''%np.mean(self.logN2O2),self.logf,self.nps)
+                the mean log([NII]6564/[OII]3727)= %f'''%np.mean(self.logN2O2),self.logf,self.nps)
             except TypeError: 
-                printsafemulti( '''WARNING: the KD02 and KK04 (+M08) methods s
-                hould only be used for  log([NII]6564/[OII]3727) >1.2, 
-                here the mean log([NII]6564/[OII]3727)=here %s'''%self.logN2O2,self.logf,self.nps)
+                printsafemulti( '''WARNING: the KD02 and KK04 (+M08) methods 
+                should only be used for  log([NII]6564/[OII]3727) >1.2, 
+                the mean log([NII]6564/[OII]3727)= %s'''%self.logN2O2,self.logf,self.nps)
  
         if not self.hasN2O2:
             self.N2O2_roots=np.zeros(self.nm)+float('NaN')
@@ -440,6 +441,7 @@ class diagnostics:
             self.Z_init_guess[(self.logN2Ha >=-1.1)&(self.N26584 != 0.0)]=8.7
         #use [N2]/[O2]
         if self.hasN2 and self.hasO2:            
+            N2O2=np.zeros(self.nm)+float('nan')
             if self.hasHb:
                 ###FED CHECK THIS!
                 N2O2=self.N26584*self.Ha*self.Hb*self.O23727
@@ -621,7 +623,7 @@ class diagnostics:
         printsafemulti(  "calculating P10",self.logf,self.nps)
         
         if not self.hasHb:
-            printsafemulti(  "this method needs Hbeta",self.logf,self.nps)
+            printsafemulti(  "this method needs Hb",self.logf,self.nps)
             return -1
         self.mds['P10_ONS']=np.zeros(self.nm)+float('NaN')
         self.mds['P10_ON']=np.zeros(self.nm)+float('NaN')
@@ -635,7 +637,6 @@ class diagnostics:
         P10logS2=np.zeros(self.nm)+float('NaN')
 
         self.calcP()
-            
         if self.R2 is not None:
             P10logR2=np.log(self.R2)
 
@@ -643,7 +644,11 @@ class diagnostics:
             P10logR3=np.log(self.R3)
 
         if self.hasN2:
-            P10logN2=np.log((self.N26584*1)/self.Hb)+self.dustcorrect(k_N2,k_Hb)
+            #the ratio of N26548 and N26548 is N26584/N26548 = 3 
+            #independent on physical conditions 
+            #The Physics and Dynamics of Planetary Nebulae
+            # By Grigor A. Gurzadyan
+            P10logN2=np.log((self.N26584*1.33)/self.Hb)+self.dustcorrect(k_N2,k_Hb)
 
         if self.hasS2 and self.hasS26731:
             P10logS2=np.log((self.S26717+self.S26731)/self.Hb)+self.dustcorrect(k_S2,k_Hb)
@@ -678,12 +683,11 @@ class diagnostics:
         if self.P is not None:
             self.mds['P10_ONS'][indx]= np.dot(vsONS[indx],coefsONS2)
         self.mds['P10_ON'][indx] = np.dot(vsON[indx],coefsON2)
-        
+
         indx=~((self.mds['P10_ONS']>7.1) * (self.mds['P10_ON']>7.1)*(self.mds['P10_ONS']<9.4) * (self.mds['P10_ON']<9.4))
         if self.P is not None:
             self.mds['P10_ONS'][indx]= float('NaN')
         self.mds['P10_ON'][indx] = float('NaN')
-        
         
     #@profile
     def calcP01(self):
@@ -1052,7 +1056,7 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
             printsafemulti(  "WARNING:  Must first calculate KK04_R23",self.logf,self.nps)
             self.calcKK04_R23()
         if not self.hasHa and not self.hasHb:
-            printsafemulti(  "WARNING: need Halpha and Hbeta for this. did you run setHab()?",self.logf,self.nps)
+            printsafemulti(  "WARNING: need Ha and Hb for this. did you run setHab()?",self.logf,self.nps)
 
         #alternative way to calculate KD02_N2O2, stated in the paper KD02,
         #valid in high Z regimes (Z>8.4)

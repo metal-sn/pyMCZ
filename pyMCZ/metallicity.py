@@ -72,6 +72,7 @@ def calculation(mscales,measured,num,mds,nps,logf,dust_corr=True,disp=False, ver
     raw_lines={}
     raw_lines['[OIII]5007']=np.array([float('NaN')])
     raw_lines['Hb']=np.array([float('NaN')])
+    raw_lines['Hz']=np.array([float('NaN')])
     for k in measured.iterkeys():
         #kills all non-finite terms 
         measured[k][~(np.isfinite(measured[k][:]))]=0.0 
@@ -98,7 +99,7 @@ def calculation(mscales,measured,num,mds,nps,logf,dust_corr=True,disp=False, ver
         else: 
             response=raw_input('''WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!! 
             Continuing without reddening correction? [Y/n]\n''').lower()
-            assert(not (response.startswith('n'))),"please fix the input file to include Halpha and Hbeta measurements"
+            assert(not (response.startswith('n'))),"please fix the input file to include Ha and Hb measurements"
 
         IGNOREDUST=True
         dust_corr=False
