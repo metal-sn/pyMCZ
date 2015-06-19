@@ -843,7 +843,7 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
             printsafemulti(  "WARNING: Must first calculate R23",self.logf,self.nps)
             self.calcR23()
         if self.logR23 is None:
-            printsafemulti(  "WARNING: Cannot compute this without R23" ,self.logf,self.nps)
+            printsafemulti(  "WARNING: Cannot compute M08_R23 without R23" ,self.logf,self.nps)
         else:
             self.mds['M08_R23']=np.zeros(self.nm)+float('NaN')
             coefs=np.array([M08_coefs['R23']]*self.nm).T
@@ -855,9 +855,12 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
             elif highZ is False:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=8.0)).cumsum(1).cumsum(1)==1
                 self.mds['M08_R23'][(indx.sum(1))>0]=sols[indx].real
-        if not allM08: return
+        if not allM08: 
+            return
+        else: printsafemulti("calculating other M08s",self.logf,self.nps)
 
         if self.logO3Hb is not None:
+
             self.mds['M08_O3Hb']=np.zeros(self.nm)+float('NaN')
             coefs=np.array([M08_coefs['O3Hb']]*self.nm).T
             coefs[0]=coefs[0]-self.logO3Hb
@@ -868,7 +871,6 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
             elif highZ is False:
                 indx= ((sols.real>=7.1)*(sols.real<=9.4)*(sols.imag==0)*(sols.real<=7.9)).cumsum(1).cumsum(1)==1
                 self.mds['M08_O3Hb'][(indx.sum(1))>0]=sols[indx].real
-
 
         if self.logO2Hb is not None:
             self.mds['M08_O2Hb']=np.zeros(self.nm)+float('NaN')

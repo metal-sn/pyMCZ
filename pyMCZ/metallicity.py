@@ -67,6 +67,7 @@ def printsafemulti(string,logf, nps):
 
 #@profile
 def calculation(mscales,measured,num,mds,nps,logf,dust_corr=True,disp=False, verbose=False): 
+
     global IGNOREDUST
     mscales.setdustcorrect()
     raw_lines={}
@@ -89,7 +90,6 @@ def calculation(mscales,measured,num,mds,nps,logf,dust_corr=True,disp=False, ver
     if dust_corr and mscales.hasHa and mscales.hasHb:
         with np.errstate(invalid='ignore'):
             mscales.calcEB_V()
-
     elif dust_corr and not IGNOREDUST:
 
         if nps>1:
@@ -131,6 +131,8 @@ def calculation(mscales,measured,num,mds,nps,logf,dust_corr=True,disp=False, ver
 
     mscales.initialguess()
     mds=mds.split(',')
+
+
     #mscales.printme()
     if verbose: print "calculating metallicity diagnostic scales: ",mds
     if 'all' in mds:
@@ -212,10 +214,10 @@ PYQZ_DIR if you want this scale. ''',logf,nps)
         mscales.calcP10()
     if 'M13' in mds:
         mscales.calcM13()
-    if 'M08' in mds:
-        mscales.calcM08()
     if 'M08all' in mds:
         mscales.calcM08(allM08=True)
+    elif 'M08' in mds:
+        mscales.calcM08()
     if 'P05' in mds:
         mscales.calcP05()
     if 'C01' in mds:

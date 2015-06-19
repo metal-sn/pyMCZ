@@ -492,8 +492,8 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
 
                 success=metallicity.calculation(scales,fluxi,nm,mds,1,logf,disp=VERBOSE, dust_corr=dust_corr,verbose=VERBOSE)
                 if success==-1:
-                    print "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
-                    continue
+                    print "MINIMUM REQUIRED LINES:  [OII]3727 & [OIII]5007, or [NII]6584, and Ha & Hb if you want dereddening"
+                    #continue
 
                 
                 for key in scales.mds.iterkeys():
