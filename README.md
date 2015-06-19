@@ -11,7 +11,7 @@ This code is released under MIT licence: see LICENSE.txt
 ====================
 Usage:
 ====================
-This code requires ascii input files, their format is described below and examples are provided in the \<input\> directory in this package. Their names are expected to end by '_meas.txt' for the file containing the measurements, and "_err.txt" for the error file. We provide an example dataset names 'exampledata', i.e. we provide input files 'exampledata_meas.txt' and 'exampledata_err.txt' are the input files. 
+This code requires ascii input files, their format is described below and examples are provided in the \<input\> directory in this package.  We provide an example dataset names 'exampledata', i.e. we provide input files 'exampledata_meas.txt' and 'exampledata_err.txt' are the input files. 
 
 From the commandline simply use as:
 ```
@@ -67,7 +67,7 @@ additional command line arguments
 ====================
 Input file format
 ====================
-Flux data for each object should be stored in the directory \<input\> that exists in the directory provided by the --path arg or by the environmental variable MCMetdata. 
+Flux data for each object should be stored in the directory \<input\> that exists in the directory provided by the --path arg or by the environmental variable MCMetdata. Their ascii file names are expected to end by "\_meas.txt" for the file containing the measurements, and "\_err.txt" for the error file.
 
 with common filename \<filename\>:
 
