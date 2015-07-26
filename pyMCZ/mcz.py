@@ -115,7 +115,7 @@ def readfile(filename):
         header=['galnum']+alllines+['flag']+morelines
         header=header[:len(l1)]
 
-    formats=['i']+['f']*(len(header)-1)
+    formats=['S10']+['f']*(len(header)-1)
     if 'flag' in header:
         findex=header.index('flag')
         formats[findex]='S10'
@@ -142,7 +142,7 @@ def ingest_data(filename,path):
     meas,nm, bsmeas=readfile(measfile)
     err, nm, bserr =readfile(errfile)
     try:
-        snr=(meas.view(np.float32).reshape(meas.shape + (-1,))[:,1:])/(err.view(np.float32).reshape(err.shape + (-1,))[:,1:])
+        snr=(meas[:,1:].view(np.float32).reshape(meas[:,1:].shape + (-1,))[:,1:])/(err[:,1:].view(np.float32).reshape(err[:,1:].shape + (-1,))[:,1:])
         if snr[~np.isnan(snr)].any()<3:  
             raw_input('''WARNING: signal to noise ratio smaller than 3 
             for at least some lines! You should only use SNR>3 
@@ -202,7 +202,7 @@ def checkhist(snname,Zs,nsample,i,path):
 ##Save the result as histogram as name
 ##############################################################################
 #@profile
-def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
+def savehist(data,snname,Zs,nsample,i,path,nmeas,measnames, verbose=False, fs=24):
     global BINMODE
     #global NOPLOT
 
@@ -327,7 +327,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas, verbose=False, fs=24):
         plt.annotate(st, xy=(0.13, 0.6), xycoords='axes fraction',size=fs,fontweight='bold')
         st='%s '%(Zs.replace('_',' '))
         plt.annotate(st, xy=(0.61, 0.93), xycoords='axes fraction',fontsize=fs,fontweight='bold')
-        st='measurement %d of %d\n\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f'%(i+1,nmeas,round(median,3),round(left,3),round(right,3))
+        st='measurement %d of %d\n   %s\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f'%(i+1,nmeas,measnames[i],round(median,3),round(left,3),round(right,3))
         plt.annotate(st, xy=(0.61, 0.65), xycoords='axes fraction',fontsize=fs)
         effectiven=len(data[~np.isnan(data)])
         if effectiven:
@@ -529,7 +529,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         
         boxlabels=[]
         datas=[]
-        print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
+        print "\n\nmeasurement %d : %s-------------------------------------------------------------"%(i+1,flux[i]['galnum'])
         for key in Zs:
             if nsample==-1:
                 try:
@@ -543,7 +543,8 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                             with open(os.path.join(binp,'%s_n%d_%s_%d.csv'%(name,nsample,key,i+1)), "wb") as fidist:
                                 writer = csv.writer(fidist)
                                 writer.writerow(res[key][:,i])
-                        sh,data,kde=savehist(res[key][:,i],name,key,nsample,i,binp,nm,verbose=verbose, fs=fs)
+                        print 
+                        sh,data,kde=savehist(res[key][:,i],name,key,nsample,i,binp,nm,flux[:]['galnum'],verbose=verbose, fs=fs)
                         s=key+"\t "+sh+'\n'
                         if ASCIIOUTPUT:
                             fi.write(s)
@@ -575,7 +576,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
             median.set(color='k', linewidth=2)
         for flier in bp['fliers']:
             flier.set(marker='o', color='#7570b3', alpha=0.4)
-        plt.title("measurement %d"%(i+1))
+        plt.title("measurement %d: %s"%(i+1,flux[i]['galnum']))
         plt.xticks(range(1,len(boxlabels)+1), boxlabels, rotation=90, fontsize=fs-5)
         plt.fill_between(range(1,len(boxlabels)+1),[8.76]*len(boxlabels),[8.69]*len(boxlabels), facecolor='black', alpha=0.3)
         plt.text(1.2, 8.705,"Solar Oxygen Abundance", alpha=0.7)

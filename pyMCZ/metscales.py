@@ -354,8 +354,8 @@ class diagnostics:
     #@profile
     def calcEB_V(self):
         printsafemulti( "calculating E(B-V)",self.logf,self.nps)
-        self.mds['E(B-V)']=np.log10(2.86/(self.Ha/self.Hb))/(0.4*(k_Ha-k_Hb)) # E(B-V)
-        self.mds['E(B-V)'][self.mds['E(B-V)']<=0]=0.00001
+        self.mds['E(B-V)']=np.log10(2.86*self.Hb/self.Ha)/(0.4*(k_Ha-k_Hb)) # E(B-V)
+        self.mds['E(B-V)'][self.mds['E(B-V)']<=0]=1e-5
         
 
     #@profile
