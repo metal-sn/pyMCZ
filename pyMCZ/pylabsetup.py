@@ -35,7 +35,7 @@ mpl.rc('axes',**{'labelweight':'normal', 'linewidth':1})
 mpl.rc('ytick',**{'major.pad':5, 'color':'k'})
 mpl.rc('xtick',**{'major.pad':5, 'color':'k'})
 params = {'legend.fontsize': 24,
-          'legend.linewidth': 1,
+          #'legend.linewidth': 1,
           'legend.numpoints':1,
           'legend.handletextpad':1
       }

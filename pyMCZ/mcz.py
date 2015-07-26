@@ -117,7 +117,7 @@ def readfile(filename):
         header=header[:len(l1)]
 
 
-    formats=['i']+['f']*(len(header)-1)
+    formats=['S10']+['f']*(len(header)-1)
     if 'flag' in header:
         findex=header.index('flag')
         formats[findex]='S10'
@@ -525,7 +525,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         
         boxlabels=[]
         datas=[]
-        print "\n\nmeasurement %d-------------------------------------------------------------"%(i+1)
+        print "\n\nmeasurement %d: %s-------------------------------------------------------------"%(i+1,flux[i]['galnum'])
         for key in Zs:
             if nsample==-1:
                 try:
