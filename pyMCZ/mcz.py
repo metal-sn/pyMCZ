@@ -259,7 +259,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,measnames, verbose=False, fs=24
             ##bw is chosen according to Silverman 1986
             bw=1.06*std*n**(-0.2)
             numbin,bm=getbinsize(data.shape[0],data)        
-            distrib=np.histogram(data, bins=numbin, density=True)            
+            distrib=np.histogram(data, bins=int(numbin), density=True)            
             ###make hist###
             counts, bins=distrib[0],distrib[1]
             widths=np.diff(bins)
@@ -278,6 +278,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,measnames, verbose=False, fs=24
         else:
             if BINMODE=='bb' :
                 ##if astroML is available use it to get Bayesian blocks
+                bm = 0
                 try:
                     from astroML.plotting import hist as amlhist
                     if BINMODE=='bb':
@@ -288,7 +289,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,measnames, verbose=False, fs=24
                     print "defaulting to Knuth's rule "
                     ##otherwise 
                     numbin,bm=getbinsize(data.shape[0],data)        
-                    distrib=np.histogram(data, numbin, density=True)
+                    distrib=np.histogram(data, bins = int(numbin), density=True)
             else:
                 numbin,bm=getbinsize(data.shape[0],data)        
                 distrib=np.histogram(data, numbin, density=True)            
