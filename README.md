@@ -3,7 +3,7 @@
 MC Metallicity
 ====================
 
-This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our paper: the paper was accepted for publication on Astronomy and Computing (and a prepreint is available at http://arxiv.org/abs/1505.06213)!</b>
+This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our paper: the paper was accepted for publication on [Astronomy and Computing] (http://www.journals.elsevier.com/astronomy-and-computing/) (and a prepreint is available at http://arxiv.org/abs/1505.06213)!</b>
 This code is released under MIT licence: see LICENSE.txt
 
 <b>Most recent stable release: v1.3</b>
