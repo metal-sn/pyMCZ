@@ -83,7 +83,7 @@ pl.show()
 '''
        
 class diagnostics:
-    def __init__(self,num, logf,nps):
+    def __init__(self, num, logf,nps):
         self.nm=num
         self.Ha=None
         self.Hb=None
@@ -101,7 +101,7 @@ class diagnostics:
         self.hasS26731=False
         self.hasS39532=False
         self.hasS39069=False
-
+        self.hasS2Hb=False
 
         self.N2O2_roots=None
         #other lines calculated and repeatedly used
@@ -109,6 +109,7 @@ class diagnostics:
         self.R2=None
         self.R3=None
         self.R23=None
+        self.S2Hb=None
         self.N2=None
         self.N2S2=None
         self.O23727=None
@@ -292,9 +293,10 @@ class diagnostics:
             printsafemulti( "WARNING: needs O lines and  and Ha/b: did you run setHab()?",self.logf,self.nps)
         if self.hasHb :
             if self.hasO2:
-                self.logO2Hb=np.log10(self.O23727/self.Hb)+self.dustcorrect(k_O2,k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
+                self.logO2Hb=np.log10(self.O23727/self.Hb) + self.dustcorrect(k_O2, k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
             if self.hasO3:
-                self.logO3Hb=np.log10(self.O35007/self.Hb)+self.dustcorrect(k_O35007,k_Hb)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
+                self.O3Hb=(self.O35007/self.Hb) + self.dustcorrect(k_O35007, k_Hb, flux = True)#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
+                self.logO3Hb=np.log10(self.O3Hb)
                 self.hasO3Hb=True
 
 
@@ -343,7 +345,6 @@ class diagnostics:
             self.S39532=S39532
             self.hasS39532=True
         if self.hasS2 :
-            
             if self.hasN2 and self.NII_SII is None and self.hasS26731:
                 self.NII_SII=np.log10(self.N26584/(self.S26717+self.S26731))#+self.dustcorrect(k_N2,k_O2,flux=True) 
                 #lines are very close: no dust correction            
@@ -396,8 +397,8 @@ class diagnostics:
 
         #R23 NEW Comb, [NII]/Ha: KK04 = Kobulnicky & Kewley, 2004, submitted'
         if  self.hasO3   and self.hasO2 and self.hasHb:
-            self.R2=(self.O23727/self.Hb)*self.dustcorrect(k_O2,k_Hb, flux=True) 
-            self.R3=(self.O34959p5007/self.Hb)*self.dustcorrect(k_O3,k_Hb, flux=True) 
+            self.R2=(self.O23727/self.Hb)*self.dustcorrect(k_O2, k_Hb, flux=True) 
+            self.R3=(self.O34959p5007/self.Hb)*self.dustcorrect(k_O3, k_Hb, flux=True) 
             self.R23=self.R2+self.R3
             self.logR23=np.log10(self.R23)
             self.mds['logR23']=self.logR23
@@ -452,6 +453,8 @@ class diagnostics:
             # at logN2O2<-1.2 using low-Z gals, A1 KE08
             self.Z_init_guess[(self.logN2O2 >=-1.2)&(N2O2 != 0.0)]=8.7  
             # at logN2O2>-1.2  using HII regions
+
+
 
 #######################these are the metallicity diagnostics##################
     #@profile
@@ -547,12 +550,12 @@ class diagnostics:
             if self.hasO3Hb :
                 self.mds['PP04_O3N2']=8.73 - 0.32*(self.logO3Hb-self.logN2Ha)
                 index=(self.logO3Hb>2)
-                self.mds['PP04_O3N2'][index]='NaN'
+                self.mds['PP04_O3N2'][index]=float('NaN')
             else:
                 printsafemulti(  "WARNING: need O3Hb for PP04_O3N2",self.logf,self.nps)
         else:
             printsafemulti(  "WARNING: need N2Ha to do this. did you run setHab and setNII",self.logf,self.nps)
-
+            
 
     #@profile
     def calcZ94(self):
@@ -651,7 +654,9 @@ class diagnostics:
             P10logN2=np.log((self.N26584*1.33)/self.Hb)+self.dustcorrect(k_N2,k_Hb)
 
         if self.hasS2 and self.hasS26731:
-            P10logS2=np.log((self.S26717+self.S26731)/self.Hb)+self.dustcorrect(k_S2,k_Hb)
+            self.S2Hb=((self.S26717+self.S26731)/self.Hb)+self.dustcorrect(k_S2, k_Hb, flux=True)
+            self.hasS2Hb = True
+            P10logS2=np.log10(self.S2Hb)
 
         P10logN2S2=P10logN2-P10logS2
         P10logN2R2=P10logN2-P10logR2
@@ -788,7 +793,7 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
     #@profile
     def calcM13(self):
         #Marino+ 2013
-        printsafemulti(  "calculating M13",self.logf,self.nps)
+        printsafemulti(  "calculating M13", self.logf, self.nps)
 
         if not self.hasHa  or not self.hasN2:
             printsafemulti(  "WARNING: need O3, N2, Ha and Hb, or at least N2 and Ha",self.logf,self.nps)
@@ -802,7 +807,8 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
                 e2=np.random.normal(0,0.012,self.nm)
                 O3N2=self.logO3Hb-self.logN2Ha
                 self.mds["M13_O3N2"] = 8.533+e1 - (0.214+e1)*O3N2
-
+                index=(self.logO3Hb>1.7)
+                self.mds["M13_O3N2"][index]==float('NaN')
 
     #@profile
     def calcM08(self, allM08=False):
@@ -1034,7 +1040,7 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
         # KD02comb  Kewley, L. J., & Dopita, M. A., 2002, ApJ
         # updated in KE08
         # ### KD02 [NII]/[OII] estimate ###
-        # (can be used for for log(O/H)+12 > 8.6 only)
+        # (can be used for log(O/H)+12 > 8.6 only)
 
         printsafemulti(  "calculating KD_combined",self.logf,self.nps)
 
@@ -1111,5 +1117,119 @@ did you set them up with  setOlines() and ?''',self.logf,self.nps)
 
 
 
+#######################these are the metallicity diagnostics##################
+    #@profile
+    def calcD13(self, plot=False):
+        printsafemulti("calculating  Dopita et al. 2014", self.logf, self.nps)
+
+        self.NII_SII=None
+        self.OIII_SII =None
+        if self.NII_SII is not None  and allD13:
+            if self.OIII_SII  is not None:
+                self.mds['D13_N2S2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
+                                        np.atleast_1d([self.OIII_SII]),'NII/SII','OIII/SII',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
+            if  self.OIII_Hb  is not None:
+                self.mds['D13_N2S2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
+                                        np.atleast_1d([self.OIII_Hb]),'NII/SII','OIII/Hb', \
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
+            if  self.OIII_OII  is not None:
+                self.mds['D13_N2S2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
+                                        np.atleast_1d([self.OIII_OII]),'NII/SII','OIII/OII',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
+
+        if self.NII_OII is not None  and allD13:
+            if self.OIII_SII  is not None:
+                self.mds['D13_N2O2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
+                                        np.atleast_1d([self.OIII_SII]),'NII/OII','OIII/SII',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
+            if  self.OIII_Hb  is not None:
+                self.mds['D13_N2O2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
+                                        np.atleast_1d([self.OIII_Hb]),'NII/OII','OIII/Hb', \
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
+            if  self.OIII_OII  is not None:
+                self.mds['D13_N2O2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
+                                        np.atleast_1d([self.OIII_OII]),'NII/OII','OIII/OII',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
+
+        if self.logN2Ha is not None :
+            if  self.OIII_Hb  is not None:
+                self.mds['D13_N2Ha_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),\
+                                        np.atleast_1d([self.OIII_Hb]),'NII/Ha','OIII/Hb',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
+            if  self.OIII_OII  is not None:
+                self.mds['D13_N2Ha_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),\
+                                        np.atleast_1d([self.OIII_OII]),'NII/Ha','OIII/OII',\
+                                        method='default', plot=plot, n_plot = False, savefig=False )[0].T
 
 
+
+    #@profile
+    def calcPM14(self):
+        # Perez-Montero 2014
+        # (can be used for for log(O/H)+12 > 8.6 only)
+        import os
+        from subprocess import Popen, PIPE, STDOUT
+        from StringIO import StringIO
+
+        printsafemulti(  "calculating HIICHI",self.logf,self.nps)
+        fin_hii_chi = open(os.getenv('HIICHI_DIR')+'/in.tmp','w')
+
+        if not self.hasHb:
+            printsafemulti( "cannot calculate HIICHI without Hbeta", self.logf, self.nps)
+            return -1
+
+        ratios = np.zeros((5,self.nm))
+
+        if self.R2 is not None: 
+            ratios[0] = self.R2 
+        elif self.hasO2: 
+            ratios[0] = ((self.O23727/self.Hb)*self.dustcorrect(k_O2, k_Hb, flux = True) )
+        else: 
+            ratios[0] = np.array(['0 ']*self.nm)
+
+        #we will never have 4363...
+        ratios[1] = np.zeros(self.nm)
+
+        if self.hasO3Hb:
+            ratios[2]  = self.O3Hb
+        elif self.hasO3:
+            ratios[2] = ((self.O35007/self.Hb) + self.dustcorrect(k_O35007, k_Hb, flux = True))#0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
+        else: ratios[2] = np.zeros(self.nm)
+
+        if self.hasN2:
+            ratios[3] = self.N26584/self.Hb
+        else:
+            ratios[3] = np.zeros(self.nm)
+
+        if self.hasS2Hb:
+            ratios[4] = self.S2Hb
+        elif self.hasS2 and self.hasS26731:
+            ratios[4] = (((self.S26717+self.S26731)/self.Hb) + self.dustcorrect(k_S2, k_Hb, flux = True))
+        else: ratios[4] = np.zeros(self.nm)
+
+        
+        for ni in range(self.nm):
+            fin_hii_chi.write('%f %f %f %f %f\n'%(ratios[0][ni], ratios[1][ni], ratios[2][ni], ratios[3][ni], ratios[4][ni]))
+        fin_hii_chi.close()
+        os.system("ln -s %s/C13*dat . "%os.getenv('HIICHI_DIR'))
+        print "\n\n\n\n\n"
+        #os.system("python %s/HII-CHI-mistry_v01.2.py in.tmp"%os.getenv('HIICHI_DIR'))     
+        #os.system("python %s/HII-CHI-mistry_v01.2.py %s/in.tmp"%(os.getenv('HIICHI_DIR'),os.getenv('HIICHI_DIR')))
+        p = Popen(['python', '%s/HII-CHI-mistry_v01.2.py'%os.getenv('HIICHI_DIR'), '%s/in.tmp'%os.getenv('HIICHI_DIR')], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        out, err = p.communicate(input='%s/in.tmp'%os.getenv('HIICHI_DIR'))
+        print "\n\n\n\n\n"
+        out = StringIO(out)
+ #       for l in enumerate(out):
+ #           if l[0].isdigit():
+ #               break
+        out = out.readlines()[12:]
+        self.mds['PM14']=np.zeros((self.nm))
+        self.mds['PM14err']=np.zeros((self.nm))        
+        for i,l in enumerate(out):
+            self.mds['PM14'][i], self.mds['PM14err'][i] = map(float, l.split()[3:5])
+        #data =  np.loadtxt(out,  skiprows=12, usecols=(3,4))#, dtype=[('lOH','f'),('elOH','f')], delimiter=",", unpack = True)
+        print self.mds
+        os.system('rm -r C13*dat')
+        
+        

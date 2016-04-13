@@ -151,16 +151,30 @@ def ingest_data(filename,path):
         pass
     return (filename, meas, err, nm, path, (bsmeas,bserr))
 
-def input_data(filename,path):
-    p = os.path.join(path,"input") 
+def input_data(filename, path):
+    p = os.path.join(path, "input") 
     assert os.path.isdir(p), "bad data directory %s"%p
-    if os.path.isfile(os.path.join(p,filename+'_err.txt')):
-        if os.path.isfile(os.path.join(p,filename+'_meas.txt')):
-            return ingest_data(filename,path=p)            
-    print "Unable to find _meas and _err files ",filename+'_meas.txt',filename+'_err.txt',"in directory ",p
+    if os.path.isfile(os.path.join(p, filename+'_err.txt')):
+        if os.path.isfile(os.path.join(p, filename+'_meas.txt')):
+            return ingest_data(filename, path=p)            
+    print "Unable to find _meas and _err files ", filename+'_meas.txt', filename+'_err.txt',"in directory ",p
     return -1
 
-
+##############################################################################
+##returns a random distribution. In the deployed version of the code this is a gaussian distribution, but the user can include her or his distribution.
+##return a random sample of size n
+##############################################################################
+def errordistrib(distrargs, n, distype='normal'):
+    if distype=='normal':
+        try: 
+            mu, sigma = distrargs
+        except: 
+            print "for normal distribution distargs must be a 2 element tuple"
+            return -1
+        return np.random.normal(mu,sigma,n) 
+    else:
+        print "distribution not supported"
+        return -1
 
 ##############################################################################
 ##returns appropriate bin size for the number of data
@@ -169,7 +183,7 @@ def input_data(filename,path):
 ##mode 's' calculates this based on sqrt of number of data
 ##mode 't' calculates this based on 2*n**1/3 (default)
 ##############################################################################
-def getbinsize(n,data,):
+def getbinsize(n, data,):
     if BINMODE=='d':
         g1=np.abs(stats.mstats.moment(data,moment=3))#/data.std())
         s1=np.sqrt(float(n)/6.0)
@@ -187,7 +201,7 @@ def getbinsize(n,data,):
 ##############################################################################
 ##Check if hist files already exist and need to be replaced
 ##############################################################################
-def checkhist(snname,Zs,nsample,i,path):
+def checkhist(snname, Zs, nsample, i, path):
     global CLOBBER
     
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
@@ -202,9 +216,10 @@ def checkhist(snname,Zs,nsample,i,path):
 ##Save the result as histogram as name
 ##############################################################################
 #@profile
-def savehist(data,snname,Zs,nsample,i,path,nmeas,measnames, verbose=False, fs=24):
+def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False, fs=24, reserr=None):
     global BINMODE
     #global NOPLOT
+    print "here"
 
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
@@ -218,7 +233,6 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,measnames, verbose=False, fs=24
 
     n=data.shape[0]
     kde=None
-
     if not n>0:
         if verbose:print "data must be an actual distribution (n>0 elements!, %s)"%Zs
         return "-1,-1,_1",[], kde
@@ -239,10 +253,13 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,measnames, verbose=False, fs=24
             maxright=median+1
         if round(right,6)==round(left,6) and round(left,6)==round(median,6):
             print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(snname,Zs,median,0,0 )
-  
+            if reserr:
+                print '+/- {0:.3f}'.format(reserr)
             return "%f\t %f\t %f"%(round(median,3), round(median-left,3), round(right-median,3)), data,kde#"-1,-1,-1",[]
         ###print out the confidence interval###
         print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f}'.format(snname, Zs, round(median,3), round(median-left,3), round(right-median,3))
+        if reserr:
+            print '+/- {0:.3f}'.format(reserr)
         alpha=1.0
 
         ######histogram######
@@ -358,7 +375,7 @@ def savehist(data,snname,Zs,nsample,i,path,nmeas,measnames, verbose=False, fs=24
         return "-1, -1,-1",[],None
 
 
-def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, logf))):
+def calc((i, (sample, flux, err, nm, bss, mds, disp, dust_corr, verbose, res, scales, nps, logf))):
     logf=sys.stdout
     print >>logf,"\n\nreading in measurements ",i+1
     fluxi={}#np.zeros((len(bss[0]),nm),float)
@@ -372,9 +389,10 @@ def calc((i,(sample,flux,err,nm,bss,mds,disp, dust_corr,verbose,res,scales,nps, 
         print >>logf, "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
         
     for key in scales[i].mds.iterkeys():
-        res[key][i]=scales[i].mds[key]
-        if res[key][i] is None:
-            res[key][i]=[float('NaN')]*len(sample)
+        if key in res.keys():
+            res[key][i] = scales[i].mds[key]
+            if res[key][i] is None:
+                res[key][i] = [float('NaN')]*len(sample)
     return res
 
 ##############################################################################
@@ -405,6 +423,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
 
     ###retrieve the metallicity keys
     Zs= metallicity.get_keys()
+    Zserr= metallicity.get_errkeys()
 
     ###make necessary paths for output files
     if not os.path.exists(os.path.join(p,'output','%s'%name)):
@@ -431,10 +450,12 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         ###Sample 'nsample' points from a gaussian centered on 0 with std 1
         mu=0
         sigma=1
+        dargs=(mu,sigma)
         if nsample==1 : sample=[np.array([mu]) for i in range(NM0,nm)]
-
-        else: sample=[np.random.normal(mu,sigma,newnsample) for i in range(NM0,nm)]
-        
+        else: 
+            sample=[errordistrib(dargs,newnsample) for i in range(NM0,nm)]
+            if sample == -1:
+                return -1
         ###Start calculation###
         ## the flux to be feed to the calculation will be
         ## flux + error*i
@@ -443,9 +464,11 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         
         #initialize the dictionary
         res={}
+        reserr={}
         for key in Zs:
-            res[key]=[[] for i in range(NM0,nm)]
-            
+            res[key] = [[] for i in range(NM0,nm)]
+        for key in Zserr:
+            reserr[key] = [[] for i in range(NM0,nm)]
         #use only valid inputs
         delkeys=[]
         for k in bss[0].iterkeys():
@@ -474,7 +497,13 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
             pool.close() # not optimal! but easy
             pool.join()
             for key in scales[i].mds.iterkeys():
-                res[key]=np.array(res[key]).T
+                if key in Zs:
+                    res[key] = np.array(res[key]).T
+                elif key in reserr.keys():
+                    reserr[key] = np.array(reserr[key]).T
+            if res[key][i] is None:
+                res[key][i] = [float('NaN')]*len(sample)
+
             if VERBOSE: print "Iteration Complete"
         else: 
             #looping over nm spectra
@@ -497,6 +526,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
 
                 
                 for key in scales.mds.iterkeys():
+                    if not key in Zs: continue
                     res[key][i]=scales.mds[key]
                     if res[key][i] is None:
                         res[key][i]=[float('NaN')]*newnsample
@@ -504,7 +534,8 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                         res[key][i]=res[key][i]+[float('NaN')]*(newnsample-len(res[key][i]))
                 
             for key in scales.mds.iterkeys():
-                res[key]=np.array(res[key]).T
+                if key in Zs:
+                    res[key]=np.array(res[key]).T
             if VERBOSE: print "Iteration Complete"
     
         #"WE CAN PICKLE THIS!"
@@ -537,14 +568,18 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                         print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(name+ ' %d'%(i+1),key,res[key][i][0],0,0 )
                 except IndexError: pass
             else:
+                reserr = None
                 try:
                     if sum(~np.isnan(res[key][:,i]))>0:
                         if ASCIIDISTRIB:
                             with open(os.path.join(binp,'%s_n%d_%s_%d.csv'%(name,nsample,key,i+1)), "wb") as fidist:
                                 writer = csv.writer(fidist)
                                 writer.writerow(res[key][:,i])
-                        print 
-                        sh,data,kde=savehist(res[key][:,i],name,key,nsample,i,binp,nm,flux[:]['galnum'],verbose=verbose, fs=fs)
+                        if 'PM14' in key:
+                            print reserr['PM14err']
+                            reserr = np.sqrt(~np.nansum(reserr['PM14err'][:,i]**2))
+                            print "herehere", reserr
+                        sh,data,kde=savehist(res[key][:,i],name,key,nsample,i,binp,nm,flux[:]['galnum'],verbose=verbose, fs=fs, reserr=reserr)
                         s=key+"\t "+sh+'\n'
                         if ASCIIOUTPUT:
                             fi.write(s)
@@ -645,7 +680,7 @@ def main():
     assert(os.path.isdir(path)),"pass a path or set up the environmental variable MCMetdata pointing to the path where the _min _max _med files live"
     if args.nsample==1:
         print "CALCULATING METALLICITY WITHOUT GENERATING MC DISTRIBUTIONS"
-    if args.nsample==1 or args.nsample>=100 :
+    if args.nsample==1 or args.nsample>=10 :
         fi=input_data(args.name, path=path)
         if fi!=-1:
             logf=smart_open(args.log)

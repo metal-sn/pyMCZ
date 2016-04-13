@@ -46,12 +46,19 @@ Zs=["E(B-V)", #Halpha, Hbeta
     "KD02_N2S2",
     "KK04_N2Ha",   #Halpha, Hbeta,  [OII]3727, [NII]6584
     "KK04_R23", #Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
-    "KD02comb"]#,"KK04comb"]
+    "KD02comb",
+    "PM14"]#,"KK04comb"]
+#'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
+
+Zserr=['PM14err']#,"KK04comb"]
 #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
 
 
 def get_keys():
     return Zs
+
+def get_errkeys():
+    return Zserr
  
 def printsafemulti(string,logf, nps):
     #this is needed because dealing with a log output with multiprocessing 
@@ -116,8 +123,8 @@ def calculation(mscales,measured,num,mds,nps,logf,dust_corr=True,disp=False, ver
             raw_lines[k]=np.array([0.]*num)
 
     mscales.setOlines(raw_lines['[OII]3727'], raw_lines['[OIII]5007'], raw_lines['[OI]6300'], raw_lines['[OIII]4959'])
-    mscales.setNII(raw_lines['[NII]6584'])
     mscales.setSII(raw_lines['[SII]6717'],raw_lines['[SII]6731'],raw_lines['[SIII]9069'],raw_lines['[SIII]9532'])
+    mscales.setNII(raw_lines['[NII]6584'])
 
     if mscales.checkminimumreq(dust_corr,IGNOREDUST) == -1:
         return -1
@@ -204,6 +211,12 @@ def calculation(mscales,measured,num,mds,nps,logf,dust_corr=True,disp=False, ver
             printsafemulti( '''set path to pyqz as environmental variable 
 PYQZ_DIR if you want this scale. ''',logf,nps)
 
+    if 'PM14' in mds:
+        if   os.getenv("HIICHI_DIR"):
+            cmd_folder = os.getenv("HIICHI_DIR")+'/'
+            if cmd_folder not in sys.path:
+                sys.path.insert(0, cmd_folder)
+            mscales.calcPM14()
     if 'PP04' in mds:
         mscales.calcPP04()
     if 'Z94' in mds:
