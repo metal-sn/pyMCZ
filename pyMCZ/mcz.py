@@ -219,7 +219,6 @@ def checkhist(snname, Zs, nsample, i, path):
 def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False, fs=24, reserr=None):
     global BINMODE
     #global NOPLOT
-    print "here"
 
     name='%s_n%d_%s_%d'%((snname,nsample,Zs,i+1))
     outdir=os.path.join(path,'hist')
@@ -309,7 +308,7 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
                     distrib=np.histogram(data, bins = int(numbin), density=True)
             else:
                 numbin,bm=getbinsize(data.shape[0],data)        
-                distrib=np.histogram(data, numbin, density=True)            
+                distrib=np.histogram(data, bins = int(numbin), density=True)            
 
             ###make hist###
             counts, bins=distrib[0],distrib[1]
@@ -579,7 +578,6 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                         if 'PM14' in key:
                             print reserr['PM14err']
                             reserr = np.sqrt(~np.nansum(reserr['PM14err'][:,i]**2))
-                            print "herehere", reserr
                         sh,data,kde=savehist(res[key][:,i],name,key,nsample,i,binp,nm,flux[:]['galnum'],verbose=verbose, fs=fs, reserr=reserr)
                         s=key+"\t "+sh+'\n'
                         if ASCIIOUTPUT:
