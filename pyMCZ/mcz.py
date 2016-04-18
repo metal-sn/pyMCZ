@@ -17,6 +17,22 @@ import metallicity as metallicity
 
 import itertools
 import multiprocessing as mpc
+
+
+###versin 1.3 February 2016
+#fixed compatyibiity issue with numphy >1.9 in the val to np.histogram https://github.com/numpy/numpy/issues/6469
+
+###version 1.3.1 April 2016
+#works with version 0.7 of pyqz (current version)
+#previous versions only worked with version 0.5.
+#a check for the version of pyqz is implememted and a different call is issued for version >0.5 and <=0.5
+
+
+
+# Define the version of                                                                                                                                                      
+__version__ = '1.3.1'
+
+
 NM0=0# setting this to say N>0 starts the calculation at measurement N. 
 #this is only for exploratory purposes as the code bugs out before 
 #plotting and printing the results

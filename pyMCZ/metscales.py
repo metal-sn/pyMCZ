@@ -460,47 +460,121 @@ class diagnostics:
     #@profile
     def calcpyqz(self, plot=False, allD13=False):
         printsafemulti(  "calculating D13",self.logf,self.nps)
-                
+              
         import pyqz
-        self.NII_SII=None
-        self.OIII_SII =None
+        
+        #check version of pyqz
+        from distutils.version import StrictVersion
+        oldpyqz = False
+        if StrictVersion(pyqz.__version__)<= StrictVersion('0.5.0'):
+            oldpyqz = True
+
         if self.NII_SII is not None  and allD13:
             if self.OIII_SII  is not None:
-                self.mds['D13_N2S2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
+
+                if oldpyqz:
+                    self.mds['D13_N2S2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
                                         np.atleast_1d([self.OIII_SII]),'NII/SII','OIII/SII',\
                                         method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                else:
+                    #pyqz.get_grid_fn(Pk=5.0,calibs='GCZO', kappa =20, struct='pp')
+                    self.mds['D13_N2S2_O3S2']=pyqz.interp_qz('Tot[O]+12',[np.atleast_1d([self.NII_SII]),\
+                                                                          np.atleast_1d([self.OIII_SII])],\
+                                                             '[NII]/[SII]+;[OIII]/[SII]+',\
+                                                             show_plot = plot, n_plot = False,\
+                                                             save_plot = False, verbose = False)[0].T
+                    
             if  self.OIII_Hb  is not None:
-                self.mds['D13_N2S2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
+                if oldpyqz:
+                    self.mds['D13_N2S2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
                                         np.atleast_1d([self.OIII_Hb]),'NII/SII','OIII/Hb', \
                                         method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                else:
+                    self.mds['D13_N2S2_O3SHb']=pyqz.interp_qz('Tot[O]+12',[np.atleast_1d([self.NII_SII]),\
+                                                                          np.atleast_1d([self.OIII_Hb])],\
+                                                             '[NII]/[SII]+;[OIII]/Hb',\
+                                                             show_plot = plot, n_plot = False,\
+                                                             save_plot = False, verbose = False)[0].T
+                    
+
+
             if  self.OIII_OII  is not None:
-                self.mds['D13_N2S2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
+                if oldpyqz:
+                    self.mds['D13_N2S2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_SII]),\
                                         np.atleast_1d([self.OIII_OII]),'NII/SII','OIII/OII',\
                                         method='default', plot=plot, n_plot = False, savefig=False )[0].T
-
+                else:
+                    self.mds['D13_N2S2_O3O2']=pyqz.interp_qz('Tot[O]+12',[np.atleast_1d([self.NII_SII]),\
+                                                                          np.atleast_1d([self.OIII_OII])],\
+                                                             '[NII]/[SII]+;[OIII]/[OII]+',\
+                                                             show_plot = plot, n_plot = False,\
+                                                             save_plot = False, verbose = False)[0].T
+                    
+                    
         if self.NII_OII is not None  and allD13:
             if self.OIII_SII  is not None:
-                self.mds['D13_N2O2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
+                if oldpyqz:
+                    self.mds['D13_N2O2_O3S2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
                                         np.atleast_1d([self.OIII_SII]),'NII/OII','OIII/SII',\
                                         method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                else:
+                    self.mds['D13_N2O2_O3S2']=pyqz.interp_qz('Tot[O]+12',[np.atleast_1d([self.NII_OII]),\
+                                                                          np.atleast_1d([self.OIII_SII])],\
+                                                             '[NII]/[OII]+;[OIII]/[SII]+',\
+                                                             show_plot = plot, n_plot = False,\
+                                                             save_plot = False, verbose = False)[0].T
+                    
+
             if  self.OIII_Hb  is not None:
-                self.mds['D13_N2O2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
+                if oldpyqz:
+                    self.mds['D13_N2O2_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
                                         np.atleast_1d([self.OIII_Hb]),'NII/OII','OIII/Hb', \
                                         method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                else:
+                    self.mds['D13_N2O2_O3Hb']=pyqz.interp_qz('Tot[O]+12',[np.atleast_1d([self.NII_OII]),\
+                                                                          np.atleast_1d([self.OIII_Hb])],\
+                                                             '[NII]/[OII]+;[OIII]/Hb',\
+                                                             show_plot = plot, n_plot = False,\
+                                                             save_plot = False, verbose = False)[0].T
+                    
             if  self.OIII_OII  is not None:
-                self.mds['D13_N2O2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
+                if oldpyqz:
+                    self.mds['D13_N2O2_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.NII_OII]),\
                                         np.atleast_1d([self.OIII_OII]),'NII/OII','OIII/OII',\
                                         method='default', plot=plot, n_plot = False, savefig=False )[0].T
-
+                else:
+                    self.mds['D13_N2O2_O3O2']=pyqz.interp_qz('Tot[O]+12',[np.atleast_1d([self.NII_OII]),\
+                                                                          np.atleast_1d([self.OIII_OII])],\
+                                                             '[NII]/[OII]+;[OIII]/[OII]+',\
+                                                             show_plot = plot, n_plot = False,\
+                                                             save_plot = False, verbose = False)[0].T
+                    
         if self.logN2Ha is not None :
             if  self.OIII_Hb  is not None:
-                self.mds['D13_N2Ha_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),\
+                if oldpyqz:
+                    self.mds['D13_N2Ha_O3Hb']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),\
                                         np.atleast_1d([self.OIII_Hb]),'NII/Ha','OIII/Hb',\
                                         method='default', plot=plot, n_plot = False, savefig=False )[0].T
+                else:
+                    self.mds['D13_N2Ha_O3Hb']=pyqz.interp_qz('Tot[O]+12',[np.atleast_1d([self.logN2Ha]),\
+                                                                          np.atleast_1d([self.OIII_Hb])],\
+                                                             '[NII]/Ha;[OIII]/Hb',\
+                                                             show_plot = plot, n_plot = False,\
+                                                             save_plot = False, verbose = False)[0].T
+                    
             if  self.OIII_OII  is not None:
-                self.mds['D13_N2Ha_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),\
+                if oldpyqz:
+                    self.mds['D13_N2Ha_O3O2']=pyqz.get_qz(20,'z',np.atleast_1d([self.logN2Ha]),\
                                         np.atleast_1d([self.OIII_OII]),'NII/Ha','OIII/OII',\
                                         method='default', plot=plot, n_plot = False, savefig=False )[0].T
+
+                else:
+                    self.mds['D13_N2Ha_O3O2']=pyqz.interp_qz('Tot[O]+12',[np.atleast_1d([self.logN2Ha]),\
+                                                                          np.atleast_1d([self.OIII_Hb])],\
+                                                             '[NII]/Ha;[OIII]/[OII]+',\
+                                                             show_plot = plot, n_plot = False,\
+                                                             save_plot = False, verbose = False)[0].T
+            
 
 
     #@profile
