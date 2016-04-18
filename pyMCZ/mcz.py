@@ -7,7 +7,7 @@ from scipy.special import gammaln
 from scipy import optimize
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
-
+import csv
 
 #modules of this package
 import pylabsetup
@@ -674,12 +674,6 @@ def main():
     NOPLOT=args.noplot
     ASCIIOUTPUT=args.asciiout
     ASCIIDISTRIB=args.asciidistrib
-
-    if ASCIIDISTRIB:
-        try: import csv
-        except ImportError: 
-            raw_input("you must import the csv package to output the distribution. press return to continue")
-            ASCIIDISTRIB=False
 
     if args.unpickle and NOPICKLE:
         args.unpickle = False
