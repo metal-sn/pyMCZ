@@ -19,7 +19,7 @@ import numpy as np
 
 IGNOREDUST=False
 MP=True
-FIXNEGATIVES = True
+FIXNEGATIVES = True #set to true if no negative flux measurements should be allowed. all negative flux measurements are set to 0
 
 ##list of metallicity methods, in order calculated
 Zs=["E(B-V)", #Halpha, Hbeta
@@ -86,7 +86,7 @@ def calculation(mscales,measured,num,mds,nps,logf,dust_corr=True,disp=False, ver
         #kills all non-finite terms 
         measured[k][~(np.isfinite(measured[k][:]))] = 0.0
         if FIXNEGATIVES:
-        measured[k][measured[k]<0] = 0.0 
+            measured[k][measured[k]<0] = 0.0 
         raw_lines[k]=measured[k]
 
     ######we trust QM better than we trust the measurement of the [OIII]4959 
