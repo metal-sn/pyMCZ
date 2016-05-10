@@ -3,7 +3,7 @@
 MC Metallicity
 ====================
 
-This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our [paper] ((http://www.sciencedirect.com/science?_ob=GatewayURL&_origin=AUTHORALERT&_method=citationSearch&_piikey=S2213133716300178&_version=1&md5=be980838aaefc279114dd4cd717f238b) which is published in [Astronomy and Computing](http://www.journals.elsevier.com/astronomy-and-computing/) , and also availabke on the [arxiv](http://arxiv.org/abs/1505.06213).</b>
+This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our [paper] (http://www.sciencedirect.com/science?_ob=GatewayURL&_origin=AUTHORALERT&_method=citationSearch&_piikey=S2213133716300178&_version=1&md5=be980838aaefc279114dd4cd717f238b) which is published in [Astronomy and Computing](http://www.journals.elsevier.com/astronomy-and-computing/) , and also availabke on the [arxiv](http://arxiv.org/abs/1505.06213).</b>
 This code is released under MIT licence: see LICENSE.txt
 
 <b>Most recent stable release: v1.3</b>
@@ -96,7 +96,7 @@ Output
 ====================
 All the results will be saved in the directory "output/\<filename\>" which will be creates in the directory provided by the --path arg.
 
-Read our paper, or the README.md file in the output directory in this package https://github.com/nyusngroup/pyMCZ/blob/master/output/README.md for more details on the output products.
+Read our [paper](http://www.sciencedirect.com/science/article/pii/S2213133716300178), or the README.md file in the output directory in this package https://github.com/nyusngroup/pyMCZ/blob/master/output/README.md for more details on the output products.
 
 
 ====================
