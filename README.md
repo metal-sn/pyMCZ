@@ -3,7 +3,7 @@
 MC Metallicity
 ====================
 
-This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our paper: the paper was accepted for publication on [Astronomy and Computing] (http://www.sciencedirect.com/science?_ob=GatewayURL&_origin=AUTHORALERT&_method=citationSearch&_piikey=S2213133716300178&_version=1&md5=be980838aaefc279114dd4cd717f238b, and http://arxiv.org/abs/1505.06213).</b>
+This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our [paper] ((http://www.sciencedirect.com/science?_ob=GatewayURL&_origin=AUTHORALERT&_method=citationSearch&_piikey=S2213133716300178&_version=1&md5=be980838aaefc279114dd4cd717f238b) which is published in [Astronomy and Computing](http://www.journals.elsevier.com/astronomy-and-computing/) , and also availabke on the [arxiv](http://arxiv.org/abs/1505.06213).</b>
 This code is released under MIT licence: see LICENSE.txt
 
 <b>Most recent stable release: v1.3</b>
@@ -143,6 +143,8 @@ Plot formatting is designed for a platform using latex and with Times New Roman 
 
 
 Note that while a PDF version of our paper is included in the repository, the PDF does not render properly in github. To see the paper please go to the arxiv link (http://arxiv.org/abs/1505.06213) or compile it with pdflatex in the repo "paper" directory on your local machine.
+
+The input file is a but awkward, for historical reasons: we decided to make minimal modification tot he input files required by the original IDL code. An alternative, more pythonic input, may be made available in the future, when we have time.
 
 ====================
 Packages required
