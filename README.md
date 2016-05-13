@@ -146,6 +146,8 @@ Note that while a PDF version of our paper is included in the repository, the PD
 
 The input file is a but awkward, for historical reasons: we decided to make minimal modification tot he input files required by the original IDL code. An alternative, more pythonic input, may be made available in the future, when we have time.
 
+It would be great to create sphyinx documentation.
+
 ====================
 Packages required
 ====================
