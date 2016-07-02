@@ -486,9 +486,14 @@ class diagnostics:
             #@profile
     def calcpyqz(self, plot=False, allD13=False):
         printsafemulti("calculating D13", self.logf, self.nps)
-
-        import pyqz as pyqz
-
+        # initializing variable pyqz to avoid style issues
+        # (pyqz not defined is reported as error by Landscape.io w/ import in func
+        pyqz = None 
+        try:
+            import pyqz
+        except ImportError:
+            return -1
+        
         #check version of pyqz
         from distutils.version import StrictVersion
         oldpyqz = False
