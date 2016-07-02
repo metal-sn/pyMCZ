@@ -3,7 +3,28 @@
 MC Metallicity
 ====================
 
-This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our [paper] (http://www.sciencedirect.com/science/article/pii/S2213133716300178) which is published in [Astronomy and Computing](http://www.journals.elsevier.com/astronomy-and-computing/) (you may need to log into ScienceDirect to view it), and also available on the [arxiv](http://arxiv.org/abs/1505.06213).</b>
+This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our [paper] (http://www.sciencedirect.com/science/article/pii/S2213133716300178) which is published in [Astronomy and Computing](http://www.journals.elsevier.com/astronomy-and-computing/) and also available on the [arxiv](http://arxiv.org/abs/1505.06213).</b>
+
+    @ARTICLE{2016A&C....16...54B,
+       author = {{Bianco}, F.~B. and {Modjaz}, M. and {Oh}, S.~M. and {Fierroz}, D. and 
+	    {Liu}, Y.~Q. and {Kewley}, L. and {Graur}, O.},
+        title = "{Monte Carlo method for calculating oxygen abundances and their uncertainties from strong-line flux measurements}",
+      journal = {Astronomy and Computing},
+    archivePrefix = "arXiv",
+      eprint = {1505.06213},
+    primaryClass = "astro-ph.IM",
+    keywords = {Galaxy, Abundances-ISM, HII regions-supernovae, General},
+         year = 2016,
+        month = jul,
+      volume = 16,
+        pages = {54-66},
+          doi = {10.1016/j.ascom.2016.03.002},
+      adsurl = {http://adsabs.harvard.edu/abs/2016A%26C....16...54B},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+    }
+
+
+
 This code is released under MIT licence: see LICENSE.txt
 
 <b>Most recent stable release: v1.3</b>
