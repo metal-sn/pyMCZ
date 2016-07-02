@@ -134,7 +134,7 @@ def calculation(mscales, measured, num, mds, nps, logf, dust_corr=True, disp=Fal
 
     if mscales.checkminimumreq(dust_corr, IGNOREDUST) == -1:
         return -1
-        
+
     mscales.calcNIIOII()
     mscales.calcNIISII()
 
@@ -154,7 +154,6 @@ def calculation(mscales, measured, num, mds, nps, logf, dust_corr=True, disp=Fal
             cmd_folder = os.getenv("PYQZ_DIR") + '/'
             if cmd_folder not in sys.path:
                 sys.path.insert(0, cmd_folder)
-            import pyqz
             mscales.calcpyqz()
         else:
             printsafemulti('''WARNING: CANNOT CALCULATE pyqz: 
@@ -190,7 +189,6 @@ def calculation(mscales, measured, num, mds, nps, logf, dust_corr=True, disp=Fal
             cmd_folder = os.getenv("PYQZ_DIR")
             if cmd_folder not in sys.path:
                 sys.path.insert(0, cmd_folder)
-            import pyqz
             #mscales.calcpyqz()
             #in order to see the original pyqz plots
             #call pyqz with option plot=True by
@@ -206,7 +204,6 @@ def calculation(mscales, measured, num, mds, nps, logf, dust_corr=True, disp=Fal
             cmd_folder = os.getenv("PYQZ_DIR")
             if cmd_folder not in sys.path:
                 sys.path.insert(0, cmd_folder)
-            import pyqz
             #mscales.calcpyqz()
             #in order to see the original pyqz plots
             #call pyqz with option plot=True by
