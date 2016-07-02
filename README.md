@@ -3,13 +3,36 @@
 MC Metallicity
 ====================
 
-This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our paper (http://arxiv.org/abs/1505.06213)!</b>
+This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our [paper] (http://www.sciencedirect.com/science/article/pii/S2213133716300178) which is published in [Astronomy and Computing](http://www.journals.elsevier.com/astronomy-and-computing/) and also available on the [arxiv](http://arxiv.org/abs/1505.06213).</b>
+
+    @ARTICLE{2016A&C....16...54B,
+       author = {{Bianco}, F.~B. and {Modjaz}, M. and {Oh}, S.~M. and {Fierroz}, D. and 
+	    {Liu}, Y.~Q. and {Kewley}, L. and {Graur}, O.},
+        title = "{Monte Carlo method for calculating oxygen abundances and their uncertainties from strong-line flux measurements}",
+      journal = {Astronomy and Computing},
+    archivePrefix = "arXiv",
+      eprint = {1505.06213},
+    primaryClass = "astro-ph.IM",
+    keywords = {Galaxy, Abundances-ISM, HII regions-supernovae, General},
+         year = 2016,
+        month = jul,
+      volume = 16,
+        pages = {54-66},
+          doi = {10.1016/j.ascom.2016.03.002},
+      adsurl = {http://adsabs.harvard.edu/abs/2016A%26C....16...54B},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+    }
+
+
+
 This code is released under MIT licence: see LICENSE.txt
+
+<b>Most recent stable release: v1.3</b>
 
 ====================
 Usage:
 ====================
-This code requires ascii input files, their format is described below and examples are provided in the \<input\> directory in this package. We provide an example dataset names 'exampledata', i.e. we provide input files 'exampledata_meas.txt' and 'exampledata_err.txt' are the input files. 
+This code requires ascii input files, their format is described below and examples are provided in the \<input\> directory in this package.  We provide an example dataset names 'exampledata', i.e. we provide input files 'exampledata_meas.txt' and 'exampledata_err.txt' are the input files. 
 
 From the commandline simply use as:
 ```
@@ -65,7 +88,7 @@ additional command line arguments
 ====================
 Input file format
 ====================
-Flux data for each object should be stored in the directory \<input\> that exists in the directory provided by the --path arg or by the environmental variable MCMetdata. 
+Flux data for each object should be stored in the directory \<input\> that exists in the directory provided by the --path arg or by the environmental variable MCMetdata. Their ascii file names are expected to end by "\_meas.txt" for the file containing the measurements, and "\_err.txt" for the error file.
 
 with common filename \<filename\>:
 
@@ -94,7 +117,7 @@ Output
 ====================
 All the results will be saved in the directory "output/\<filename\>" which will be creates in the directory provided by the --path arg.
 
-Read our paper, or the README.md file in the output directory in this package https://github.com/nyusngroup/pyMCZ/blob/master/output/README.md for more details on the output products.
+Read our [paper](http://www.sciencedirect.com/science/article/pii/S2213133716300178), or the README.md file in the output directory in this package https://github.com/nyusngroup/pyMCZ/blob/master/output/README.md for more details on the output products.
 
 
 ====================
@@ -122,13 +145,13 @@ The figures below show an undersampled realization and a well- (possibly) over-s
 
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n200_testcomplete.png)
+![alt tag](https://github.com/nyusngroup/pyMCZ/blob/master/figures/exampledata_n200_testcomplete.png)
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n2000_testcomplete.png)
+![alt tag](https://github.com/nyusngroup/pyMCZ/blob/master/figures/exampledata_n2000_testcomplete.png)
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/exampledata_n20000_testcomplete.png)
+![alt tag](https://github.com/nyusngroup/pyMCZ/blob/master/figures/exampledata_n20000_testcomplete.png)
 
 
  
@@ -139,6 +162,12 @@ Known Issues and TODO
 
 Plot formatting is designed for a platform using latex and with Times New Roman serif font available to matplotlib. The module pylabsetup loaded early on assures that the matplotlib rcparameters are set up appropriately, including font choice, and in case of missing fonts an error message is streamed (but not paused upon). If your plots don't look good, change the necessary parameters in pylabsetup.py. This is an unfortunately common occurrence when not running on a Mac.
 
+
+Note that while a PDF version of our paper is included in the repository, the PDF does not render properly in github. To see the paper please go to the arxiv link (http://arxiv.org/abs/1505.06213) or compile it with pdflatex in the repo "paper" directory on your local machine.
+
+The input file is a but awkward, for historical reasons: we decided to make minimal modification tot he input files required by the original IDL code. An alternative, more pythonic input, may be made available in the future, when we have time.
+
+It would be great to create sphyinx documentation.
 
 ====================
 Packages required
@@ -151,15 +180,17 @@ desirable packages:
 
 pickle,multiprocessing,itertools,csv,cProfile,pyqz
 
+
 ===================
 Some figures from the paper as examples of code products
 ===================
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_KD02distrib.png)
+![alt tag](https://github.com/nyusngroup/pyMCZ/blob/master/figures/pyMCZ_KD02distrib.png)
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_KD02distrib_KDE.png)
+![alt tag](https://github.com/nyusngroup/pyMCZ/blob/master/figures/pyMCZ_KD02distrib_KDE.png)
 
 
-![alt tag](https://github.com/fedhere/pyMCZ/blob/master/figures/pyMCZ_boxplot.png)
+![alt tag](https://github.com/nyusngroup/pyMCZ/blob/master/figures/pyMCZ_boxplot.png)
+
