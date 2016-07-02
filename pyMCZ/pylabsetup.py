@@ -1,6 +1,5 @@
 import matplotlib as mpl
 import pylab as plt
-from pylab import rc
 
 mpl.rcParams.update(mpl.rcParamsDefault)
 mpl.rcParams['font.size'] = 26.
