@@ -291,6 +291,7 @@ class diagnostics:
     def setOlines(self, O23727, O35007, O16300, O34959):
         self.O23727 = O23727
         self.O35007 = O35007
+        self.O16300 = O16300
 
         if sum(self.O35007 > 0):
             self.hasO3 = True
@@ -436,7 +437,10 @@ class diagnostics:
         #Vilchez & Esteban (1996)
         if  self.hasS2:
             if self.hasS39069 and self.hasHb:
-                self.logS23 = np.log10((self.S26717 / self.Hb) * self.dustcorrect(k_S2, k_Hb, flux=True) + (self.S39069 / self.Hb) * self.dustcorrect(k_S3, k_Hb, flux=True))
+                self.logS23 = np.log10((self.S26717 / self.Hb) *
+                                       self.dustcorrect(k_S2, k_Hb, flux=True) +
+                                       (self.S39069 / self.Hb) *
+                                       self.dustcorrect(k_S3, k_Hb, flux=True))
 
             #self.logS3S2=np.log10(S39069/self.S26717)+self.dustcorrect(k_S3,k_S2)
 
@@ -483,15 +487,21 @@ class diagnostics:
     def calcpyqz(self, plot=False, allD13=False):
         printsafemulti("calculating D13", self.logf, self.nps)
 
-        import pyqz
-
+        # initializing variable pyqz to avoid style issues
+        # (pyqz not defined is reported as error by Landscape.io w/ import in func
+        pyqz = None 
+        try:
+            import pyqz
+        except ImportError:
+            return -1
+        
         #check version of pyqz
         from distutils.version import StrictVersion
         oldpyqz = False
         if StrictVersion(pyqz.__version__) <= StrictVersion('0.5.0'):
             oldpyqz = True
 
-        if self.NII_SII is not None  and allD13:
+        if self.NII_SII is not None and allD13:
             if self.OIII_SII  is not None:
 
                 if oldpyqz:
@@ -533,7 +543,7 @@ class diagnostics:
                                                              save_plot=False, verbose=False)[0].T
 
                     
-        if self.NII_OII is not None  and allD13:
+        if self.NII_OII is not None and allD13:
             if self.OIII_SII  is not None:
                 if oldpyqz:
                     self.mds['D13_N2O2_O3S2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_OII]), \
@@ -723,8 +733,6 @@ class diagnostics:
         P10logR3 = np.zeros(self.nm) + float('NaN')
         P10logR2 = np.zeros(self.nm) + float('NaN')
         P10logN2 = np.zeros(self.nm) + float('NaN')
-        P10logN2R2 = np.zeros(self.nm) + float('NaN')
-        P10logS2R2 = np.zeros(self.nm) + float('NaN')
         P10logS2 = np.zeros(self.nm) + float('NaN')
 
         self.calcP()
@@ -895,7 +903,7 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
                 O3N2 = self.logO3Hb - self.logN2Ha
                 self.mds["M13_O3N2"] = 8.533 + e1 - (0.214 + e1) * O3N2
                 index = (self.logO3Hb > 1.7)
-                self.mds["M13_O3N2"][index] == float('NaN')
+                self.mds["M13_O3N2"][index] = float('NaN')
 
     #@profile
     def calcM08(self, allM08=False):
@@ -1195,50 +1203,6 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
 
 #######################these are the metallicity diagnostics##################
 #@profile
-    def calcD13(self, plot=False):
-        printsafemulti("calculating  Dopita et al. 2014", self.logf, self.nps)
-
-        self.NII_SII = None
-        self.OIII_SII = None
-        if self.NII_SII is not None  and allD13:
-            if self.OIII_SII  is not None:
-                self.mds['D13_N2S2_O3S2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_SII]), \
-                                        np.atleast_1d([self.OIII_SII]), 'NII/SII', 'OIII/SII', \
-                                        method='default', plot=plot, n_plot=False, savefig=False)[0].T
-            if  self.OIII_Hb  is not None:
-                self.mds['D13_N2S2_O3Hb'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_SII]), \
-                                        np.atleast_1d([self.OIII_Hb]), 'NII/SII', 'OIII/Hb', \
-                                        method='default', plot=plot, n_plot=False, savefig=False)[0].T
-            if  self.OIII_OII  is not None:
-                self.mds['D13_N2S2_O3O2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_SII]), \
-                                        np.atleast_1d([self.OIII_OII]), 'NII/SII', 'OIII/OII', \
-                                        method='default', plot=plot, n_plot=False, savefig=False)[0].T
-
-        if self.NII_OII is not None  and allD13:
-            if self.OIII_SII  is not None:
-                self.mds['D13_N2O2_O3S2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_OII]), \
-                                        np.atleast_1d([self.OIII_SII]), 'NII/OII', 'OIII/SII', \
-                                        method='default', plot=plot, n_plot=False, savefig=False)[0].T
-            if  self.OIII_Hb  is not None:
-                self.mds['D13_N2O2_O3Hb'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_OII]), \
-                                        np.atleast_1d([self.OIII_Hb]), 'NII/OII', 'OIII/Hb', \
-                                        method='default', plot=plot, n_plot=False, savefig=False)[0].T
-            if  self.OIII_OII  is not None:
-                self.mds['D13_N2O2_O3O2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_OII]), \
-                                        np.atleast_1d([self.OIII_OII]), 'NII/OII', 'OIII/OII', \
-                                        method='default', plot=plot, n_plot=False, savefig=False)[0].T
-
-        if self.logN2Ha is not None:
-            if  self.OIII_Hb  is not None:
-                self.mds['D13_N2Ha_O3Hb'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.logN2Ha]), \
-                                        np.atleast_1d([self.OIII_Hb]), 'NII/Ha', 'OIII/Hb', \
-                                        method='default', plot=plot, n_plot=False, savefig=False)[0].T
-            if  self.OIII_OII  is not None:
-                self.mds['D13_N2Ha_O3O2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.logN2Ha]), \
-                                        np.atleast_1d([self.OIII_OII]), 'NII/Ha', 'OIII/OII', \
-                                        method='default', plot=plot, n_plot=False, savefig=False)[0].T
-
-    #@profile
     def calcPM14(self):
         # Perez-Montero 2014
         # (can be used for for log(O/H)+12 > 8.6 only)

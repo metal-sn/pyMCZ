@@ -1,6 +1,5 @@
 import matplotlib as mpl
 import pylab as plt
-from pylab import rc
 
 mpl.rcParams.update(mpl.rcParamsDefault)
 mpl.rcParams['font.size'] = 26.
@@ -34,8 +33,6 @@ mpl.rc('axes', **{'labelweight': 'normal', 'linewidth': 1})
 mpl.rc('ytick', **{'major.pad': 5, 'color': 'k'})
 mpl.rc('xtick', **{'major.pad': 5, 'color': 'k'})
 params = {'legend.fontsize': 24,
-          #removed with pylab version upgrade
-          #'legend.linewidth': 1,
           'legend.numpoints': 1,
           'legend.handletextpad': 1
       }
