@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 #import sys
 import scipy.stats as  stats
@@ -162,72 +163,72 @@ class diagnostics:
 
     def printme(self, verbose=False):
         try:
-            print "\nHa", np.mean(self.Ha)
+            print ("\nHa", np.mean(self.Ha))
             if verbose:
-                print self.Ha
+                print (self.Ha)
         except (IndexError, TypeError):
             pass
         try:
-            print "\nHb", np.mean(self.Hb)
+            print ("\nHb", np.mean(self.Hb))
             if verbose:
-                print self.Hb
+                print (self.Hb)
         except (IndexError, TypeError):
             pass
         try:
-            print  "\nO2", np.mean(self.O23727)
+            print ("\nO2", np.mean(self.O23727))
             if verbose:
-                print self.O23727
+                print (self.O23727)
         except (IndexError, TypeError):
             pass
         try:
-            print  "\nO3", np.mean(self.O35007)
+            print ("\nO3", np.mean(self.O35007))
             if verbose:
-                print self.O35007
+                print (self.O35007)
         except (IndexError, TypeError):
             pass
         try:
-            print  "\nO34959", np.mean(self.O34959)
+            print ("\nO34959", np.mean(self.O34959))
             if verbose:
-                print self.O34959
+                print (self.O34959)
         except (IndexError, TypeError):
             pass
         try:
-            print  "\nZ94", np.mean(self.mds['Z94'])
+            print ("\nZ94", np.mean(self.mds['Z94']))
             if verbose:
-                print self.mds['Z94']
+                print (self.mds['Z94'])
         except (IndexError, TypeError):
             pass
         try:
-            print  "\nR23", np.mean(self.R23)
+            print ("\nR23", np.mean(self.R23))
             if verbose:
-                print self.R23
+                print (self.R23)
         except (IndexError, TypeError):
             pass
         try:
-            print "\nlog(R23)", np.mean(self.logR23)
+            print ("\nlog(R23)", np.mean(self.logR23))
             if verbose:
-                print self.logR23
+                print (self.logR23)
         except (TypeError, IndexError):
             pass
         try:
-            print  "\nlog([NII][OII])", stats.nanmean(self.logN2O2)
+            print ("\nlog([NII][OII])", stats.nanmean(self.logN2O2))
             if verbose:
-                print self.logN2O2
+                print (self.logN2O2)
         except (TypeError, IndexError):
             pass
         try:
-            print  "\nlog([OIII][OII])", stats.nanmean(self.logO3O2)
+            print ("\nlog([OIII][OII])", stats.nanmean(self.logO3O2))
             if verbose:
-                print self.logO3O2
+                print (self.logO3O2)
         except (TypeError, IndexError):
             pass
         for k in self.mds.iterkeys():
-            print "\n", k,
+            print ("\n", k)
             try:
-                print stats.nanmean(self.mds[k]), np.stdev(self.mds[k])
+                print (stats.nanmean(self.mds[k]), np.stdev(self.mds[k]))
             except (IndexError, TypeError):
                 if verbose:
-                    print self.mds[k]
+                    print (self.mds[k])
     
     def checkminimumreq(self, red_corr, ignoredust):
         if red_corr and not ignoredust:
@@ -489,12 +490,12 @@ class diagnostics:
 
         # initializing variable pyqz to avoid style issues
         # (pyqz not defined is reported as error by Landscape.io w/ import in func
-        pyqz = None 
+        pyqz = None
         try:
             import pyqz
         except ImportError:
             return -1
-        
+
         #check version of pyqz
         from distutils.version import StrictVersion
         oldpyqz = False
@@ -891,7 +892,8 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
         printsafemulti("calculating M13", self.logf, self.nps)
 
         if not self.hasHa  or not self.hasN2:
-            printsafemulti("WARNING: need O3, N2, Ha and Hb, or at least N2 and Ha", self.logf, self.nps)
+            printsafemulti("WARNING: need O3, N2, Ha and Hb, ",
+                           "or at least N2 and Ha", self.logf, self.nps)
             return -1
         else:
             e1 = np.random.normal(0, 0.027, self.nm)
@@ -902,9 +904,10 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
                 e2 = np.random.normal(0, 0.012, self.nm)
                 O3N2 = self.logO3Hb - self.logN2Ha
                 self.mds["M13_O3N2"] = 8.533 + e1 - (0.214 + e1) * O3N2
-                index = (self.logO3Hb > 1.7)
+                index = (self.logO3Hb > 1.7) 
                 self.mds["M13_O3N2"][index] = float('NaN')
-
+                index = (self.logO3Hb < -1.1)
+                self.mds["M13_O3N2"][index] = float('NaN')                
     #@profile
     def calcM08(self, allM08=False):
         #Maiolino+ 2008
@@ -1253,12 +1256,12 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
             fin_hii_chi.write('%f %f %f %f %f\n' % (ratios[0][ni], ratios[1][ni], ratios[2][ni], ratios[3][ni], ratios[4][ni]))
         fin_hii_chi.close()
         os.system("ln -s %s/C13*dat . " % os.getenv('HIICHI_DIR'))
-        print "\n\n\n\n\n"
+        print ("\n\n\n\n\n")
         #os.system("python %s/HII-CHI-mistry_v01.2.py in.tmp"%os.getenv('HIICHI_DIR'))
         #os.system("python %s/HII-CHI-mistry_v01.2.py %s/in.tmp"%(os.getenv('HIICHI_DIR'),os.getenv('HIICHI_DIR')))
         p = Popen(['python', '%s/HII-CHI-mistry_v01.2.py' % os.getenv('HIICHI_DIR'), '%s/in.tmp' % os.getenv('HIICHI_DIR')], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         out, err = p.communicate(input='%s/in.tmp' % os.getenv('HIICHI_DIR'))
-        print "\n\n\n\n\n"
+        print ("\n\n\n\n\n")
         out = StringIO(out)
         #       for l in enumerate(out):
         #           if l[0].isdigit():
@@ -1269,5 +1272,22 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
         for i, l in enumerate(out):
             self.mds['PM14'][i], self.mds['PM14err'][i] = map(float, l.split()[3:5])
         #data =  np.loadtxt(out,  skiprows=12, usecols=(3,4))#, dtype=[('lOH','f'),('elOH','f')], delimiter=",", unpack = True)
-        print self.mds
+        print (self.mds)
         os.system('rm -r C13*dat')
+
+    #@profile
+    def calcD16(self):
+        #Dopita+ 2016
+        printsafemulti("calculating D16", self.logf, self.nps)
+        
+        if not self.hasHa  or not self.hasN2 or not self.hasS2:
+            printsafemulti("WARNING: need N2, Ha and SII, ",
+                           self.logf, self.nps)
+            return -1
+        print ("here")
+        y = self.logN2S2 + 0.264 * self.logN2Ha
+        self.mds["D16"] = 8.77 + y - 0.45 * pow(y + 0.3, 5)
+        #index = (self.logO3Hb < -1.1)
+        #self.mds["D16"][index] = float('NaN')                
+
+        
