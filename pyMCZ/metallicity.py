@@ -12,6 +12,7 @@
 ## disp - if True prints the results, default False
 ##############################################################################
 
+from __future__ import print_function
 import sys
 import os
 import numpy as np
@@ -47,7 +48,8 @@ Zs = ["E(B-V)",  # Halpha, Hbeta
     "KK04_N2Ha",  # Halpha, Hbeta,  [OII]3727, [NII]6584
     "KK04_R23",  # Hbeta,  [OII]3727, [OIII]5007, ([OIII]4959 )
     "KD02comb",
-    "PM14"]  # ,"KK04comb"]
+    "PM14",
+    "D16"]  # ,"KK04comb"]
 #'KD02_N2O2', 'KD03new_R23', 'M91', 'KD03_N2Ha'
 
 Zserr = ['PM14err']  # ,"KK04comb"]
@@ -67,9 +69,10 @@ def printsafemulti(string, logf, nps):
     #is painful. but it introduces a bunch of if checks.
     #if anyone has a better solution please let me know!
     if nps == 1:
-        print >> logf, string
+        logf.write(string)
+        #print >> logf, string
     else:
-        print string
+        print (string)
 
 
 ##############################################################################
@@ -106,8 +109,8 @@ def calculation(mscales, measured, num, mds, nps, logf, dust_corr=True, disp=Fal
     elif dust_corr and not IGNOREDUST:
 
         if nps > 1:
-            print '''WARNING: reddening correction cannot be done 
-            without both H_alpha and H_beta measurement!!'''
+            print ('''WARNING: reddening correction cannot be done 
+            without both H_alpha and H_beta measurement!!''')
 
         else:
             response = raw_input('''WARNING: reddening correction cannot be done without both H_alpha and H_beta measurement!! 
@@ -147,7 +150,7 @@ def calculation(mscales, measured, num, mds, nps, logf, dust_corr=True, disp=Fal
 
     #mscales.printme()
     if verbose:
-        print "calculating metallicity diagnostic scales: ", mds
+        print ("calculating metallicity diagnostic scales: ", mds)
     if 'all' in mds:
         mscales.calcD02()
         if   os.getenv("PYQZ_DIR"):
@@ -242,3 +245,5 @@ PYQZ_DIR if you want this scale. ''', logf, nps)
         mscales.calcKK04_N2Ha()
         mscales.calcKK04_R23()
         mscales.calcKDcombined()
+    if 'D16' in mds:
+         mscales.calcD16()

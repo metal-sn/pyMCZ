@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import os
 import sys
 import argparse
@@ -185,7 +186,8 @@ def input_data(filename, path):
     if os.path.isfile(os.path.join(p, filename + '_err.txt')):
         if os.path.isfile(os.path.join(p, filename + '_meas.txt')):
             return ingest_data(filename, path=p)
-    print "Unable to find _meas and _err files ", filename + '_meas.txt', filename + '_err.txt', "in directory ", p
+    print ("Unable to find _meas and _err files ", filename +
+           '_meas.txt', filename + '_err.txt', "in directory ", p)
     return -1
 
 
@@ -198,11 +200,11 @@ def errordistrib(distrargs, n, distype='normal'):
         try:
             mu, sigma = distrargs
         except:
-            print "for normal distribution distargs must be a 2 element tuple"
+            print ("for normal distribution distargs must be a 2 element tuple")
             return -1
         return np.random.normal(mu, sigma, n)
     else:
-        print "distribution not supported"
+        print ("distribution not supported")
         return -1
 
 
@@ -265,11 +267,11 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
     kde = None
     if not n > 0:
         if verbose:
-            print "data must be an actual distribution (n>0 elements!, %s)" % Zs
+            print ("data must be an actual distribution (n>0 elements!, %s)" % Zs)
         return "-1,-1,_1", [], kde
 
     if data.shape[0] <= 0 or np.sum(data) <= 0:
-        print '{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(snname, Zs, -1, -1, -1)
+        print ('{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(snname, Zs, -1, -1, -1))
         return "-1, -1, -1", [], kde
     try:
         ###find C.I.###
@@ -283,14 +285,17 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
             maxleft = median - 1
             maxright = median + 1
         if round(right, 6) == round(left, 6) and round(left, 6) == round(median, 6):
-            print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(snname, Zs, median, 0, 0)
+            print ('{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(snname, Zs, median, 0, 0))
             if reserr:
-                print '+/- {0:.3f}'.format(reserr)
+                print ('+/- {0:.3f}'.format(reserr))
             return "%f\t %f\t %f" % (round(median, 3), round(median - left, 3), round(right - median, 3)), data, kde  # "-1,-1,-1",[]
         ###print out the confidence interval###
-        print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f}'.format(snname, Zs, round(median, 3), round(median - left, 3), round(right - median, 3))
+        print ('{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f}'.format(snname,
+                                                                           Zs, round(median, 3),
+                                                                           round(median - left, 3),
+                                                                           round(right - median, 3)))
         if reserr:
-            print '+/- {0:.3f}'.format(reserr)
+            print ('+/- {0:.3f}'.format(reserr))
         alpha = 1.0
 
         ######histogram######
@@ -299,9 +304,9 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
             try:
                 from sklearn.neighbors import KernelDensity
             except ImportError:
-                print '''sklearn is not available, 
+                print ('''sklearn is not available, 
                 thus we cannot compute kernel density. 
-                switching to bayesian blocks'''
+                switching to bayesian blocks''')
                 BINMODE = 'bb'
         if BINMODE == 'kd':
             ##bw is chosen according to Silverman 1986
@@ -338,8 +343,8 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
                     if not NOPLOT:
                         plt.clf()
                 except ImportError:
-                    print "bayesian blocks for histogram requires astroML to be installed"
-                    print "defaulting to Knuth's rule "
+                    print ("bayesian blocks for histogram requires astroML to be installed")
+                    print ("defaulting to Knuth's rule ")
                     ##otherwise
                     numbin, bm = getbinsize(data.shape[0], data)
                     distrib = np.histogram(data, bins=int(numbin), density=True)
@@ -382,7 +387,8 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
         plt.annotate(st, xy=(0.13, 0.6), xycoords='axes fraction', size=fs, fontweight='bold')
         st = '%s ' % (Zs.replace('_', ' '))
         plt.annotate(st, xy=(0.61, 0.93), xycoords='axes fraction', fontsize=fs, fontweight='bold')
-        st = 'measurement %d of %d\n   %s\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f' % (i + 1, nmeas, measnames[i], round(median, 3), round(left, 3), round(right, 3))
+        st = 'measurement %d of %d\n   %s\nmedian: %.3f\n16th Percentile: %.3f\n84th Percentile: %.3f' \
+             % (i + 1, nmeas, measnames[i], round(median, 3), round(left, 3), round(right, 3))
         plt.annotate(st, xy=(0.61, 0.65), xycoords='axes fraction', fontsize=fs)
         effectiven = len(data[~np.isnan(data)])
         if effectiven:
@@ -408,23 +414,26 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
 
     except (OverflowError, AttributeError, ValueError):
         if VERBOSE:
-            print data
-        print name, 'had infinities (or something in plotting went wrong)'
+            print (data)
+        print (name, 'had infinities (or something in plotting went wrong)')
         return "-1, -1,-1", [], None
 
 
 def calc((i, (sample, flux, err, nm, bss, mds, disp, dust_corr, verbose, res, scales, nps, logf))):
     logf = sys.stdout
-    print >> logf, "\n\nreading in measurements ", i + 1
+    logf.write("\n\nreading in measurements %d\n"%(i + 1))
     fluxi = {}  # np.zeros((len(bss[0]),nm),float)
     for k in bss[0].iterkeys():
-        print >> logf, '{0:15} '.format(k),
-        print >> logf, '{0:0.2} +/- {1:0.2}'.format(flux[k][i], err[k][i])
+        logf.write('{0:15} '.format(k))
+        logf.write('{0:0.2} +/- {1:0.2}\n'.format(flux[k][i], err[k][i]))
+        #print >> logf, '{0:15} '.format(k),
+        #print >> logf, '{0:0.2} +/- {1:0.2}'.format(flux[k][i], err[k][i])
         fluxi[k] = flux[k][i] * np.ones(len(sample[i])) + err[k][i] * sample[i]
         warnings.filterwarnings("ignore")
     success = metallicity.calculation(scales[i], fluxi, nm, mds, nps, logf, disp=disp, dust_corr=dust_corr, verbose=verbose)
     if success == -1:
-        print >> logf, "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
+        logf.write("MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'\n")
+        #print >> logf, "MINIMUM REQUIRED LINES: '[OII]3727','[OIII]5007','[NII]6584','[SII]6717'"
 
     for key in scales[i].mds.iterkeys():
         if key in res.keys():
@@ -472,7 +481,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
     binp = os.path.join(p, 'output', '%s' % name)
     picklefile = os.path.join(binp, '%s_n%d.pkl' % (name, nsample))
     if VERBOSE:
-        print "output files will be stored in ", binp
+        print ("output files will be stored in ", binp)
     if not CLOBBER and not NOPLOT:
         for key in Zs:
             for i in range(NM0, nm):
@@ -502,7 +511,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         ## flux + error*i
         ## where i is the sampled gaussian
         if VERBOSE:
-            print "Starting iteration"
+            print ("Starting iteration")
 
         #initialize the dictionary
         res = {}
@@ -526,7 +535,8 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         if multiproc and nps > 1:
             scales = [ms.diagnostics(newnsample, logf, nps) for i in range(nm)]
 
-            print >> logf, "\n\n\nrunning on %d threads\n\n\n" % nps
+            logf.write( "\n\n\nrunning on %d threads\n\n\n" % nps)
+            #print >> logf, "\n\n\nrunning on %d threads\n\n\n" % nps
             second_args = [sample, flux, err, nm, bss, mds, VERBOSE, dust_corr, VERBOSE, res, scales, nps, logf]
             pool = mpc.Pool(processes=nps)  # depends on available cores
             rr = pool.map(calc, itertools.izip(range(NM0, nm), itertools.repeat(second_args)))  # for i in range(nm): result[i] = f(i, second_args)
@@ -548,29 +558,34 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                 res[key][i] = [float('NaN')] * len(sample)
 
             if VERBOSE:
-                print "Iteration Complete"
+                print ("Iteration Complete")
         else:
             #looping over nm spectra
             for i in range(NM0, nm):
                 scales = ms.diagnostics(newnsample, logf, nps)
-                print >> logf, "\n\n measurements ", i + 1
+                logf.write("\n\n measurements %d\n"%(i + 1))
+                #print >> logf, "\n\n measurements ", i + 1
                 fluxi = {}
 
                 for k in bss[0].iterkeys():
-                    print >> logf, '{0:15} '.format(k),
-                    print >> logf, '{0:0.2} +/- {1:0.2}'.format(flux[k][i], err[k][i])
+                    logf.write('{0:15} '.format(k))
+                    logf.write('{0:0.2} +/- {1:0.2}\n'.format(flux[k][i],
+                                                              err[k][i]))
+                    #print >> logf, '{0:15} '.format(k),
+                    #print >> logf, '{0:0.2} +/- {1:0.2}'.format(flux[k][i], err[k][i])
                     fluxi[k] = flux[k][i] * np.ones(len(sample[i])) + err[k][i] * sample[i]
                     warnings.filterwarnings("ignore")
-                print >> logf, ""
+                logf.write("\n")
+                #print >> logf, ""
 
                 success = metallicity.calculation(scales, fluxi, nm, mds, 1, logf, disp=VERBOSE, dust_corr=dust_corr, verbose=VERBOSE)
                 if success == -1:
-                    print "MINIMUM REQUIRED LINES:  [OII]3727 & [OIII]5007, or [NII]6584, and Ha & Hb if you want dereddening"
+                    print ("MINIMUM REQUIRED LINES:  [OII]3727 & [OIII]5007, or [NII]6584, and Ha & Hb if you want dereddening")
                     #continue
 
 
                 for key in scales.mds.iterkeys():
-                    if not key in Zs:
+                    if key not in Zs:
                         continue
                     res[key][i] = scales.mds[key]
                     if res[key][i] is None:
@@ -582,7 +597,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                 if key in Zs:
                     res[key] = np.array(res[key]).T
             if VERBOSE:
-                print "Iteration Complete"
+                print ("Iteration Complete")
 
         #"WE CAN PICKLE THIS!"
         #pickle this realization
@@ -594,11 +609,13 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
     if 'Time' not in  findfont(FontProperties()):
         fs = 20
     if VERBOSE:
-        print "FONT: %s, %d" % (findfont(FontProperties()), fs)
+        print ("FONT: %s, %d" % (findfont(FontProperties()), fs))
 
     ###Bin the results and save###
-    print "\n\n"
-    print '{0:15} {1:20} {2:>13}   -{3:>5}     +{4:>5}  {5:11} {6:>7}'.format("SN", "diagnostic", "metallicity", "34%", "34%", "(sample size:", '%d)' % nsample)
+    print ("\n\n")
+    print ('{0:15} {1:20} {2:>13}   -{3:>5}     +{4:>5}  {5:11} {6:>7}'\
+        .format("SN", "diagnostic", "metallicity", "34%", "34%",
+                "(sample size:", '%d)' % nsample))
     for i in range(NM0, nm):
         if ASCIIOUTPUT:
             fi = open(os.path.join(binp, '%s_n%d_%d.txt' % (name, nsample, i + 1)), 'w')
@@ -606,12 +623,13 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
 
         boxlabels = []
         datas = []
-        print "\n\nmeasurement %d : %s-------------------------------------------------------------" % (i + 1, flux[i]['galnum'])
+        print ("\n\nmeasurement ",
+               "%d : %s-------------------------------------------------------------" % (i + 1, flux[i]['galnum']))
         for key in Zs:
             if nsample == -1:
                 try:
                     if ~np.isnan(res[key][i][0]):
-                        print '{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(name + ' %d' % (i + 1), key, res[key][i][0], 0, 0)
+                        print ('{0:15} {1:20} {2:>13.3f}   -{3:>7.3f}   +{4:>7.3f} (no distribution)'.format(name + ' %d' % (i + 1), key, res[key][i][0], 0, 0))
                 except IndexError:
                     pass
             else:
@@ -625,7 +643,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                                 writer.writerow(res[key][:
                                     ,i])
                         if 'PM14' in key:
-                            print reserr['PM14err']
+                            print (reserr['PM14err'])
                             reserr = np.sqrt(~np.nansum(reserr['PM14err'][:
                                 ,i] ** 2))
                         sh, data, kde = savehist(res[key][:
@@ -639,7 +657,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                         if BINMODE == 'kd' and  not NOPICKLE:
                             pickleKDEfile = os.path.join(binp + '/%s_n%d_%s_%d_KDE.pkl' % (name, nsample, key, i + 1))
                             if VERBOSE:
-                                print "KDE files will be stored in ", pickleKDEfile
+                                print ("KDE files will be stored in ", pickleKDEfile)
                             pickle.dump(kde, open(pickleKDEfile, 'wb'))
                 except (IndexError, TypeError):
                     pass
@@ -673,7 +691,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         if ASCIIOUTPUT:
             fi.close()
         if VERBOSE:
-            print "uncertainty calculation complete"
+            print ("uncertainty calculation complete")
 
         #del datas
 
@@ -697,7 +715,7 @@ def main():
     parser.add_argument('--asciidistrib', default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
     parser.add_argument('--md', default='all', type=str, help='''metallicity diagnostic to calculate. 
     default is 'all', options are: 
-    D02, Z94, M91, C01, P05, M08, M08all, M13, PP04, D13, KD02, DP00 (deprecated), P01''')
+    D02, Z94, M91, C01, P05, M08, M08all, M13, PP04, D13, KD02, DP00 (deprecated), P01, D16''')
     parser.add_argument('--multiproc', default=False, action='store_true', help=" multiprocess, with number of threads max(available cores-1, MAXPROCESSES)")
     args = parser.parse_args()
 
@@ -727,7 +745,7 @@ def main():
         path = os.getenv("MCMetdata")
     assert(os.path.isdir(path)), "pass a path or set up the environmental variable MCMetdata pointing to the path where the _min _max _med files live"
     if args.nsample == 1:
-        print "CALCULATING METALLICITY WITHOUT GENERATING MC DISTRIBUTIONS"
+        print ("CALCULATING METALLICITY WITHOUT GENERATING MC DISTRIBUTIONS")
     if args.nsample == 1 or args.nsample >= 10:
         fi = input_data(args.name, path=path)
         if fi != -1:
@@ -736,7 +754,7 @@ def main():
             if args.log:
                 logf.close()
     else:
-        print "nsample must be at least 100"
+        print ("nsample must be at least 100")
 
 
 if __name__ == "__main__":
