@@ -1,14 +1,15 @@
 ##############################################################################
-##Calculate metalicity, code originally in IDL written by Lisa
+## Calculates oxygen abundance (here called metalicity) based on strong emission lines, 
+## based on code originally written in IDL by Lisa Kewley (Kewley & Ellison 2008). Outputs 
+## oxygen abundance in many different diagnostics (see Bianco et al. 2016).
+##
 ##new calculation based on the most recent version of the .pro file.
 ##
-##I ignored the section she had of not calculating the lines that didn't
-##meet some mass condition.
 ##inputs:
 ## measured - flux data, must be the format returned by readfile()
-## num - also returned by readfile()
+## num - number of spectra for which to calculate metallicity, also returned by readfile()
 ## outfilename - the name of the file the results will be appended to
-## red_corr - True by default
+## red_corr - reddening correction flag - True by default
 ## disp - if True prints the results, default False
 ##############################################################################
 
@@ -22,7 +23,7 @@ MP = True
 FIXNEGATIVES = True  # set to true if no negative flux measurements should be allowed. all negative flux measurements are set to 0
 
 ##list of metallicity methods, in order calculated
-Zs = ["E(B-V)",  # Halpha, Hbeta
+Zs = ["E(B-V)",  # based on Halpha, Hbeta
     "logR23",  # Hbeta,  [OII]3727, [OIII]5007, [OIII]4959
 
     "D02",  # Halpha, [NII]6584
