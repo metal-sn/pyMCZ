@@ -247,4 +247,4 @@ PYQZ_DIR if you want this scale. ''', logf, nps)
         mscales.calcKK04_R23()
         mscales.calcKDcombined()
     if 'D16' in mds:
-         mscales.calcD16()
+        mscales.calcD16()
