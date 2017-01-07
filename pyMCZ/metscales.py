@@ -1287,7 +1287,9 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
         print ("here")
         y = self.logN2S2 + 0.264 * self.logN2Ha
         self.mds["D16"] = 8.77 + y - 0.45 * pow(y + 0.3, 5)
-        #index = (self.logO3Hb < -1.1)
-        #self.mds["D16"][index] = float('NaN')                
+        index = (y < -1.)
+        self.mds["D16"][index] = float('NaN')                
+        index = (y > 0.5)
+        self.mds["D16"][index] = float('NaN')                
 
         
