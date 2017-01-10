@@ -68,16 +68,15 @@ def get_errkeys():
 def printsafemulti(string, logf, nps):
     #this is needed because dealing with a log output with multiprocessing
     #is painful. but it introduces a bunch of if checks.
-    #if anyone has a better solution please let me know!
     if nps == 1:
-        logf.write(string)
+        logf.write(string + "\n")
         #print >> logf, string
     else:
         print (string)
 
 
 ##############################################################################
-##fz_roots function as used in the IDL code  FED:reference the code here!
+##fz_roots function as used in the IDL code 
 ##############################################################################
 
 #@profile
@@ -162,7 +161,7 @@ def calculation(mscales, measured, num, mds, nps, logf, dust_corr=True, disp=Fal
         else:
             printsafemulti('''WARNING: CANNOT CALCULATE pyqz: 
             set path to pyqz as environmental variable :
-            export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want this scale. ''', logf, nps)
+            export PYQZ_DIR="your/path/where/pyqz/resides/ in bash, for example, if you want this scale. \n''', logf, nps)
 
         mscales.calcZ94()
         mscales.calcM91()

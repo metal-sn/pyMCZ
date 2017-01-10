@@ -62,7 +62,9 @@ ASCIIDISTRIB = False
 RUNSIM = True
 NOPLOT = False
 BINMODE = 'k'
-binning = {'bb': 'Bayesian blocks', 'k': "Knuth's rule", 'd': "Doane's formula", 's': r'$\sqrt{N}$', 't': r'$2 N^{1/3}$', 'kd': 'Kernel Density'}
+binning = {'bb': 'Bayesian blocks', 'k': "Knuth's rule",
+           'd': "Doane's formula", 's': r'$\sqrt{N}$',
+           't': r'$2 N^{1/3}$', 'kd': 'Kernel Density'}
 
 MP = False
 
@@ -136,7 +138,17 @@ def readfile(filename):
         header = ['galnum'] + alllines + ['flag'] + morelines
         header = header[:len(l1)]
 
+    usecols = []
+    newheader  = []
+    for i,h in enumerate(header):
+        if h in alllines + ['galnum']:
+            usecols.append(i)
+            newheader.append(h)
+
+    header = newheader
+    
     formats = ['S10'] + ['f'] * (len(header) - 1)
+
     if 'flag' in header:
         findex = header.index('flag')
         formats[findex] = 'S10'
@@ -144,7 +156,7 @@ def readfile(filename):
     bstruct = {}
     for i, k in enumerate(header):
         bstruct[k] = [i, 0]
-    b = np.loadtxt(filename, skiprows=noheader, dtype={'names': header, 'formats': formats}, comments=';')
+    b = np.loadtxt(filename, skiprows=noheader, dtype={'names': header, 'formats': formats}, comments=';',usecols=usecols)
     if b.size == 1:
         b = np.atleast_1d(b)
 
@@ -624,7 +636,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         boxlabels = []
         datas = []
         print ("\n\nmeasurement ",
-               "%d : %s-------------------------------------------------------------" % (i + 1, flux[i]['galnum']))
+               "%d/%d : %s-------------------------------------------------------------" % (i + 1, nm, flux[i]['galnum']))
         for key in Zs:
             if nsample == -1:
                 try:
