@@ -904,10 +904,11 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
                 e2 = np.random.normal(0, 0.012, self.nm)
                 O3N2 = self.logO3Hb - self.logN2Ha
                 self.mds["M13_O3N2"] = 8.533 + e1 - (0.214 + e1) * O3N2
-                index = (self.logO3Hb > 1.7) 
+                index = (O3N2 > 1.7) 
                 self.mds["M13_O3N2"][index] = float('NaN')
-                index = (self.logO3Hb < -1.1)
-                self.mds["M13_O3N2"][index] = float('NaN')                
+                index = (O3N2 < -1.1)
+                self.mds["M13_O3N2"][index] = float('NaN')
+
     #@profile
     def calcM08(self, allM08=False):
         #Maiolino+ 2008
@@ -1284,7 +1285,6 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
             printsafemulti("WARNING: need N2, Ha and SII, ",
                            self.logf, self.nps)
             return -1
-        print ("here")
         y = self.logN2S2 + 0.264 * self.logN2Ha
         self.mds["D16"] = 8.77 + y - 0.45 * pow(y + 0.3, 5)
         index = (y < -1.)
