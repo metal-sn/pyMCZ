@@ -318,7 +318,7 @@ class diagnostics:
             if self.hasO2:
                 self.logO2Hb = np.log10(self.O23727 / self.Hb) + self.dustcorrect(k_O2, k_Hb)  # 0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
             if self.hasO3:
-                self.O3Hb = (self.O35007 / self.Hb) + self.dustcorrect(k_O35007, k_Hb, flux=True)  # 0.4*self.mds['E(B-V)']*(k_O2-k_Hb)
+                self.O3Hb = (self.O35007 / self.Hb) + self.dustcorrect(k_O35007, k_Hb, flux=False)  # 0.4*self.mds['E(B-V)']*(k_O2-k_Hb)
                 self.logO3Hb = np.log10(self.O3Hb)
                 self.hasO3Hb = True
 
@@ -908,7 +908,14 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
                 self.mds["M13_O3N2"][index] = float('NaN')
                 index = (O3N2 < -1.1)
                 self.mds["M13_O3N2"][index] = float('NaN')
-
+                '''
+                for i in range(len(self.mds["M13_O3N2"])):
+                    print ("here O3N2",self.O35007[i], self.Hb[i],
+                           self.O3Hb[i], 
+                           self.logO3Hb[i], self.logN2Ha[i],
+                           O3N2[i], 
+                           self.mds["M13_O3N2"][i])
+                '''
     #@profile
     def calcM08(self, allM08=False):
         #Maiolino+ 2008
