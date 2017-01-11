@@ -159,7 +159,6 @@ def readfile(filename):
     b = np.loadtxt(filename, skiprows=noheader, dtype={'names': header, 'formats': formats}, comments=';',usecols=usecols)
     if b.size == 1:
         b = np.atleast_1d(b)
-
     for i, k in enumerate(header):
         if not k == 'flag' and is_number(b[k][0]):
             bstruct[k][1] = np.count_nonzero(b[k]) + sum(np.isnan(b[k]))
@@ -191,7 +190,6 @@ def ingest_data(filename, path):
         pass
     return (filename, meas, err, nm, path, (bsmeas, bserr))
 
-
 def input_data(filename, path):
     p = os.path.join(path, "input")
     assert os.path.isdir(p), "bad data directory %s" % p
@@ -201,7 +199,6 @@ def input_data(filename, path):
     print ("Unable to find _meas and _err files ", filename +
            '_meas.txt', filename + '_err.txt', "in directory ", p)
     return -1
-
 
 ##############################################################################
 ##returns a random distribution. In the deployed version of the code this is a gaussian distribution, but the user can include her or his distribution.
@@ -710,7 +707,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('name', metavar='<name>', type=str, help="the SN file name (root of the _min,_max file names")
-    parser.add_argument('nsample', metavar='N', type=int, help="number of iterations, minimum 100 (or 0 for no MC sampling)")
+    parser.add_argument('nsample', metavar='N', type=int, help="number of iterations, minimum 100 (or 1 for no MC sampling)")
     parser.add_argument('--clobber', default=False, action='store_true', help="replace existing output")
     parser.add_argument('--binmode', default='k', type=str, choices=['d', 's', 'k', 't', 'bb', 'kd'], help='''method to determine bin size 
     {d: Duanes formula, s: n^1/2, t: 2*n**1/3(default), k: Knuth's rule, 
@@ -767,7 +764,6 @@ def main():
                 logf.close()
     else:
         print ("nsample must be at least 100")
-
 
 if __name__ == "__main__":
     if PROFILING:
