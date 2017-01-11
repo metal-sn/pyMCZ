@@ -892,7 +892,7 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
         printsafemulti("calculating M13", self.logf, self.nps)
 
         if not self.hasHa  or not self.hasN2:
-            printsafemulti("WARNING: need O3, N2, Ha and Hb, ",
+            printsafemulti("WARNING: need O3, N2, Ha and Hb, " + 
                            "or at least N2 and Ha", self.logf, self.nps)
             return -1
         else:
