@@ -308,30 +308,39 @@ class diagnostics:
 
             #self.logO2O35007Hb=np.log10((self.O23727+self.O35007)/self.Hb)
             # ratios for other diagnostics - slightly different ratios needed
-            if self.hasHb:
-                self.logO2O35007Hb = np.log10((self.O23727 / self.Hb) * self.dustcorrect(k_O2, k_Hb, flux=True)) + \
-                (self.O35007 / self.Hb) * self.dustcorrect(k_O35007, k_Hb, flux=True)
+            # commenting since it is not used
+            #if self.hasHb:
+            #    self.logO2O35007Hb = np.log10(
+            #        (self.O23727 / self.Hb) * self.dustcorrect(k_O2,
+            #                                                   k_Hb, flux=True)
+            #      + (self.O35007 / self.Hb) * self.dustcorrect(k_O35007,
+            #                                                   k_Hb, flux=True))
 
         else:
             printsafemulti("WARNING: needs O lines and  and Ha/b: did you run setHab()?", self.logf, self.nps)
         if self.hasHb:
             if self.hasO2:
-                self.logO2Hb = np.log10(self.O23727 / self.Hb) + self.dustcorrect(k_O2, k_Hb)  # 0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
+                self.logO2Hb = np.log10(self.O23727 / self.Hb) + \
+                               self.dustcorrect(k_O2, k_Hb, flux=False)
+                               # 0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
             if self.hasO3:
-                self.O3Hb = (self.O35007 / self.Hb) + self.dustcorrect(k_O35007, k_Hb, flux=False)  # 0.4*self.mds['E(B-V)']*(k_O2-k_Hb)
+                self.O3Hb = (self.O35007 / self.Hb) * \
+                            self.dustcorrect(k_O35007, k_Hb, flux=True)
+                            # 0.4*self.mds['E(B-V)']*(k_O2-k_Hb)
                 self.logO3Hb = np.log10(self.O3Hb)
                 self.hasO3Hb = True
 
 
         if self.hasO2 and self.hasO3:
-            self.OIII_OII = np.log10(self.O35007 / self.O23727 + self.dustcorrect(k_O35007, k_O2, flux=True))
+            self.OIII_OII = np.log10(self.O35007 / self.O23727 * self.dustcorrect(k_O35007, k_O2, flux=True))
             if O34959  is not None and sum(O34959 > 0) > 0:
                 self.O34959p5007 = (O34959 + self.O35007)
-                self.logO3O2 = np.log10((self.O34959p5007) / self.O23727) + self.dustcorrect(k_O3, k_O2)
+                self.logO3O2 = np.log10((self.O34959p5007) / self.O23727)\
+                               + self.dustcorrect(k_O3, k_O2, flux=False)
                 #this is useful when we get logq
                 self.hasO3O2 = True
         if self.hasHb:
-            self.OIII_Hb = np.log10(self.O35007 / self.Hb + self.dustcorrect(k_O35007, k_Hb, flux=True))
+            self.OIII_Hb = np.log10(self.O35007 / self.Hb * self.dustcorrect(k_O35007, k_Hb, flux=True))
 
     def setNII(self, N26584):
         if N26584 is not None and sum(N26584 > 0):
@@ -347,7 +356,7 @@ class diagnostics:
                 self.NII_SII = np.log10(self.N26584 / (self.S26717 + self.S26731))  # +self.dustcorrect(k_N2,k_S2,flux=True) 
                 #lines are very close: no dust correction
             if self.hasO2 and self.hasN2:
-                self.NII_OII = np.log10(self.N26584 / self.O23727 + self.dustcorrect(k_N2, k_O2, flux=True))
+                self.NII_OII = np.log10(self.N26584 / self.O23727 * self.dustcorrect(k_N2, k_O2, flux=True))
 
     def setSII(self, S26717, S26731, S39069, S39532):
         if S26717 is not None and sum(S26717 > 0) > 0:
@@ -355,7 +364,7 @@ class diagnostics:
             self.hasS2 = True
 
             if self.hasHa:
-                self.logS2Ha = np.log10(self.S26717 / self.Ha) + self.dustcorrect(k_S2, k_Ha)
+                self.logS2Ha = np.log10(self.S26717 / self.Ha) + self.dustcorrect(k_S2, k_Ha, flux=False)
             else:
                 printsafemulti("WARNING: needs SII6717 and Ha to calculate SIIHa: did you run setHab() and setS()?", self.logf, self.nps)
         if S26731 is not None and sum(S26731 > 1e-9) > 0:
@@ -372,7 +381,7 @@ class diagnostics:
                 self.NII_SII = np.log10(self.N26584 / (self.S26717 + self.S26731))  # +self.dustcorrect(k_N2,k_O2,flux=True) 
                 #lines are very close: no dust correction
             if self.hasO3  and self.OIII_SII is None and self.hasS26731:
-                self.OIII_SII = np.log10(self.O35007 / (self.S26717 + self.S26731) + self.dustcorrect(k_O3, k_S2, flux=True))
+                self.OIII_SII = np.log10(self.O35007 / (self.S26717 + self.S26731) * self.dustcorrect(k_O3, k_S2, flux=True))
 
     #@profile
     def calcEB_V(self):
@@ -383,8 +392,8 @@ class diagnostics:
     #@profile
     def calcNIISII(self):
         if self.hasS2 and self.hasN2:
-            self.N2S2 = self.N26584 / self.S26717 + self.dustcorrect(k_N2, k_S2, flux=True)  # 0.4*self.mds['E(B-V)']*(k_N2-k_S2)
-            self.logN2S2 = np.log10(self.N26584 / self.S26717) + self.dustcorrect(k_N2, k_S2)  # 0.4*self.mds['E(B-V)']*(k_N2-k_S2)
+            self.N2S2 = self.N26584 / self.S26717 * self.dustcorrect(k_N2, k_S2, flux=True)  # 0.4*self.mds['E(B-V)']*(k_N2-k_S2)
+            self.logN2S2 = np.log10(self.N26584 / self.S26717) + self.dustcorrect(k_N2, k_S2, flux=False)  # 0.4*self.mds['E(B-V)']*(k_N2-k_S2)
             self.hasN2S2 = True
         else:
             printsafemulti("WARNING: needs SII6717 and NII6584 to calculate NIISII: did you run setN2() and setS?", self.logf, self.nps)
@@ -392,7 +401,7 @@ class diagnostics:
     #@profile
     def calcNIIOII(self):
         if self.hasN2 and self.hasO2:
-            self.logN2O2 = np.log10(self.N26584 / self.O23727) + self.dustcorrect(k_N2, k_O2)
+            self.logN2O2 = np.log10(self.N26584 / self.O23727) + self.dustcorrect(k_N2, k_O2, flux=False)
             self.hasN2O2 = True
         if not self.hasN2O2 or np.mean(self.logN2O2) < 1.2:
 
@@ -635,7 +644,8 @@ class diagnostics:
         if self.hasN2 and self.hasHa:
             self.mds['D02'] = 9.12 + e1 + (0.73 + e2) * self.logN2Ha
         else:
-            printsafemulti("WARNING: need N2Ha to do this. did you run setHab and setNII", self.logf, self.nps)
+            printsafemulti("WARNING: need N2Ha to do this. " +
+                           "did you run setHab and setNII", self.logf, self.nps)
 
     #@profile
     def calcPP04(self):
@@ -748,10 +758,12 @@ class diagnostics:
             #independent on physical conditions
             #The Physics and Dynamics of Planetary Nebulae
             # By Grigor A. Gurzadyan
-            P10logN2 = np.log((self.N26584 * 1.33) / self.Hb) + self.dustcorrect(k_N2, k_Hb)
+            P10logN2 = (np.log((self.N26584 * 1.33) / self.Hb) 
+                        + self.dustcorrect(k_N2, k_Hb, flux=False))
 
         if self.hasS2 and self.hasS26731:
-            self.S2Hb = ((self.S26717 + self.S26731) / self.Hb) + self.dustcorrect(k_S2, k_Hb, flux=True)
+            self.S2Hb = ((self.S26717 + self.S26731) / self.Hb
+                         * self.dustcorrect(k_S2, k_Hb, flux=True))
             self.hasS2Hb = True
             P10logS2 = np.log10(self.S2Hb)
 
@@ -908,14 +920,14 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
                 self.mds["M13_O3N2"][index] = float('NaN')
                 index = (O3N2 < -1.1)
                 self.mds["M13_O3N2"][index] = float('NaN')
-                '''
-                for i in range(len(self.mds["M13_O3N2"])):
-                    print ("here O3N2",self.O35007[i], self.Hb[i],
-                           self.O3Hb[i], 
-                           self.logO3Hb[i], self.logN2Ha[i],
-                           O3N2[i], 
-                           self.mds["M13_O3N2"][i])
-                '''
+                
+                #for i in range(len(self.mds["M13_O3N2"])):
+                    #print ("here O3N2",#self.O35007[i], self.Hb[i],
+                           #self.O3Hb[i], 
+                           #self.logO3Hb[i], self.logN2Ha[i],
+                    #       O3N2[i], 
+                    #       self.mds["M13_O3N2"][i])
+                
     #@profile
     def calcM08(self, allM08=False):
         #Maiolino+ 2008
@@ -1002,9 +1014,11 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
         if self.hasO3  and self.hasN2:
             self.mds['M08_O3N2'] = np.zeros(self.nm) + float('NaN')
             coefs = np.array([M08_coefs['O3N2']] * self.nm).T
-            coefs[0] = coefs[0] - np.log(self.O35007 / self.N26584) * self.dustcorrect(k_O35007, k_N2)
+            coefs[0] = coefs[0] - np.log(self.O35007 / self.N26584) \
+                       + self.dustcorrect(k_O35007, k_N2, flux=False)
             sols = np.array([self.fz_roots(coefs.T)])[0] + 8.69
-            indx = ((sols.real >= 7.1) * (sols.real <= 9.4) * (sols.imag == 0)).cumsum(1).cumsum(1) == 1
+            indx = ((sols.real >= 7.1) * (sols.real <= 9.4)\
+                    * (sols.imag == 0)).cumsum(1).cumsum(1) == 1
             self.mds['M08_O3N2'][(indx.sum(1)) > 0] = sols[indx].real
 
     #@profile
@@ -1233,7 +1247,8 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
         if self.R2 is not None:
             ratios[0] = self.R2
         elif self.hasO2:
-            ratios[0] = ((self.O23727 / self.Hb) * self.dustcorrect(k_O2, k_Hb, flux=True))
+            ratios[0] = ((self.O23727 / self.Hb)
+                         * self.dustcorrect(k_O2, k_Hb, flux=True))
         else:
             ratios[0] = np.array(['0 '] * self.nm)
 
@@ -1243,7 +1258,8 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
         if self.hasO3Hb:
             ratios[2] = self.O3Hb
         elif self.hasO3:
-            ratios[2] = ((self.O35007 / self.Hb) + self.dustcorrect(k_O35007, k_Hb, flux=True))  # 0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
+            ratios[2] = ((self.O35007 / self.Hb)
+                         * self.dustcorrect(k_O35007, k_Hb, flux=True))  # 0.4*self.mds['E(B-V)']*(k_O2-k_Hb) 
         else:
             ratios[2] = np.zeros(self.nm)
 
@@ -1255,7 +1271,8 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
         if self.hasS2Hb:
             ratios[4] = self.S2Hb
         elif self.hasS2 and self.hasS26731:
-            ratios[4] = (((self.S26717 + self.S26731) / self.Hb) + self.dustcorrect(k_S2, k_Hb, flux=True))
+            ratios[4] = (((self.S26717 + self.S26731) / self.Hb) *
+                         self.dustcorrect(k_S2, k_Hb, flux=True))
         else:
             ratios[4] = np.zeros(self.nm)
 
@@ -1267,7 +1284,9 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
         print ("\n\n\n\n\n")
         #os.system("python %s/HII-CHI-mistry_v01.2.py in.tmp"%os.getenv('HIICHI_DIR'))
         #os.system("python %s/HII-CHI-mistry_v01.2.py %s/in.tmp"%(os.getenv('HIICHI_DIR'),os.getenv('HIICHI_DIR')))
-        p = Popen(['python', '%s/HII-CHI-mistry_v01.2.py' % os.getenv('HIICHI_DIR'), '%s/in.tmp' % os.getenv('HIICHI_DIR')], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        p = Popen(['python', '%s/HII-CHI-mistry_v01.2.py' % os.getenv('HIICHI_DIR'),
+                   '%s/in.tmp' % os.getenv('HIICHI_DIR')],
+                  stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         out, err = p.communicate(input='%s/in.tmp' % os.getenv('HIICHI_DIR'))
         print ("\n\n\n\n\n")
         out = StringIO(out)

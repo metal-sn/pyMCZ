@@ -213,8 +213,9 @@ def calculation(mscales, measured, num, mds, nps, logf, dust_corr=True, disp=Fal
             #using the commented line below instead
             mscales.calcpyqz(plot=disp, allD13=True)
         else:
-            printsafemulti('''set path to pyqz as environmental variable 
-PYQZ_DIR if you want this scale. ''', logf, nps)
+            printsafemulti('''WARNING: CANNOT CALCULATE pyqz: 
+            set path to pyqz as environmental variable 
+            PYQZ_DIR if you want this scale. ''', logf, nps)
 
     if 'PM14' in mds:
         if   os.getenv("HIICHI_DIR"):

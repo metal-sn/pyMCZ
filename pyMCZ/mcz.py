@@ -280,7 +280,8 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
         return "-1,-1,_1", [], kde
 
     if data.shape[0] <= 0 or np.sum(data) <= 0:
-        print ('{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '.format(snname, Zs, -1, -1, -1))
+        print ('{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '\
+               .format(snname, Zs, -1, -1, -1))
         return "-1, -1, -1", [], kde
     try:
         ###find C.I.###
@@ -428,7 +429,8 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
         return "-1, -1,-1", [], None
 
 
-def calc((i, (sample, flux, err, nm, bss, mds, disp, dust_corr, verbose, res, scales, nps, logf))):
+def calc((i, (sample, flux, err, nm, bss, mds, disp, dust_corr,
+              verbose, res, scales, nps, logf))):
     logf = sys.stdout
     logf.write("\n\nreading in measurements %d\n"%(i + 1))
     fluxi = {}  # np.zeros((len(bss[0]),nm),float)
@@ -501,7 +503,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
             raw_input("missing pickled file for this simulation: name, nsample.\nrun the MonteCarlo? Ctr-C to exit, Return to continue?\n")
             RUNSIM = True
         else:
-            pklfile = open(picklefile, 'rb')
+            pklfile = open(picklefile, 'rb')     
             res = pickle.load(pklfile)
 
     if RUNSIM:
@@ -549,13 +551,12 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
             second_args = [sample, flux, err, nm, bss, mds, VERBOSE, dust_corr, VERBOSE, res, scales, nps, logf]
             pool = mpc.Pool(processes=nps)  # depends on available cores
             rr = pool.map(calc, itertools.izip(range(NM0, nm), itertools.repeat(second_args)))  # for i in range(nm): result[i] = f(i, second_args)
-            for ri, r  in enumerate(rr):
-                for kk in r.iterkeys():
-                    res[kk][ri] = r[kk][ri]
+
 
             for ri, r  in enumerate(rr):
                 for kk in r.iterkeys():
                     res[kk][ri] = r[kk][ri]
+
             pool.close()  # not optimal! but easy
             pool.join()
             for key in scales[i].mds.iterkeys():
@@ -724,7 +725,7 @@ def main():
     parser.add_argument('--asciidistrib', default=False, action='store_true', help=" write distribution in an ascii output (default is not to)")
     parser.add_argument('--md', default='all', type=str, help='''metallicity diagnostic to calculate. 
     default is 'all', options are: 
-    D02, Z94, M91, C01, P05, M08, M08all, M13, PP04, D13, KD02, DP00 (deprecated), P01, D16''')
+    D02, Z94, M91, C01, P05, M08, M08all, M13, PP04, D13, D13all, KD02, DP00 (deprecated), P01, D16''')
     parser.add_argument('--multiproc', default=False, action='store_true', help=" multiprocess, with number of threads max(available cores-1, MAXPROCESSES)")
     args = parser.parse_args()
 

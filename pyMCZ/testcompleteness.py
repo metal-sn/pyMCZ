@@ -1,3 +1,4 @@
+
 import os
 import sys
 import numpy as np
@@ -51,7 +52,9 @@ def fitdistrib(picklefile, scales=None):
     nm = len(ebvs)
     Ndata = len(ebvs[0])
     assert(Ndata > 0), "something is wrong with your distribution"
-    invalids = [sum(np.isnan(res[testingdiags[1]].T[i])) + sum(np.isnan(res[testingdiags[2]].T[i])) + sum(np.isnan(res[testingdiags[3]].T[i])) for i in range(nm)]
+    invalids = [sum(np.isnan(res[testingdiags[1]].T[i])) +
+                sum(np.isnan(res[testingdiags[2]].T[i])) +
+                sum(np.isnan(res[testingdiags[3]].T[i])) for i in range(nm)]
     myi, = np.where(invalids == min(invalids))
     try:
         myi = myi[1]  # in case there are more than one solutions
@@ -61,7 +64,10 @@ def fitdistrib(picklefile, scales=None):
         except IndexError:
             pass
     xold = np.zeros(10)
-    assert(Ndata - invalids[myi] > 0), "something is wrong with your distribution. Perhaps one of the default scale has all invalid values? try select different scales"
+    assert(Ndata - invalids[myi] > 0),\
+    "something is wrong with your distribution. " +\
+    "Perhaps one of the default scale has all invalid values? " +\
+    "try select different scales"
     # -- plotting utils
     fwid = 10.  # fig width
     rat = 1.   # fig aspect ratio
