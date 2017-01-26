@@ -590,7 +590,6 @@ class diagnostics:
                                                              '[NII]/[OII]+;[OIII]/[OII]+', \
                                                              show_plot=plot, n_plot=False, \
                                                              save_plot=False, verbose=False)[0].T
-
         if self.logN2Ha is not None:
             if  self.OIII_Hb  is not None:
                 if oldpyqz:
@@ -603,7 +602,6 @@ class diagnostics:
                                                              '[NII]/Ha;[OIII]/Hb', \
                                                              show_plot=plot, n_plot=False, \
                                                              save_plot=False, verbose=False)[0].T
-
             if  self.OIII_OII  is not None:
                 if oldpyqz:
                     self.mds['D13_N2Ha_O3O2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.logN2Ha]), \

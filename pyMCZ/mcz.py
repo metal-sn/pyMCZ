@@ -690,7 +690,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
         for median in bp['medians']:
             median.set(color='k', linewidth=2)
         for flier in bp['fliers']:
-            flier.set(marker='o', color='#7570b3', alpha=0.4)
+            flier.set(marker='o', color='#7570b3', alpha=0.4, mfc='#7570b3')
         plt.title("measurement %d: %s" % (i + 1, flux[i]['galnum']))
         plt.xticks(range(1, len(boxlabels) + 1), boxlabels, rotation=90, fontsize=fs - 5)
         plt.fill_between(range(1, len(boxlabels) + 1), [8.76] * len(boxlabels), [8.69] * len(boxlabels), facecolor='black', alpha=0.3)
