@@ -517,6 +517,7 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
             sample = [errordistrib(dargs, newnsample) for i in range(NM0, nm)]
             if sample == -1:
                 return -1
+            
         ###Start calculation###
         ## the flux to be feed to the calculation will be
         ## flux + error*i
@@ -576,8 +577,10 @@ def run((name, flux, err, nm, path, bss), nsample, mds, multiproc, logf, unpickl
                 logf.write("\n\n measurements %d\n"%(i + 1))
                 #print >> logf, "\n\n measurements ", i + 1
                 fluxi = {}
-
                 for k in bss[0].iterkeys():
+                    #shuffling the distribution each time
+                    np.random.shuffle(sample[i])
+
                     logf.write('{0:15} '.format(k))
                     logf.write('{0:0.2} +/- {1:0.2}\n'.format(flux[k][i],
                                                               err[k][i]))
