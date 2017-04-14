@@ -21,7 +21,10 @@ import numpy as np
 IGNOREDUST = False
 MP = True
 FIXNEGATIVES = True  # set to true if no negative flux measurements should be allowed. all negative flux measurements are set to 0
-
+DROPNEGATIVES = False  # set to true if no negative flux measurements should be allowed. all negative flux measurements are dropped
+if DROPNEGATIVES:
+    FIXNEGATIVES = False
+    
 ##list of metallicity methods, in order calculated
 Zs = ["E(B-V)",  # based on Halpha, Hbeta
     "logR23",  # Hbeta,  [OII]3727, [OIII]5007, [OIII]4959
@@ -91,10 +94,14 @@ def calculation(mscales, measured, num, mds, nps, logf, dust_corr=True, disp=Fal
     for k in measured.iterkeys():
         #kills all non-finite terms
         measured[k][~(np.isfinite(measured[k][:]))] = 0.0
+
         if FIXNEGATIVES:
             measured[k][measured[k] < 0] = 0.0
-        raw_lines[k] = measured[k]
 
+        if DROPNEGATIVES:
+            measured[k][measured[k] < 0] = np.nan
+
+        raw_lines[k] = measured[k]
     ######we trust QM better than we trust the measurement of the [OIII]4959
     ######which is typical low S/N so we set it to [OIII]5007/3.
     ######change this only if youre spectra are very high SNR
