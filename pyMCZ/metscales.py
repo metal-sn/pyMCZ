@@ -403,14 +403,14 @@ class diagnostics:
         if self.hasN2 and self.hasO2:
             self.logN2O2 = np.log10(self.N26584 / self.O23727) + self.dustcorrect(k_N2, k_O2, flux=False)
             self.hasN2O2 = True
-        if not self.hasN2O2 or np.mean(self.logN2O2) < 1.2:
+        if not self.hasN2O2 or np.mean(self.logN2O2) < -1.2:
 
             try:
-                printsafemulti('''WARNING: the KD02 and KK04 (+M08) methods should only be used for  log([NII]6564/[OII]3727) >1.2, 
+                printsafemulti('''WARNING: the KD02 and KK04 (+M08) methods should only be used for  log([NII]6564/[OII]3727) > -1.2, 
                 the mean log([NII]6564/[OII]3727)= %f''' % np.mean(self.logN2O2), self.logf, self.nps)
             except TypeError:
                 printsafemulti('''WARNING: the KD02 and KK04 (+M08) methods 
-                should only be used for  log([NII]6564/[OII]3727) >1.2, 
+                should only be used for  log([NII]6564/[OII]3727) >-1.2, 
                 the mean log([NII]6564/[OII]3727)= %s''' % self.logN2O2, self.logf, self.nps)
 
         if not self.hasN2O2:
@@ -1198,7 +1198,7 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
             if self.Z_init_guess is None:
                 self.initialguess()
             logq = self.calclogq(self.Z_init_guess)
-        #FED: CHECK: the paragraph below makes sense in words but i dont see whereit ie enforced.
+        #FED: CHECK: the paragraph below makes sense in words but i dont see where it is enforced.
         # if log([NII]/[OII]) after extinction correction is <-1.5, then check the data.
         # if it is only slightly less than 1.5, then this can be a result of either noisy
         # data, inaccurate fluxes or extinction correction, or a higher ionization parameter
