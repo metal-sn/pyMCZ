@@ -3,7 +3,7 @@
 MC Metallicity
 ====================
 
-This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our [paper] (http://www.sciencedirect.com/science/article/pii/S2213133716300178) which is published in [Astronomy and Computing](http://www.journals.elsevier.com/astronomy-and-computing/) and also available on the [arxiv](http://arxiv.org/abs/1505.06213).</b>
+This code allows the user to calculate metallicity according to a number of <i> strong line metallicity diagnostics </i> from spectroscopy line measurements, and obtain uncertainties from the line flux errors in a Monte Carlo framework. If you use this code, <b> please cite our [paper](http://www.sciencedirect.com/science/article/pii/S2213133716300178) which is published in [Astronomy and Computing](http://www.journals.elsevier.com/astronomy-and-computing/) and also available on the [arxiv](http://arxiv.org/abs/1505.06213).</b>
 
     @ARTICLE{2016A&C....16...54B,
        author = {{Bianco}, F.~B. and {Modjaz}, M. and {Oh}, S.~M. and {Fierroz}, D. and 
@@ -29,7 +29,7 @@ This code is released under MIT licence: see LICENSE.txt
 
 <b>Most recent stable release: v1.3</b>
 
-====================
+
 Usage:
 ====================
 This code requires ascii input files, their format is described below and examples are provided in the \<input\> directory in this package.  We provide an example dataset names 'exampledata', i.e. we provide input files 'exampledata_meas.txt' and 'exampledata_err.txt' are the input files. 
@@ -85,7 +85,7 @@ additional command line arguments
 <b>  --log LOGFILE  </b>       outputting messages to a log file instead of standard output. disabled when multiprocessing
 
 
-====================
+
 Input file format
 ====================
 Flux data for each object should be stored in the directory \<input\> that exists in the directory provided by the --path arg or by the environmental variable MCMetdata. Their ascii file names are expected to end by "\_meas.txt" for the file containing the measurements, and "\_err.txt" for the error file.
@@ -120,7 +120,6 @@ All the results will be saved in the directory "output/\<filename\>" which will 
 Read our [paper](http://www.sciencedirect.com/science/article/pii/S2213133716300178), or the README.md file in the output directory in this package https://github.com/nyusngroup/pyMCZ/blob/master/output/README.md for more details on the output products.
 
 
-====================
 Tests implemented
 ====================
 
@@ -155,7 +154,6 @@ The figures below show an undersampled realization and a well- (possibly) over-s
 
 
  
-====================
 Known Issues and TODO
 ====================
 
@@ -169,7 +167,7 @@ The input file is a but awkward, for historical reasons: we decided to make mini
 
 It would be great to create sphyinx documentation.
 
-====================
+
 Packages required
 ====================
 required packages:
@@ -181,7 +179,6 @@ desirable packages:
 pickle,multiprocessing,itertools,csv,cProfile,pyqz
 
 
-===================
 Some figures from the paper as examples of code products
 ===================
 
