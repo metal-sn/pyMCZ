@@ -112,7 +112,6 @@ The first row is optional - it can contain more keys than columns, as long as th
 The data should be in the above order, separated by any number of white spaces.
 
 
-====================
 Output
 ====================
 All the results will be saved in the directory "output/\<filename\>" which will be creates in the directory provided by the --path arg.
