@@ -508,8 +508,13 @@ class diagnostics:
         #check version of pyqz
         from distutils.version import StrictVersion
         oldpyqz = False
-        if StrictVersion(pyqz.__version__) <= StrictVersion('0.5.0'):
+        newpyqz = False
+        pyqzversion = StrictVersion(pyqz.__version__)
+        printsafemulti("checking version of pyqz: " + str(pyqzversion), self.logf, self.nps)
+        if pyqzversion <= StrictVersion('0.5.0'):
             oldpyqz = True
+        if pyqzversion >= StrictVersion('0.8.0'):
+            newpyqz = True
 
         if self.NII_SII is not None and allD13:
             if self.OIII_SII  is not None:
@@ -518,19 +523,29 @@ class diagnostics:
                     self.mds['D13_N2S2_O3S2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_SII]), \
                                         np.atleast_1d([self.OIII_SII]), 'NII/SII', 'OIII/SII', \
                                         method='default', plot=plot, n_plot=False, savefig=False)[0].T
-                else:
+                elif newpyqz:
                     #pyqz.get_grid_fn(Pk=5.0,calibs='GCZO', kappa =20, struct='pp')
                     self.mds['D13_N2S2_O3S2'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_SII]), \
                                                                           np.atleast_1d([self.OIII_SII])], \
-                                                             '[NII]/[SII]+;[OIII]/[SII]+', \
-                                                             show_plot=plot, n_plot=False, \
-                                                             save_plot=False, verbose=False)[0].T
+                                                             '[NII]/[SII]+;[OIII]/[SII]+')[0].T
+                else:
+                    self.mds['D13_N2S2_O3S2'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_SII]), \
+                                                                             np.atleast_1d([self.OIII_SII])], \
+                                                               '[NII]/[SII]+;[OIII]/[SII]+', \
+                                                               show_plot=plot, n_plot=False, \
+                                                               save_plot=False, verbose=False)[0].T
 
             if  self.OIII_Hb  is not None:
                 if oldpyqz:
                     self.mds['D13_N2S2_O3Hb'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_SII]), \
                                         np.atleast_1d([self.OIII_Hb]), 'NII/SII', 'OIII/Hb', \
                                         method='default', plot=plot, n_plot=False, savefig=False)[0].T
+                elif newpyqz:
+                    self.mds['D13_N2S2_O3SHb'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_SII]), \
+                                                                          np.atleast_1d([self.OIII_Hb])], \
+                                                             '[NII]/[SII]+;[OIII]/Hb')[0].T
+
+      
                 else:
                     self.mds['D13_N2S2_O3SHb'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_SII]), \
                                                                           np.atleast_1d([self.OIII_Hb])], \
@@ -545,6 +560,10 @@ class diagnostics:
                     self.mds['D13_N2S2_O3O2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_SII]), \
                                         np.atleast_1d([self.OIII_OII]), 'NII/SII', 'OIII/OII', \
                                         method='default', plot=plot, n_plot=False, savefig=False)[0].T
+                elif newpyqz:
+                    self.mds['D13_N2S2_O3O2'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_SII]), \
+                                                                          np.atleast_1d([self.OIII_OII])], \
+                                                             '[NII]/[SII]+;[OIII]/[OII]+')[0].T
                 else:
                     self.mds['D13_N2S2_O3O2'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_SII]), \
                                                                           np.atleast_1d([self.OIII_OII])], \
@@ -559,6 +578,10 @@ class diagnostics:
                     self.mds['D13_N2O2_O3S2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_OII]), \
                                         np.atleast_1d([self.OIII_SII]), 'NII/OII', 'OIII/SII', \
                                         method='default', plot=plot, n_plot=False, savefig=False)[0].T
+                elif newpyqz:
+                    self.mds['D13_N2O2_O3S2'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_OII]), \
+                                                                          np.atleast_1d([self.OIII_SII])], \
+                                                             '[NII]/[OII]+;[OIII]/[SII]+')[0].T
                 else:
                     self.mds['D13_N2O2_O3S2'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_OII]), \
                                                                           np.atleast_1d([self.OIII_SII])], \
@@ -572,6 +595,10 @@ class diagnostics:
                     self.mds['D13_N2O2_O3Hb'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_OII]), \
                                         np.atleast_1d([self.OIII_Hb]), 'NII/OII', 'OIII/Hb', \
                                         method='default', plot=plot, n_plot=False, savefig=False)[0].T
+                elif newpyqz:
+                    self.mds['D13_N2O2_O3Hb'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_OII]), \
+                                                                          np.atleast_1d([self.OIII_Hb])], \
+                                                             '[NII]/[OII]+;[OIII]/Hb')[0].T
                 else:
                     self.mds['D13_N2O2_O3Hb'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_OII]), \
                                                                           np.atleast_1d([self.OIII_Hb])], \
@@ -584,6 +611,10 @@ class diagnostics:
                     self.mds['D13_N2O2_O3O2'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.NII_OII]), \
                                         np.atleast_1d([self.OIII_OII]), 'NII/OII', 'OIII/OII', \
                                         method='default', plot=plot, n_plot=False, savefig=False)[0].T
+                elif newpyqz:
+                    self.mds['D13_N2O2_O3O2'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_OII]), \
+                                                                          np.atleast_1d([self.OIII_OII])], \
+                                                             '[NII]/[OII]+;[OIII]/[OII]+')[0].T
                 else:
                     self.mds['D13_N2O2_O3O2'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.NII_OII]), \
                                                                           np.atleast_1d([self.OIII_OII])], \
@@ -596,6 +627,10 @@ class diagnostics:
                     self.mds['D13_N2Ha_O3Hb'] = pyqz.get_qz(20, 'z', np.atleast_1d([self.logN2Ha]), \
                                         np.atleast_1d([self.OIII_Hb]), 'NII/Ha', 'OIII/Hb', \
                                         method='default', plot=plot, n_plot=False, savefig=False)[0].T
+                elif newpyqz:
+                    self.mds['D13_N2Ha_O3Hb'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.logN2Ha]), \
+                                                                          np.atleast_1d([self.OIII_Hb])], \
+                                                             '[NII]/Ha;[OIII]/Hb')[0].T
                 else:
                     self.mds['D13_N2Ha_O3Hb'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.logN2Ha]), \
                                                                           np.atleast_1d([self.OIII_Hb])], \
@@ -608,6 +643,10 @@ class diagnostics:
                                         np.atleast_1d([self.OIII_OII]), 'NII/Ha', 'OIII/OII', \
                                         method='default', plot=plot, n_plot=False, savefig=False)[0].T
 
+                elif newpyqz:
+                    self.mds['D13_N2Ha_O3O2'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.logN2Ha]), \
+                                                                          np.atleast_1d([self.OIII_Hb])], \
+                                                             '[NII]/Ha;[OIII]/[OII]+')[0].T
                 else:
                     self.mds['D13_N2Ha_O3O2'] = pyqz.interp_qz('Tot[O]+12', [np.atleast_1d([self.logN2Ha]), \
                                                                           np.atleast_1d([self.OIII_Hb])], \
