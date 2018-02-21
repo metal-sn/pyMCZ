@@ -1051,7 +1051,7 @@ did you set them up with  setOlines() and ?''', self.logf, self.nps)
         if self.hasO3  and self.hasN2:
             self.mds['M08_O3N2'] = np.zeros(self.nm) + float('NaN')
             coefs = np.array([M08_coefs['O3N2']] * self.nm).T
-            coefs[0] = coefs[0] - np.log(self.O35007 / self.N26584) \
+            coefs[0] = coefs[0] - np.log10(self.O35007 / self.N26584) \
                        + self.dustcorrect(k_O35007, k_N2, flux=False)
             sols = np.array([self.fz_roots(coefs.T)])[0] + 8.69
             indx = ((sols.real >= 7.1) * (sols.real <= 9.4)\
