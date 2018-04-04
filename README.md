@@ -1,6 +1,6 @@
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.17880.svg)](http://dx.doi.org/10.5281/zenodo.17880) 
 [![Code Health](https://landscape.io/github/fedhere/pyMCZ/master/landscape.svg?style=flat)](https://landscape.io/github/fedhere/pyMCZ/master)
-[![ASCL](ascl-1505.025-blue.jpg)](http://ascl.net/1505.025)
+[![ASCL](ascl-1505.025-blue.png)](http://ascl.net/1505.025)
 MC Metallicity
 ====================
 
