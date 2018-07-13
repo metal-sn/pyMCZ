@@ -277,12 +277,12 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
     if not n > 0:
         if verbose:
             print ("data must be an actual distribution (n>0 elements!, %s)" % Zs)
-        return "-1,-1,_1", [], kde
+        return "-1\t -1\t -1", [], kde
 
     if data.shape[0] <= 0 or np.sum(data) <= 0:
         print ('{0:15} {1:20} {2:>13d}   {3:>7d}   {4:>7d} '\
                .format(snname, Zs, -1, -1, -1))
-        return "-1, -1, -1", [], kde
+        return "-1\t -1\t -1", [], kde
     try:
         ###find C.I.###
         median, pc16, pc84 = np.percentile(data, [50, 16, 84])
@@ -426,7 +426,7 @@ def savehist(data, snname, Zs, nsample, i, path, nmeas, measnames, verbose=False
         if VERBOSE:
             print (data)
         print (name, 'had infinities (or something in plotting went wrong)')
-        return "-1, -1,-1", [], None
+        return "-1\t -1\t -1", [], None
 
 
 def calc((i, (sample, flux, err, nm, bss, mds, disp, dust_corr,
